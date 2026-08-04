@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unit Converter — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-3xl px-6 py-10">
+    <!-- Navigation Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Unit Converter</h1>
+    <p class="text-sm text-slate-400 mb-6">Convert length, weight, data, area, temperature, speed, and time effortlessly.</p>
+
+    <!-- Top Category & Settings Bar -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="md:col-span-2">
+        <label class="mono text-xs text-slate-400 uppercase block mb-1">Category</label>
+        <select id="category" class="w-full rounded-md p-3 text-sm font-medium">
+          <option value="length">Length</option>
+          <option value="weight">Weight / Mass</option>
+          <option value="temperature">Temperature</option>
+          <option value="data">Digital Data</option>
+          <option value="area">Area</option>
+          <option value="speed">Speed</option>
+          <option value="time">Time</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mono text-xs text-slate-400 uppercase block mb-1">Precision</label>
+        <select id="precision" class="w-full rounded-md p-3 text-sm font-medium">
+          <option value="2">2 Decimals</option>
+          <option value="4" selected>4 Decimals</option>
+          <option value="6">6 Decimals</option>
+          <option value="8">8 Decimals</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Main Converter Grid -->
+    <div class="bg-[#14283b]/40 p-5 rounded-md border border-white/10 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
+        <!-- From Column -->
+        <div>
+          <label class="mono text-xs text-slate-400 uppercase block mb-1">From Value</label>
+          <input id="value" type="number" value="1" class="w-full rounded-md p-3 text-sm mb-2 font-mono" placeholder="Enter number..." />
+          <select id="from" class="w-full rounded-md p-3 text-sm"></select>
+        </div>
+
+        <!-- Swap Button -->
+        <div class="flex justify-center pb-2">
+          <button id="swap" class="secondary p-3 rounded-md transition-all hover:rotate-180 duration-300" title="Swap Units">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+          </button>
+        </div>
+
+        <!-- To Column -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="mono text-xs text-slate-400 uppercase">Result</label>
+            <span id="copiedNotice" class="mono text-[10px] text-teal-300 hidden">Copied!</span>
+          </div>
+          <div id="resultBox" class="w-full rounded-md p-3 text-sm border border-teal-500/30 bg-[#0f1f2e] mb-2 mono text-teal-300 font-bold flex justify-between items-center cursor-pointer group" title="Click to copy">
+            <span id="result">0</span>
+            <span class="text-[10px] text-slate-500 group-hover:text-teal-300 uppercase">Copy</span>
+          </div>
+          <select id="to" class="w-full rounded-md p-3 text-sm"></select>
+        </div>
+      </div>
+
+      <!-- Formula Bar -->
+      <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+        <span class="mono text-xs text-slate-400 uppercase">Formula:</span>
+        <span id="formula" class="mono text-xs text-slate-300 bg-[#14283b] px-3 py-1 rounded border border-white/5">--</span>
+      </div>
+    </div>
+
+    <!-- Multi-Unit All-in-One Conversion Matrix -->
+    <div class="bg-[#14283b]/20 p-5 rounded-md border border-white/5">
+      <h3 class="mono text-xs uppercase font-bold text-slate-400 mb-3 tracking-wider">All Units Conversion Matrix</h3>
+      <div id="matrix" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"></div>
+    </div>
+  </div>
+
+  <script>
+    const unitDefinitions = {
+      length: {
+        names: { m: 'Meters (m)', km: 'Kilometers (km)', cm: 'Centimeters (cm)', mm: 'Millimeters (mm)', mi: 'Miles (mi)', yd: 'Yards (yd)', ft: 'Feet (ft)', in: 'Inches (in)' },
+        rates: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254 }
+      },
+      weight: {
+        names: { kg: 'Kilograms (kg)', g: 'Grams (g)', mg: 'Milligrams (mg)', lb: 'Pounds (lb)', oz: 'Ounces (oz)', t: 'Metric Tons (t)' },
+        rates: { kg: 1, g: 0.001, mg: 0.000001, lb: 0.45359237, oz: 0.028349523, t: 1000 }
+      },
+      data: {
+        names: { b: 'Bytes (B)', kb: 'Kilobytes (KB)', mb: 'Megabytes (MB)', gb: 'Gigabytes (GB)', tb: 'Terabytes (TB)' },
+        rates: { b: 1, kb: 1024, mb: 1048576, gb: 1073741824, tb: 1099511627776 }
+      },
+      area: {
+        names: { sqm: 'Square Meters (m²)', sqkm: 'Square Kilometers (km²)', sqft: 'Square Feet (ft²)', sqin: 'Square Inches (in²)', acre: 'Acres', ha: 'Hectares' },
+        rates: { sqm: 1, sqkm: 1000000, sqft: 0.092903, sqin: 0.00064516, acre: 4046.86, ha: 10000 }
+      },
+      speed: {
+        names: { ms: 'Meters / sec (m/s)', kmh: 'Kilometers / hr (km/h)', mph: 'Miles / hr (mph)', knot: 'Knots' },
+        rates: { ms: 1, kmh: 0.277778, mph: 0.44704, knot: 0.514444 }
+      },
+      time: {
+        names: { ms: 'Milliseconds', sec: 'Seconds', min: 'Minutes', hr: 'Hours', day: 'Days' },
+        rates: { ms: 0.001, sec: 1, min: 60, hr: 3600, day: 86400 }
+      },
+      temperature: {
+        names: { C: 'Celsius (°C)', F: 'Fahrenheit (°F)', K: 'Kelvin (K)' }
+      }
+    };
+
+    const category = document.getElementById('category');
+    const precision = document.getElementById('precision');
+    const from = document.getElementById('from');
+    const to = document.getElementById('to');
+    const value = document.getElementById('value');
+    const result = document.getElementById('result');
+    const resultBox = document.getElementById('resultBox');
+    const copiedNotice = document.getElementById('copiedNotice');
+    const formula = document.getElementById('formula');
+    const matrix = document.getElementById('matrix');
+
+    function populateUnits() {
+      const cat = category.value;
+      const names = unitDefinitions[cat].names;
+      const keys = Object.keys(names);
+
+      from.innerHTML = keys.map((k) => `<option value="${k}">${names[k]}</option>`).join('');
+      to.innerHTML = keys.map((k) => `<option value="${k}">${names[k]}</option>`).join('');
+      
+      if (keys.length > 1) to.selectedIndex = 1;
+      convert();
+    }
+
+    function convertTemp(val, fromUnit, toUnit) {
+      let celsius;
+      if (fromUnit === 'C') celsius = val;
+      else if (fromUnit === 'F') celsius = (val - 32) * (5 / 9);
+      else if (fromUnit === 'K') celsius = val - 273.15;
+
+      if (toUnit === 'C') return celsius;
+      if (toUnit === 'F') return celsius * (9 / 5) + 32;
+      if (toUnit === 'K') return celsius + 273.15;
+    }
+
+    function getTempFormula(fromUnit, toUnit) {
+      if (fromUnit === toUnit) return `1 ${fromUnit} = 1 ${toUnit}`;
+      if (fromUnit === 'C' && toUnit === 'F') return '(°C × 9/5) + 32 = °F';
+      if (fromUnit === 'F' && toUnit === 'C') return '(°F − 32) × 5/9 = °C';
+      if (fromUnit === 'C' && toUnit === 'K') return '°C + 273.15 = K';
+      if (fromUnit === 'K' && toUnit === 'C') return 'K − 273.15 = °C';
+      if (fromUnit === 'F' && toUnit === 'K') return '(°F − 32) × 5/9 + 273.15 = K';
+      if (fromUnit === 'K' && toUnit === 'F') return '(K − 273.15) × 9/5 + 32 = °F';
+    }
+
+    function calculate(v, fromU, toU, cat) {
+      if (cat === 'temperature') return convertTemp(v, fromU, toU);
+      const rates = unitDefinitions[cat].rates;
+      const base = v * rates[fromU];
+      return base / rates[toU];
+    }
+
+    function convert() {
+      const cat = category.value;
+      const v = parseFloat(value.value);
+      const dec = parseInt(precision.value, 10);
+
+      if (isNaN(v)) {
+        result.textContent = '0';
+        formula.textContent = '--';
+        matrix.innerHTML = '';
+        return;
+      }
+
+      const out = calculate(v, from.value, to.value, cat);
+      result.textContent = Number(out.toFixed(dec)).toLocaleString(undefined, { maximumFractionDigits: dec });
+
+      // Update Formula
+      if (cat === 'temperature') {
+        formula.textContent = getTempFormula(from.value, to.value);
+      } else {
+        const rates = unitDefinitions[cat].rates;
+        const factor = rates[from.value] / rates[to.value];
+        formula.textContent = `1 ${from.value} = ${Number(factor.toFixed(6))} ${to.value}`;
+      }
+
+      // Render Matrix
+      const keys = Object.keys(unitDefinitions[cat].names);
+      matrix.innerHTML = keys.map(k => {
+        const matrixVal = calculate(v, from.value, k, cat);
+        const formatted = Number(matrixVal.toFixed(dec)).toLocaleString(undefined, { maximumFractionDigits: dec });
+        return `
+          <div class="bg-[#14283b] p-3 rounded border border-white/5 flex flex-col">
+            <span class="mono text-[10px] text-slate-400 uppercase">${unitDefinitions[cat].names[k]}</span>
+            <span class="mono text-xs text-teal-300 font-bold mt-1 break-all">${formatted}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Swap Units
+    document.getElementById('swap').addEventListener('click', () => {
+      const temp = from.value;
+      from.value = to.value;
+      to.value = temp;
+      convert();
+    });
+
+    // Copy Result
+    resultBox.addEventListener('click', () => {
+      navigator.clipboard.writeText(result.textContent).then(() => {
+        copiedNotice.classList.remove('hidden');
+        setTimeout(() => copiedNotice.classList.add('hidden'), 2000);
+      });
+    });
+
+    // Listeners
+    category.addEventListener('change', populateUnits);
+    precision.addEventListener('change', convert);
+    [from, to, value].forEach((i) => i.addEventListener('input', convert));
+
+    populateUnits();
+  </script>
+</body>
+</html>

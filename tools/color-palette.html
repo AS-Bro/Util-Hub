@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Color Palette Picker & Studio — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  .swatch { transition: transform .15s ease, box-shadow .15s ease; }
+  .swatch:hover { transform: translateY(-3px); }
+  select, input { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-4xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Color Palette Studio</h1>
+    <p class="text-sm text-slate-400 mb-6">Generate color harmonies, lock individual swatches, inspect accessibility, and export palette code.</p>
+
+    <!-- Toolbar Controls -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-[#14283b]/40 p-4 rounded-md border border-white/10">
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="generate" class="primary mono text-xs uppercase px-4 py-2 rounded-md transition-all">Generate Palette</button>
+        
+        <select id="harmonyMode" class="mono text-xs p-2 rounded-md">
+          <option value="analogous" selected>Analogous</option>
+          <option value="monochromatic">Monochromatic</option>
+          <option value="triadic">Triadic</option>
+          <option value="complementary">Complementary</option>
+          <option value="random">Random</option>
+        </select>
+
+        <select id="formatSelect" class="mono text-xs p-2 rounded-md">
+          <option value="hex" selected>HEX Format</option>
+          <option value="rgb">RGB Format</option>
+          <option value="hsl">HSL Format</option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="copyCss" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy CSS</button>
+        <button id="copyJson" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy JSON</button>
+        <button id="downloadPng" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">PNG Canvas</button>
+      </div>
+    </div>
+
+    <!-- Palette Swatches Grid -->
+    <div id="palette" class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4"></div>
+
+    <div class="flex justify-between items-center mb-8">
+      <p id="copied" class="mono text-xs text-teal-300 h-4"></p>
+      <span class="mono text-[11px] text-slate-500">Tip: Press <kbd class="px-1.5 py-0.5 bg-[#14283b] rounded border border-white/10 text-slate-300">Space</kbd> to generate a new palette</span>
+    </div>
+
+    <!-- Tints & Shades Inspector -->
+    <div id="inspector" class="rounded-md border border-white/10 p-5 bg-[#14283b]/30 hidden">
+      <div class="flex justify-between items-center mb-3">
+        <h3 id="inspectorTitle" class="mono text-xs uppercase tracking-wider text-slate-300">Shades & Tints Inspector</h3>
+        <span id="inspectorHex" class="mono text-xs text-teal-300"></span>
+      </div>
+      <div id="shadesGrid" class="grid grid-cols-10 gap-1.5 h-12 rounded overflow-hidden"></div>
+    </div>
+  </div>
+
+  <script>
+    const paletteEl = document.getElementById('palette');
+    const copiedEl = document.getElementById('copied');
+    const harmonyModeEl = document.getElementById('harmonyMode');
+    const formatSelectEl = document.getElementById('formatSelect');
+    const inspectorEl = document.getElementById('inspector');
+    const inspectorTitleEl = document.getElementById('inspectorTitle');
+    const inspectorHexEl = document.getElementById('inspectorHex');
+    const shadesGridEl = document.getElementById('shadesGrid');
+
+    let currentColors = Array(5).fill(null);
+    let lockedSwatches = [false, false, false, false, false];
+
+    // Helper: Convert HSL to Hex
+    function hslToHex(h, s, l) {
+      l /= 100;
+      const a = (s / 100) * Math.min(l, 1 - l);
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    // Helper: Convert Hex to RGB
+    function hexToRgb(hex) {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      return { r, g, b, str: `rgb(${r}, ${g}, ${b})` };
+    }
+
+    // Helper: Calculate Contrast Ratio & WCAG Assessment
+    function getLuminance(r, g, b) {
+      const a = [r, g, b].map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function getContrastRating(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const lum = getLuminance(r, g, b);
+      const contrastWhite = (1.05) / (lum + 0.05);
+      const contrastBlack = (lum + 0.05) / (0.05);
+      
+      const isWhiteText = contrastWhite >= contrastBlack;
+      const bestContrast = Math.max(contrastWhite, contrastBlack).toFixed(1);
+      
+      let badge = 'Low Contrast';
+      let dotColor = 'bg-amber-400';
+      let badgeBg = 'bg-amber-950/80 border-amber-500/40 text-amber-300';
+
+      if (bestContrast >= 7.0) {
+        badge = `AAA (${bestContrast}:1)`;
+        dotColor = 'bg-emerald-400';
+        badgeBg = 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300';
+      } else if (bestContrast >= 4.5) {
+        badge = `AA (${bestContrast}:1)`;
+        dotColor = 'bg-teal-400';
+        badgeBg = 'bg-teal-950/80 border-teal-500/40 text-teal-300';
+      }
+
+      return {
+        textClass: isWhiteText ? 'text-white' : 'text-slate-900',
+        badge,
+        dotColor,
+        badgeBg
+      };
+    }
+
+    // Generate Colors based on selected Harmony Rule
+    function generateHslPalette() {
+      const baseHue = Math.floor(Math.random() * 360);
+      const mode = harmonyModeEl.value;
+      const colors = [];
+
+      for (let i = 0; i < 5; i++) {
+        let h = baseHue, s = 65, l = 50;
+
+        if (mode === 'analogous') {
+          h = (baseHue + (i - 2) * 25 + 360) % 360;
+          s = 55 + Math.random() * 25;
+          l = 40 + Math.random() * 25;
+        } else if (mode === 'monochromatic') {
+          h = baseHue;
+          s = 60;
+          l = 20 + i * 15;
+        } else if (mode === 'triadic') {
+          const offsets = [0, 120, 240, 30, 150];
+          h = (baseHue + offsets[i]) % 360;
+          s = 60 + Math.random() * 20;
+          l = 45 + Math.random() * 20;
+        } else if (mode === 'complementary') {
+          h = (i % 2 === 0) ? baseHue : (baseHue + 180) % 360;
+          s = 50 + Math.random() * 30;
+          l = 30 + i * 12;
+        } else { // Random
+          h = Math.floor(Math.random() * 360);
+          s = 50 + Math.random() * 40;
+          l = 35 + Math.random() * 35;
+        }
+
+        colors.push({ h, s, l, hex: hslToHex(h, s, l) });
+      }
+      return colors;
+    }
+
+    function generateNewPalette() {
+      const hslColors = generateHslPalette();
+      currentColors = currentColors.map((color, i) => {
+        return lockedSwatches[i] && color ? color : hslColors[i];
+      });
+      renderUI();
+    }
+
+    function renderUI() {
+      paletteEl.innerHTML = '';
+
+      currentColors.forEach((color, i) => {
+        const format = formatSelectEl.value;
+        let displayCode = color.hex;
+        if (format === 'rgb') displayCode = hexToRgb(color.hex).str;
+        if (format === 'hsl') displayCode = `hsl(${Math.round(color.h)}, ${Math.round(color.s)}%, ${Math.round(color.l)}%)`;
+
+        const contrast = getContrastRating(color.hex);
+        const isLocked = lockedSwatches[i];
+
+        const card = document.createElement('div');
+        card.className = 'swatch rounded-md overflow-hidden border border-white/10 bg-[#14283b] flex flex-col justify-between';
+        
+        const lockBtnStyle = isLocked 
+          ? 'bg-[#0e1c2b] text-teal-300 border-teal-400/60 shadow-[0_0_10px_rgba(111,216,203,0.2)]' 
+          : 'bg-[#17304a] text-slate-300 border-white/10 hover:border-teal-400/40 hover:text-white';
+
+        card.innerHTML = `
+          <div style="background:${color.hex}" class="h-32 p-3 flex flex-col justify-end group transition-all">
+            <div class="mono text-[11px] ${contrast.textClass} font-semibold opacity-0 group-hover:opacity-100 transition">
+              Inspect Shades &rarr;
+            </div>
+          </div>
+          <div class="p-3 bg-[#14283b] flex flex-col gap-2.5">
+            <!-- Color Code -->
+            <div class="mono text-xs font-semibold text-center text-slate-200 cursor-pointer hover:text-teal-300 transition copy-val truncate" title="Click to copy">
+              ${displayCode}
+            </div>
+
+            <!-- Controls Stacked Below Color Code -->
+            <div class="flex flex-col gap-1.5 pt-2 border-t border-white/5">
+              <!-- Lock Button -->
+              <button class="lock-btn w-full mono text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 rounded-md border transition-all flex items-center justify-center gap-1.5 ${lockBtnStyle}">
+                <span>${isLocked ? '🔒' : '🔓'}</span>
+                <span>${isLocked ? 'Locked' : 'Lock'}</span>
+              </button>
+
+              <!-- WCAG Badge (Under Lock) -->
+              <div class="w-full mono text-[10px] font-medium px-2 py-1 rounded-md border flex items-center justify-center gap-1.5 ${contrast.badgeBg}">
+                <span class="w-1.5 h-1.5 rounded-full ${contrast.dotColor}"></span>
+                <span>${contrast.badge}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Event: Lock swatch without generating/changing colors
+        card.querySelector('.lock-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          lockedSwatches[i] = !lockedSwatches[i];
+          renderUI();
+        });
+
+        // Event: Copy Color Value
+        card.querySelector('.copy-val').addEventListener('click', (e) => {
+          e.stopPropagation();
+          copyToClipboard(displayCode, `Copied ${displayCode} to clipboard`);
+        });
+
+        // Event: Open Inspector Shades
+        card.addEventListener('click', () => {
+          inspectColor(color);
+        });
+
+        paletteEl.appendChild(card);
+      });
+    }
+
+    function inspectColor(color) {
+      inspectorEl.classList.remove('hidden');
+      inspectorTitleEl.textContent = `Shades & Tints Inspector`;
+      inspectorHexEl.textContent = color.hex.toUpperCase();
+      shadesGridEl.innerHTML = '';
+
+      for (let i = 1; i <= 10; i++) {
+        const lightness = i * 9;
+        const shadeHex = hslToHex(color.h, color.s, lightness);
+        const shadeDiv = document.createElement('div');
+        shadeDiv.style.background = shadeHex;
+        shadeDiv.className = 'h-full cursor-pointer hover:scale-105 transition-transform rounded-sm border border-black/20';
+        shadeDiv.title = shadeHex;
+        shadeDiv.addEventListener('click', () => {
+          copyToClipboard(shadeHex, `Copied shade ${shadeHex} to clipboard`);
+        });
+        shadesGridEl.appendChild(shadeDiv);
+      }
+    }
+
+    function copyToClipboard(text, message) {
+      navigator.clipboard.writeText(text).catch(() => {});
+      copiedEl.textContent = message;
+      setTimeout(() => (copiedEl.textContent = ''), 2000);
+    }
+
+    // Export CSS
+    document.getElementById('copyCss').addEventListener('click', () => {
+      const cssVars = currentColors.map((c, i) => `  --color-${i + 1}: ${c.hex};`).join('\n');
+      const cssBlock = `:root {\n${cssVars}\n}`;
+      copyToClipboard(cssBlock, 'Copied CSS variables to clipboard!');
+    });
+
+    // Export JSON
+    document.getElementById('copyJson').addEventListener('click', () => {
+      const json = JSON.stringify(currentColors.map(c => c.hex), null, 2);
+      copyToClipboard(json, 'Copied palette JSON to clipboard!');
+    });
+
+    // Render Canvas PNG
+    document.getElementById('downloadPng').addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+
+      const swatchWidth = canvas.width / currentColors.length;
+      currentColors.forEach((c, i) => {
+        ctx.fillStyle = c.hex;
+        ctx.fillRect(i * swatchWidth, 0, swatchWidth, canvas.height);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(c.hex.toUpperCase(), i * swatchWidth + swatchWidth / 2, canvas.height - 30);
+      });
+
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'color-palette.png';
+      a.click();
+    });
+
+    // Listeners
+    document.getElementById('generate').addEventListener('click', generateNewPalette);
+    harmonyModeEl.addEventListener('change', generateNewPalette);
+    formatSelectEl.addEventListener('change', renderUI);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        e.preventDefault();
+        generateNewPalette();
+      }
+    });
+
+    generateNewPalette();
+  </script>
+</body>
+</html>

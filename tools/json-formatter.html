@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JSON Formatter — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  textarea, select { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  textarea:focus, select:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .error { color:#f2a154; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-6xl px-6 py-10">
+    <!-- Navigation Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">JSON Formatter</h1>
+    <p class="text-sm text-slate-400 mb-6">Validate, beautify, minify, repair, and convert JSON data with deep diagnostics.</p>
+
+    <!-- Top Action & Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4 bg-[#14283b]/40 p-3 rounded-md border border-white/10">
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="beautify" class="primary mono text-xs uppercase px-3.5 py-2 rounded-md">Beautify</button>
+        <button id="minify" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Minify</button>
+        <button id="repair" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Auto-Fix Quotes</button>
+        <button id="sortKeys" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Sort Keys</button>
+        
+        <select id="indent" class="mono text-xs p-2 rounded-md">
+          <option value="2">2 Spaces</option>
+          <option value="4">4 Spaces</option>
+          <option value="tab">Tab Indent</option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="file" id="fileInput" class="hidden" accept=".json,.txt" />
+        <button id="uploadBtn" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Upload File</button>
+        <button id="toCsv" class="secondary mono text-xs uppercase px-3 py-2 rounded-md text-teal-300">Convert to CSV</button>
+        <button id="downloadBtn" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Download</button>
+      </div>
+    </div>
+
+    <!-- Status & Statistics Banner -->
+    <div class="flex flex-wrap items-center justify-between gap-2 bg-[#14283b]/20 px-4 py-2 rounded-md border border-white/5 mb-4">
+      <p id="status" class="mono text-xs text-slate-400">Ready</p>
+      <div id="stats" class="mono text-[11px] text-slate-400 flex gap-4 hidden">
+        <span>Keys: <strong id="statKeys" class="text-teal-300">0</strong></span>
+        <span>Max Depth: <strong id="statDepth" class="text-teal-300">0</strong></span>
+        <span>Size: <strong id="statSize" class="text-teal-300">0 B</strong></span>
+      </div>
+    </div>
+
+    <!-- Main Dual Editors -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Input Panel -->
+      <div class="flex flex-col">
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="mono text-xs text-slate-400 uppercase">Input JSON</label>
+          <div class="flex gap-2">
+            <button id="pasteBtn" class="mono text-[10px] text-teal-300 hover:underline uppercase">Paste</button>
+            <button id="clearBtn" class="mono text-[10px] text-rose-400 hover:underline uppercase">Clear</button>
+          </div>
+        </div>
+        <textarea id="input" rows="18" class="w-full rounded-md p-4 text-sm mono leading-relaxed" placeholder='{"hello": "world", "items": [1, 2, 3]}' spellcheck="false"></textarea>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="flex flex-col">
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="mono text-xs text-slate-400 uppercase">Output Result</label>
+          <div class="flex gap-2">
+            <span id="copiedNotice" class="mono text-[10px] text-teal-300 hidden">Copied!</span>
+            <button id="copyBtn" class="mono text-[10px] text-teal-300 hover:underline uppercase">Copy Output</button>
+          </div>
+        </div>
+        <textarea id="output" rows="18" readonly class="w-full rounded-md p-4 text-sm mono leading-relaxed bg-[#0f1f2e] text-teal-200" placeholder="Formatted output will appear here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const output = document.getElementById('output');
+    const status = document.getElementById('status');
+    const indentSelect = document.getElementById('indent');
+    const statsEl = document.getElementById('stats');
+    const statKeys = document.getElementById('statKeys');
+    const statDepth = document.getElementById('statDepth');
+    const statSize = document.getElementById('statSize');
+    const copiedNotice = document.getElementById('copiedNotice');
+
+    function getIndentValue() {
+      const val = indentSelect.value;
+      return val === 'tab' ? '\t' : parseInt(val, 10);
+    }
+
+    function calculateStats(obj, depth = 1) {
+      let keysCount = 0;
+      let maxDepth = depth;
+
+      if (typeof obj === 'object' && obj !== null) {
+        const keys = Object.keys(obj);
+        keysCount += keys.length;
+
+        for (const key of keys) {
+          if (typeof obj[key] === 'object' && obj[key] !== null) {
+            const res = calculateStats(obj[key], depth + 1);
+            keysCount += res.keysCount;
+            maxDepth = Math.max(maxDepth, res.maxDepth);
+          }
+        }
+      }
+      return { keysCount, maxDepth };
+    }
+
+    function updateStats(text, parsed) {
+      const bytes = new Blob([text]).size;
+      const sizeStr = bytes > 1024 ? (bytes / 1024).toFixed(2) + ' KB' : bytes + ' B';
+      const { keysCount, maxDepth } = calculateStats(parsed);
+
+      statKeys.textContent = keysCount;
+      statDepth.textContent = maxDepth;
+      statSize.textContent = sizeStr;
+      statsEl.classList.remove('hidden');
+    }
+
+    function run(fn) {
+      if (!input.value.trim()) {
+        output.value = '';
+        status.textContent = 'Ready';
+        status.className = 'mono text-xs text-slate-400';
+        statsEl.classList.add('hidden');
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(input.value);
+        const result = fn(parsed);
+        output.value = result;
+        status.textContent = 'Valid JSON';
+        status.className = 'mono text-xs text-teal-300 font-semibold';
+        updateStats(result, parsed);
+      } catch (err) {
+        output.value = '';
+        status.textContent = `Invalid JSON — ${err.message}`;
+        status.className = 'mono text-xs error';
+        statsEl.classList.add('hidden');
+      }
+    }
+
+    // Sort JSON Keys Recursively
+    function sortObjectKeys(obj) {
+      if (Array.isArray(obj)) {
+        return obj.map(sortObjectKeys);
+      } else if (typeof obj === 'object' && obj !== null) {
+        return Object.keys(obj)
+          .sort()
+          .reduce((acc, key) => {
+            acc[key] = sortObjectKeys(obj[key]);
+            return acc;
+          }, {});
+      }
+      return obj;
+    }
+
+    // Auto Repair Single Quotes & Trailing Commas
+    function repairJson(str) {
+      return str
+        .replace(/'/g, '"') // Single quotes to double quotes
+        .replace(/,\s*([\]}])/g, '$1'); // Trailing commas
+    }
+
+    // Convert JSON Array of Objects to CSV
+    function jsonToCsv(json) {
+      const parsed = JSON.parse(json);
+      const arr = Array.isArray(parsed) ? parsed : [parsed];
+      if (arr.length === 0 || typeof arr[0] !== 'object') {
+        throw new Error('JSON must be an array of objects to convert to CSV.');
+      }
+
+      const headers = Array.from(new Set(arr.flatMap(obj => Object.keys(obj))));
+      const csvRows = [];
+      csvRows.push(headers.join(','));
+
+      for (const row of arr) {
+        const values = headers.map(header => {
+          const val = row[header] === undefined ? '' : row[header];
+          const escaped = ('' + val).replace(/"/g, '""');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+      return csvRows.join('\n');
+    }
+
+    // Event Handlers
+    document.getElementById('beautify').addEventListener('click', () => run((p) => JSON.stringify(p, null, getIndentValue())));
+    document.getElementById('minify').addEventListener('click', () => run((p) => JSON.stringify(p)));
+    
+    document.getElementById('sortKeys').addEventListener('click', () => run((p) => {
+      const sorted = sortObjectKeys(p);
+      return JSON.stringify(sorted, null, getIndentValue());
+    }));
+
+    document.getElementById('repair').addEventListener('click', () => {
+      try {
+        const repaired = repairJson(input.value);
+        input.value = repaired;
+        run((p) => JSON.stringify(p, null, getIndentValue()));
+      } catch (e) {
+        status.textContent = 'Auto-Fix failed — Check syntax errors manually.';
+        status.className = 'mono text-xs error';
+      }
+    });
+
+    document.getElementById('toCsv').addEventListener('click', () => {
+      try {
+        const csv = jsonToCsv(input.value);
+        output.value = csv;
+        status.textContent = 'Converted to CSV Successfully!';
+        status.className = 'mono text-xs text-teal-300';
+      } catch (err) {
+        status.textContent = `Conversion Error — ${err.message}`;
+        status.className = 'mono text-xs error';
+      }
+    });
+
+    // File Operations
+    const fileInput = document.getElementById('fileInput');
+    document.getElementById('uploadBtn').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          input.value = evt.target.result;
+          run((p) => JSON.stringify(p, null, getIndentValue()));
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const content = output.value || input.value;
+      if (!content) return;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = output.value.startsWith('"') || output.value.startsWith('{') || output.value.startsWith('[') ? 'formatted.json' : 'export.csv';
+      a.click();
+    });
+
+    // Editor Helpers
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      input.value = '';
+      output.value = '';
+      status.textContent = 'Ready';
+      status.className = 'mono text-xs text-slate-400';
+      statsEl.classList.add('hidden');
+    });
+
+    document.getElementById('pasteBtn').addEventListener('click', async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        input.value = text;
+        run((p) => JSON.stringify(p, null, getIndentValue()));
+      } catch (err) {}
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      if (!output.value) return;
+      navigator.clipboard.writeText(output.value).then(() => {
+        copiedNotice.classList.remove('hidden');
+        setTimeout(() => copiedNotice.classList.add('hidden'), 2000);
+      });
+    });
+
+    // Live Validation on Type
+    input.addEventListener('input', () => run((p) => JSON.stringify(p, null, getIndentValue())));
+    indentSelect.addEventListener('change', () => run((p) => JSON.stringify(p, null, getIndentValue())));
+  </script>
+</body>
+</html>

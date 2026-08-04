@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Counter & Text Analyzer — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  textarea, input, select { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color: #e7eef4;
+  }
+  textarea:focus, input:focus, select:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-4xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Word Counter & Text Analyzer</h1>
+    <p class="text-sm text-slate-400 mb-6">Real-time statistics, readability index, target tracking, and keyword density.</p>
+
+    <!-- Toolbar: Quick Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div class="flex flex-wrap gap-1.5">
+        <button type="button" onclick="cleanExtraSpaces()" class="secondary mono text-[11px] uppercase px-2.5 py-1 rounded">Clean Extra Spaces</button>
+      </div>
+
+      <div class="flex gap-2">
+        <button type="button" id="copyBtn" onclick="copyText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded">Copy</button>
+        <button type="button" onclick="downloadText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded">Download .txt</button>
+        <button type="button" onclick="clearText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded text-rose-400 border-rose-400/30 hover:border-rose-400 hover:text-rose-300">Clear</button>
+      </div>
+    </div>
+
+    <!-- Text Input -->
+    <textarea id="input" rows="9" class="w-full rounded-md p-4 text-sm resize-y leading-relaxed mb-4" placeholder="Paste or type text here…"></textarea>
+
+    <!-- Goal / Target Tracker -->
+    <div class="mb-6 rounded-md border border-white/10 p-4 bg-[#14283b]/40">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-2">
+          <span class="mono text-xs uppercase tracking-wide text-slate-400">Target Goal:</span>
+          <input id="goalCount" type="number" value="500" min="1" class="w-20 rounded p-1 text-xs mono text-center" />
+          <select id="goalType" class="rounded p-1 text-xs mono">
+            <option value="words" selected>Words</option>
+            <option value="chars">Characters</option>
+          </select>
+        </div>
+        <div id="goalProgressText" class="mono text-xs text-teal-300">0 / 500 (0%)</div>
+      </div>
+      <div class="w-full h-1.5 bg-[#14283b] rounded-full overflow-hidden border border-white/10">
+        <div id="goalBar" class="h-full bg-[#6fd8cb] transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Main Statistics Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Words</div>
+        <div id="words" class="display text-2xl font-semibold mt-1">0</div>
+      </div>
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Characters</div>
+        <div id="chars" class="display text-2xl font-semibold mt-1">0</div>
+        <div id="charsNoSpace" class="mono text-[10px] text-slate-500 mt-0.5">0 no spaces</div>
+      </div>
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Sentences</div>
+        <div id="sentences" class="display text-2xl font-semibold mt-1">0</div>
+      </div>
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Paragraphs</div>
+        <div id="paragraphs" class="display text-2xl font-semibold mt-1">0</div>
+      </div>
+
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Reading Time</div>
+        <div id="readtime" class="display text-xl font-semibold mt-1 text-teal-300">0 min</div>
+        <div class="mono text-[10px] text-slate-500 mt-0.5">200 wpm avg</div>
+      </div>
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
+        <div class="mono text-xs text-slate-400 uppercase">Speaking Time</div>
+        <div id="speaktime" class="display text-xl font-semibold mt-1 text-teal-300">0 min</div>
+        <div class="mono text-[10px] text-slate-500 mt-0.5">130 wpm avg</div>
+      </div>
+      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30 col-span-2">
+        <div class="mono text-xs text-slate-400 uppercase">Readability Index</div>
+        <div id="readability" class="display text-xl font-semibold mt-1">—</div>
+        <div id="readabilityScore" class="mono text-[10px] text-slate-500 mt-0.5">Flesch Reading Ease Score</div>
+      </div>
+    </div>
+
+    <!-- Keyword Frequency / Density Section -->
+    <div class="rounded-md border border-white/10 p-5 bg-[#14283b]/30">
+      <h3 class="mono text-xs uppercase tracking-wider text-slate-400 mb-3">Top Repeated Words</h3>
+      <div id="densityList" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mono">
+        <span class="text-slate-500 italic col-span-full">Type or paste text above to see keyword density…</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const wordsEl = document.getElementById('words');
+    const charsEl = document.getElementById('chars');
+    const charsNoSpaceEl = document.getElementById('charsNoSpace');
+    const sentencesEl = document.getElementById('sentences');
+    const paragraphsEl = document.getElementById('paragraphs');
+    const readtimeEl = document.getElementById('readtime');
+    const speaktimeEl = document.getElementById('speaktime');
+    const readabilityEl = document.getElementById('readability');
+    const readabilityScoreEl = document.getElementById('readabilityScore');
+    const densityList = document.getElementById('densityList');
+
+    const goalCount = document.getElementById('goalCount');
+    const goalType = document.getElementById('goalType');
+    const goalProgressText = document.getElementById('goalProgressText');
+    const goalBar = document.getElementById('goalBar');
+
+    const stopWords = new Set(['the','be','to','of','and','a','in','that','have','i','it','for','not','on','with','he','as','you','do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their','what','so','up','out','if','about','who','get','which','go','me']);
+
+    function countSyllables(word) {
+      word = word.toLowerCase();
+      if (word.length <= 3) return 1;
+      word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+      word = word.replace(/^y/, '');
+      const match = word.match(/[aeiouy]{1,2}/g);
+      return match ? match.length : 1;
+    }
+
+    function update() {
+      const text = input.value;
+      const rawWords = text.trim().match(/\b[^\s]+\b/g) || [];
+      const wordCount = rawWords.length;
+      const charCount = text.length;
+      const charNoSpaceCount = text.replace(/\s/g, '').length;
+      const sentenceCount = (text.match(/[.!?]+(\s|$)/g) || []).length || (wordCount > 0 ? 1 : 0);
+      const paragraphCount = text.split(/\n+/).filter(p => p.trim().length > 0).length;
+
+      // Stats
+      wordsEl.textContent = wordCount.toLocaleString();
+      charsEl.textContent = charCount.toLocaleString();
+      charsNoSpaceEl.textContent = `${charNoSpaceCount.toLocaleString()} no spaces`;
+      sentencesEl.textContent = sentenceCount.toLocaleString();
+      paragraphsEl.textContent = paragraphCount.toLocaleString();
+
+      // Read & Speak Times
+      const readMinutes = Math.ceil(wordCount / 200);
+      const speakMinutes = Math.ceil(wordCount / 130);
+      readtimeEl.textContent = wordCount === 0 ? '0 min' : `${readMinutes} min`;
+      speaktimeEl.textContent = wordCount === 0 ? '0 min' : `${speakMinutes} min`;
+
+      // Readability Calculation (Flesch Reading Ease)
+      if (wordCount > 5 && sentenceCount > 0) {
+        let totalSyllables = 0;
+        rawWords.forEach(w => totalSyllables += countSyllables(w));
+        const score = 206.835 - (1.015 * (wordCount / sentenceCount)) - (84.6 * (totalSyllables / wordCount));
+        const rounded = Math.min(100, Math.max(0, Math.round(score)));
+        
+        let label = 'Plain English';
+        if (rounded >= 80) label = 'Very Easy';
+        else if (rounded >= 70) label = 'Easy';
+        else if (rounded >= 60) label = 'Standard';
+        else if (rounded >= 50) label = 'Fairly Difficult';
+        else if (rounded >= 30) label = 'Difficult';
+        else label = 'Very Confusing';
+
+        readabilityEl.textContent = label;
+        readabilityScoreEl.textContent = `Score: ${rounded}/100`;
+      } else {
+        readabilityEl.textContent = '—';
+        readabilityScoreEl.textContent = 'Flesch Reading Ease Score';
+      }
+
+      // Target Progress Bar
+      const targetVal = parseInt(goalCount.value, 10) || 1;
+      const currentVal = goalType.value === 'words' ? wordCount : charCount;
+      const percent = Math.min(100, Math.round((currentVal / targetVal) * 100));
+      goalProgressText.textContent = `${currentVal.toLocaleString()} / ${targetVal.toLocaleString()} (${percent}%)`;
+      goalBar.style.width = `${percent}%`;
+
+      // Density calculation
+      if (wordCount === 0) {
+        densityList.innerHTML = '<span class="text-slate-500 italic col-span-full">Type or paste text above to see keyword density…</span>';
+      } else {
+        const freq = {};
+        rawWords.forEach(w => {
+          const clean = w.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (clean && !stopWords.has(clean) && clean.length > 2) {
+            freq[clean] = (freq[clean] || 0) + 1;
+          }
+        });
+
+        const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]).slice(0, 8);
+
+        if (sorted.length === 0) {
+          densityList.innerHTML = '<span class="text-slate-500 italic col-span-full">No key terms identified yet.</span>';
+        } else {
+          densityList.innerHTML = sorted.map(([word, count]) => {
+            const pct = ((count / wordCount) * 100).toFixed(1);
+            return `<div class="bg-[#14283b] p-2 rounded border border-white/5 flex justify-between items-center">
+              <span class="text-teal-300 truncate pr-1">${word}</span>
+              <span class="text-slate-400 text-[10px]">${count} (${pct}%)</span>
+            </div>`;
+          }).join('');
+        }
+      }
+    }
+
+    // Quick Action
+    function cleanExtraSpaces() {
+      input.value = input.value.replace(/\s+/g, ' ').trim();
+      update();
+    }
+
+    // Clipboard & Actions
+    async function copyText() {
+      const copyBtn = document.getElementById('copyBtn');
+      await navigator.clipboard.writeText(input.value);
+      copyBtn.innerText = 'Copied!';
+      setTimeout(() => copyBtn.innerText = 'Copy', 2000);
+    }
+
+    function clearText() {
+      input.value = '';
+      update();
+    }
+
+    function downloadText() {
+      const blob = new Blob([input.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'analyzed-text.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Event Listeners
+    input.addEventListener('input', update);
+    goalCount.addEventListener('input', update);
+    goalType.addEventListener('change', update);
+
+    update();
+  </script>
+</body>
+</html>

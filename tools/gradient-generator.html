@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gradient Generator — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input[type="color"] { background:none; border:1px solid rgba(143,176,204,.16); border-radius:6px; height:38px; width:48px; cursor:pointer; }
+  select, input[type="range"], input[type="number"] { accent-color:#6fd8cb; }
+  select, input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input[type="number"]:focus { outline:none; border-color:#6fd8cb; }
+  code { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-3xl px-6 py-10">
+    <!-- Navigation & Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Gradient Generator</h1>
+    <p class="text-sm text-slate-400 mb-6">Build linear, radial, or conic CSS gradients visually, adjust stops, and export standard CSS or Tailwind classes.</p>
+
+    <!-- Top Action Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-[#14283b]/40 p-4 rounded-md border border-white/10">
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="mono text-xs text-slate-400 uppercase">Type</label>
+        <select id="type" class="mono text-xs p-2 rounded-md">
+          <option value="linear" selected>Linear</option>
+          <option value="radial">Radial</option>
+          <option value="conic">Conic</option>
+        </select>
+        <button id="randomize" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">🎲 Randomize</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="toggleDownloadPanel" class="primary mono text-xs uppercase px-4 py-2 rounded-md flex items-center gap-1.5">
+          <span>↓</span>
+          <span>Download</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Download Options Panel (Hidden by Default) -->
+    <div id="downloadPanel" class="hidden bg-[#14283b]/60 border border-teal-500/30 p-5 rounded-md mb-6 shadow-xl transition-all">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="mono text-xs uppercase font-bold text-teal-300 tracking-wider">Export Image Options</h3>
+        <button id="closeDownloadPanel" class="text-slate-400 hover:text-white text-xs mono uppercase">&times; Close</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <!-- Aspect Ratio Selector -->
+        <div>
+          <label class="mono text-xs text-slate-400 uppercase block mb-1">Aspect Ratio</label>
+          <select id="ratioSelect" class="mono text-xs p-2 rounded-md w-full">
+            <option value="16:9" selected>16:9 Landscape (1920x1080)</option>
+            <option value="1:1">1:1 Square (1080x1080)</option>
+            <option value="9:16">9:16 Portrait/Story (1080x1920)</option>
+            <option value="4:3">4:3 Standard (1600x1200)</option>
+            <option value="custom">Custom Dimensions</option>
+          </select>
+        </div>
+
+        <!-- Format Selector -->
+        <div>
+          <label class="mono text-xs text-slate-400 uppercase block mb-1">File Format</label>
+          <select id="formatSelect" class="mono text-xs p-2 rounded-md w-full">
+            <option value="png" selected>PNG (.png)</option>
+            <option value="jpeg">JPEG (.jpg)</option>
+            <option value="webp">WebP (.webp)</option>
+          </select>
+        </div>
+
+        <!-- Download Action -->
+        <div class="flex items-end">
+          <button id="triggerDownload" class="primary w-full mono text-xs uppercase px-4 py-2 rounded-md font-bold transition-all h-[38px]">
+            Export Image
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom Size Inputs -->
+      <div id="customSizeRow" class="hidden grid grid-cols-2 gap-4 pt-3 border-t border-white/5">
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Width (px)</label>
+          <input id="customWidth" type="number" value="1920" min="100" max="8000" class="mono text-xs p-2 rounded-md w-full" />
+        </div>
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Height (px)</label>
+          <input id="customHeight" type="number" value="1080" min="100" max="8000" class="mono text-xs p-2 rounded-md w-full" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Gradient Live Preview Block -->
+    <div id="preview" class="h-48 rounded-md border border-white/10 mb-6 transition-all shadow-lg flex items-end justify-end p-3">
+      <span class="mono text-[10px] uppercase bg-black/50 backdrop-blur-md text-slate-300 px-2 py-1 rounded border border-white/10">Live Canvas</span>
+    </div>
+
+    <!-- Controls Box -->
+    <div class="bg-[#14283b]/30 p-5 rounded-md border border-white/10 mb-6 flex flex-col gap-5">
+      
+      <!-- Angle / Position Control -->
+      <div id="angleGroup" class="flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <label class="mono text-xs text-slate-400 uppercase">Angle / Direction: <span id="angleVal" class="text-teal-300 font-bold">90</span>&deg;</label>
+          <div class="flex gap-1">
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="0">0°</button>
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="45">45°</button>
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="90">90°</button>
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="135">135°</button>
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="180">180°</button>
+            <button class="angle-preset secondary mono text-[10px] px-2 py-0.5 rounded" data-angle="270">270°</button>
+          </div>
+        </div>
+        <input id="angle" type="range" min="0" max="360" value="90" class="w-full h-1.5 bg-[#17304a] rounded-lg appearance-none cursor-pointer" />
+      </div>
+
+      <!-- Color Stops List -->
+      <div class="flex flex-col gap-3">
+        <div class="flex justify-between items-center">
+          <label class="mono text-xs text-slate-400 uppercase">Color Stops</label>
+          <button id="addStop" class="secondary mono text-xs uppercase px-2.5 py-1 rounded-md text-teal-300">+ Add Stop</button>
+        </div>
+        
+        <div id="stopsContainer" class="flex flex-col gap-2.5"></div>
+      </div>
+
+      <!-- Quick Presets -->
+      <div class="flex flex-col gap-2 pt-2 border-t border-white/5">
+        <label class="mono text-xs text-slate-400 uppercase">Curated Presets</label>
+        <div class="flex flex-wrap gap-2" id="presets"></div>
+      </div>
+
+    </div>
+
+    <!-- Output Code Section -->
+    <div class="flex flex-col gap-2">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2">
+          <button id="modeCss" class="mono text-xs uppercase px-3 py-1 rounded bg-[#17304a] text-teal-300 border border-teal-400/40">CSS Standard</button>
+          <button id="modeTailwind" class="mono text-xs uppercase px-3 py-1 rounded bg-[#14283b] text-slate-400 border border-white/5 hover:text-slate-200">Tailwind CSS</button>
+        </div>
+        <span id="copied" class="mono text-xs text-teal-300 h-4"></span>
+      </div>
+
+      <code id="output" class="block mono text-xs p-4 rounded-md break-all leading-relaxed text-slate-200"></code>
+      
+      <div class="flex justify-end mt-2">
+        <button id="copy" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md font-semibold transition-all">Copy Code</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const preview = document.getElementById('preview');
+    const output = document.getElementById('output');
+    const angle = document.getElementById('angle');
+    const angleVal = document.getElementById('angleVal');
+    const typeSelect = document.getElementById('type');
+    const stopsContainer = document.getElementById('stopsContainer');
+    const copiedEl = document.getElementById('copied');
+    const modeCssBtn = document.getElementById('modeCss');
+    const modeTailwindBtn = document.getElementById('modeTailwind');
+
+    // Download Panel Elements
+    const toggleDownloadPanelBtn = document.getElementById('toggleDownloadPanel');
+    const downloadPanel = document.getElementById('downloadPanel');
+    const closeDownloadPanelBtn = document.getElementById('closeDownloadPanel');
+    const ratioSelect = document.getElementById('ratioSelect');
+    const formatSelect = document.getElementById('formatSelect');
+    const customSizeRow = document.getElementById('customSizeRow');
+    const customWidth = document.getElementById('customWidth');
+    const customHeight = document.getElementById('customHeight');
+    const triggerDownloadBtn = document.getElementById('triggerDownload');
+
+    let isTailwindMode = false;
+
+    // State for color stops
+    let stops = [
+      { color: '#6fd8cb', position: 0 },
+      { color: '#e8a33d', position: 100 }
+    ];
+
+    const presetsList = [
+      { name: 'Sunset Neon', type: 'linear', angle: 90, stops: [{ color: '#ff7e5f', position: 0 }, { color: '#feb47b', position: 100 }] },
+      { name: 'Aurora', type: 'linear', angle: 135, stops: [{ color: '#00c6ff', position: 0 }, { color: '#0072ff', position: 100 }] },
+      { name: 'Cyberpunk', type: 'linear', angle: 45, stops: [{ color: '#f806cc', position: 0 }, { color: '#a91079', position: 50 }, { color: '#570a57', position: 100 }] },
+      { name: 'Emerald Slate', type: 'linear', angle: 90, stops: [{ color: '#0f2027', position: 0 }, { color: '#203a43', position: 50 }, { color: '#2c5364', position: 100 }] },
+      { name: 'Synthwave', type: 'radial', angle: 90, stops: [{ color: '#ffe53b', position: 0 }, { color: '#ff2525', position: 100 }] },
+      { name: 'Deep Space', type: 'conic', angle: 0, stops: [{ color: '#000000', position: 0 }, { color: '#434343', position: 50 }, { color: '#000000', position: 100 }] }
+    ];
+
+    function renderStopsUI() {
+      stopsContainer.innerHTML = '';
+      stops.sort((a, b) => a.position - b.position);
+
+      stops.forEach((stop, index) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 bg-[#14283b] p-2.5 rounded-md border border-white/5';
+        
+        row.innerHTML = `
+          <input type="color" value="${stop.color}" class="color-picker" data-index="${index}" />
+          <span class="mono text-xs uppercase text-slate-300 w-16">${stop.color}</span>
+          <input type="range" min="0" max="100" value="${stop.position}" class="pos-slider flex-grow h-1.5 bg-[#17304a] rounded-lg appearance-none cursor-pointer" data-index="${index}" />
+          <span class="mono text-xs text-slate-400 w-10 text-right">${stop.position}%</span>
+          ${stops.length > 2 ? `<button class="remove-stop mono text-xs text-rose-400 hover:text-rose-300 px-2 py-1" data-index="${index}">&times;</button>` : ''}
+        `;
+
+        stopsContainer.appendChild(row);
+      });
+
+      // Attach Event Listeners
+      document.querySelectorAll('.color-picker').forEach(el => {
+        el.addEventListener('input', (e) => {
+          stops[e.target.dataset.index].color = e.target.value;
+          update();
+        });
+      });
+
+      document.querySelectorAll('.pos-slider').forEach(el => {
+        el.addEventListener('input', (e) => {
+          stops[e.target.dataset.index].position = parseInt(e.target.value);
+          update();
+        });
+      });
+
+      document.querySelectorAll('.remove-stop').forEach(el => {
+        el.addEventListener('click', (e) => {
+          stops.splice(e.target.dataset.index, 1);
+          renderStopsUI();
+          update();
+        });
+      });
+    }
+
+    function generateCssString() {
+      const type = typeSelect.value;
+      const stopStr = stops.map(s => `${s.color} ${s.position}%`).join(', ');
+
+      if (type === 'linear') {
+        return `background: linear-gradient(${angle.value}deg, ${stopStr});`;
+      } else if (type === 'radial') {
+        return `background: radial-gradient(circle at center, ${stopStr});`;
+      } else if (type === 'conic') {
+        return `background: conic-gradient(from ${angle.value}deg at 50% 50%, ${stopStr});`;
+      }
+    }
+
+    function generateTailwindString() {
+      if (typeSelect.value !== 'linear' || stops.length > 3) {
+        return `/* Tailwind CSS natively supports 2-3 stop linear gradients best */\nbg-gradient-to-r from-[${stops[0].color}] to-[${stops[stops.length - 1].color}]`;
+      }
+      const dirMap = { 0: 'to-t', 45: 'to-tr', 90: 'to-r', 135: 'to-br', 180: 'to-b', 270: 'to-l' };
+      const dir = dirMap[angle.value] || 'to-r';
+
+      if (stops.length === 2) {
+        return `bg-gradient-${dir} from-[${stops[0].color}] to-[${stops[1].color}]`;
+      } else if (stops.length === 3) {
+        return `bg-gradient-${dir} from-[${stops[0].color}] via-[${stops[1].color}] to-[${stops[2].color}]`;
+      }
+    }
+
+    function update() {
+      const type = typeSelect.value;
+      const stopStr = stops.map(s => `${s.color} ${s.position}%`).join(', ');
+      
+      let backgroundStyle = '';
+      if (type === 'linear') backgroundStyle = `linear-gradient(${angle.value}deg, ${stopStr})`;
+      if (type === 'radial') backgroundStyle = `radial-gradient(circle at center, ${stopStr})`;
+      if (type === 'conic') backgroundStyle = `conic-gradient(from ${angle.value}deg at 50% 50%, ${stopStr})`;
+
+      preview.style.background = backgroundStyle;
+      angleVal.textContent = angle.value;
+
+      output.textContent = isTailwindMode ? generateTailwindString() : generateCssString();
+    }
+
+    // Download Panel Controls
+    toggleDownloadPanelBtn.addEventListener('click', () => {
+      downloadPanel.classList.toggle('hidden');
+    });
+
+    closeDownloadPanelBtn.addEventListener('click', () => {
+      downloadPanel.classList.add('hidden');
+    });
+
+    ratioSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        customSizeRow.classList.remove('hidden');
+      } else {
+        customSizeRow.classList.add('hidden');
+      }
+    });
+
+    // Execute Image Export
+    triggerDownloadBtn.addEventListener('click', () => {
+      let width = 1920;
+      let height = 1080;
+
+      const ratio = ratioSelect.value;
+      if (ratio === '1:1') { width = 1080; height = 1080; }
+      else if (ratio === '9:16') { width = 1080; height = 1920; }
+      else if (ratio === '4:3') { width = 1600; height = 1200; }
+      else if (ratio === 'custom') {
+        width = parseInt(customWidth.value) || 1920;
+        height = parseInt(customHeight.value) || 1080;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      const type = typeSelect.value;
+      let grad;
+
+      if (type === 'linear') {
+        const rad = (angle.value * Math.PI) / 180;
+        const x1 = canvas.width / 2 - Math.cos(rad) * canvas.width / 2;
+        const y1 = canvas.height / 2 - Math.sin(rad) * canvas.height / 2;
+        const x2 = canvas.width / 2 + Math.cos(rad) * canvas.width / 2;
+        const y2 = canvas.height / 2 + Math.sin(rad) * canvas.height / 2;
+        grad = ctx.createLinearGradient(x1, y1, x2, y2);
+      } else {
+        grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height)/2);
+      }
+
+      stops.forEach(s => grad.addColorStop(s.position / 100, s.color));
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const format = formatSelect.value;
+      const mimeType = format === 'jpeg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
+      const ext = format === 'jpeg' ? 'jpg' : format;
+
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL(mimeType, 0.95);
+      a.download = `gradient-${ratio.replace(':', '-')}.${ext}`;
+      a.click();
+    });
+
+    // Add Stop Button
+    document.getElementById('addStop').addEventListener('click', () => {
+      if (stops.length >= 6) return;
+      const lastPos = stops[stops.length - 1].position;
+      const newPos = Math.min(100, lastPos + 15);
+      const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      stops.push({ color: randomColor, position: newPos });
+      renderStopsUI();
+      update();
+    });
+
+    // Randomize Button
+    document.getElementById('randomize').addEventListener('click', () => {
+      const randomCount = Math.floor(Math.random() * 2) + 2;
+      stops = [];
+      for (let i = 0; i < randomCount; i++) {
+        const hex = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+        const pos = i === 0 ? 0 : i === randomCount - 1 ? 100 : Math.floor(100 / randomCount * i);
+        stops.push({ color: hex, position: pos });
+      }
+      angle.value = Math.floor(Math.random() * 8) * 45;
+      renderStopsUI();
+      update();
+    });
+
+    // Angle Preset Buttons
+    document.querySelectorAll('.angle-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        angle.value = btn.dataset.angle;
+        update();
+      });
+    });
+
+    // Render Presets UI
+    const presetsContainer = document.getElementById('presets');
+    presetsList.forEach(p => {
+      const b = document.createElement('button');
+      b.className = 'secondary mono text-[10px] uppercase px-2.5 py-1 rounded-md transition';
+      b.textContent = p.name;
+      b.addEventListener('click', () => {
+        typeSelect.value = p.type;
+        angle.value = p.angle;
+        stops = JSON.parse(JSON.stringify(p.stops));
+        renderStopsUI();
+        update();
+      });
+      presetsContainer.appendChild(b);
+    });
+
+    // Mode Toggle
+    modeCssBtn.addEventListener('click', () => {
+      isTailwindMode = false;
+      modeCssBtn.className = 'mono text-xs uppercase px-3 py-1 rounded bg-[#17304a] text-teal-300 border border-teal-400/40';
+      modeTailwindBtn.className = 'mono text-xs uppercase px-3 py-1 rounded bg-[#14283b] text-slate-400 border border-white/5 hover:text-slate-200';
+      update();
+    });
+
+    modeTailwindBtn.addEventListener('click', () => {
+      isTailwindMode = true;
+      modeTailwindBtn.className = 'mono text-xs uppercase px-3 py-1 rounded bg-[#17304a] text-teal-300 border border-teal-400/40';
+      modeCssBtn.className = 'mono text-xs uppercase px-3 py-1 rounded bg-[#14283b] text-slate-400 border border-white/5 hover:text-slate-200';
+      update();
+    });
+
+    // Copy to Clipboard
+    document.getElementById('copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(output.textContent).catch(() => {});
+      copiedEl.textContent = 'Copied code to clipboard!';
+      setTimeout(() => (copiedEl.textContent = ''), 2000);
+    });
+
+    // Event Listeners
+    angle.addEventListener('input', update);
+    typeSelect.addEventListener('change', update);
+
+    // Initial Load
+    renderStopsUI();
+    update();
+  </script>
+</body>
+</html>

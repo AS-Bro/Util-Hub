@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QR Code Generator — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input[type="text"], select, textarea { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color: #e7eef4;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    cursor: pointer;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(143,176,204,.3); border-radius: 4px; }
+  
+  /* Custom styled slider track */
+  input[type="range"] {
+    accent-color: #6fd8cb;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-3xl px-6 py-10">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">QR Code Generator</h1>
+    <p class="text-sm text-slate-400 mb-6">Turn links, text, or Wi-Fi credentials into customizable, high-res QR codes.</p>
+
+    <!-- Quick Type Selection -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button type="button" onclick="setPreset('url')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">URL</button>
+      <button type="button" onclick="setPreset('wifi')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Wi-Fi</button>
+      <button type="button" onclick="setPreset('email')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Email</button>
+      <button type="button" onclick="setPreset('text')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Text</button>
+    </div>
+
+    <!-- Data Input -->
+    <div class="mb-6">
+      <textarea id="input" rows="3" placeholder="Enter a link or text…" class="w-full rounded-md p-3 text-sm resize-none">https://example.com</textarea>
+    </div>
+
+    <!-- Customization Options Grid -->
+    <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-md border border-white/10 p-4 bg-[#14283b]/50">
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Size</label>
+        <select id="size" class="w-full rounded-md p-2 text-xs">
+          <option value="200">200 x 200 px</option>
+          <option value="300" selected>300 x 300 px</option>
+          <option value="400">400 x 400 px</option>
+          <option value="500">500 x 500 px</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Format</label>
+        <select id="format" class="w-full rounded-md p-2 text-xs">
+          <option value="png" selected>PNG</option>
+          <option value="svg">SVG</option>
+          <option value="jpg">JPG</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Foreground</label>
+        <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-md border border-white/10">
+          <input id="fgColor" type="color" value="#000000" class="h-6 w-6 rounded bg-transparent" />
+          <span id="fgHex" class="mono text-xs text-slate-300">#000000</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Background</label>
+        <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-md border border-white/10">
+          <input id="bgColor" type="color" value="#ffffff" class="h-6 w-6 rounded bg-transparent" />
+          <span id="bgHex" class="mono text-xs text-slate-300">#FFFFFF</span>
+        </div>
+      </div>
+
+      <!-- Expanded Background Margin / Border Size Slider (0 to 20 modules) -->
+      <div class="col-span-2 sm:col-span-4 border-t border-white/10 pt-3 mt-1">
+        <div class="flex justify-between items-center mb-1.5">
+          <label class="mono text-[11px] uppercase tracking-wide text-slate-400">
+            Background Margin Size <span class="text-faint text-[10px] lowercase">(larger = smaller QR)</span>
+          </label>
+          <span id="marginVal" class="mono text-xs text-teal-300">1 module</span>
+        </div>
+        <input id="margin" type="range" min="10" max="50" value="1" step="1" class="w-full cursor-pointer h-1.5 bg-[#14283b] rounded-lg appearance-none" />
+      </div>
+    </div>
+
+    <!-- Preview & Action Panel -->
+    <div class="flex flex-col items-center gap-4 rounded-md border border-white/10 p-6 bg-[#14283b]/30">
+      <div class="relative flex items-center justify-center p-3 rounded-lg bg-white/5 border border-white/10 min-h-[220px]">
+        <img id="qr" alt="Generated QR code" class="rounded-md transition-opacity duration-200" width="200" height="200" />
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <button id="downloadBtn" type="button" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md transition flex items-center gap-2">
+          Download File
+        </button>
+        <button id="copyBtn" type="button" class="secondary mono text-xs uppercase px-4 py-2.5 rounded-md transition">
+          Copy Image
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const size = document.getElementById('size');
+    const format = document.getElementById('format');
+    const fgColor = document.getElementById('fgColor');
+    const bgColor = document.getElementById('bgColor');
+    const fgHex = document.getElementById('fgHex');
+    const bgHex = document.getElementById('bgHex');
+    const margin = document.getElementById('margin');
+    const marginVal = document.getElementById('marginVal');
+    const qr = document.getElementById('qr');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let currentQrUrl = '';
+
+    function getApiUrl() {
+      const data = encodeURIComponent(input.value.trim() || 'https://example.com');
+      const sz = size.value;
+      const fmt = format.value;
+      const fg = fgColor.value.replace('#', '');
+      const bg = bgColor.value.replace('#', '');
+      const m = margin.value;
+
+      return `https://api.qrserver.com/v1/create-qr-code/?size=${sz}x${sz}&data=${data}&color=${fg}&bgcolor=${bg}&margin=${m}&format=${fmt}`;
+    }
+
+    function update() {
+      fgHex.textContent = fgColor.value.toUpperCase();
+      bgHex.textContent = bgColor.value.toUpperCase();
+      marginVal.textContent = `${margin.value} ${margin.value === '1' ? 'module' : 'modules'}`;
+
+      currentQrUrl = getApiUrl();
+      qr.src = currentQrUrl;
+    }
+
+    // Direct Blob Download implementation to fix cross-origin download issues
+    async function downloadQR() {
+      try {
+        downloadBtn.innerText = 'Downloading...';
+        const response = await fetch(currentQrUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `qr-code.${format.value}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        window.open(currentQrUrl, '_blank');
+      } finally {
+        downloadBtn.innerText = `Download ${format.value.toUpperCase()}`;
+      }
+    }
+
+    // Copy QR Image to Clipboard
+    async function copyQR() {
+      try {
+        const response = await fetch(currentQrUrl);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ [blob.type]: blob })
+        ]);
+        copyBtn.innerText = 'Copied!';
+        setTimeout(() => copyBtn.innerText = 'Copy Image', 2000);
+      } catch (err) {
+        alert('Copying image failed or is not supported by your browser.');
+      }
+    }
+
+    // Input presets helper
+    function setPreset(type) {
+      if (type === 'wifi') {
+        input.value = 'WIFI:S:MyNetwork;T:WPA;P:Password123;;';
+      } else if (type === 'url') {
+        input.value = 'https://example.com';
+      } else if (type === 'email') {
+        input.value = 'mailto:hello@example.com?subject=Hello';
+      } else if (type === 'text') {
+        input.value = 'Utility Hub QR Code Generator';
+      }
+      update();
+    }
+
+    // Listeners
+    input.addEventListener('input', update);
+    size.addEventListener('change', update);
+    format.addEventListener('change', () => {
+      downloadBtn.innerText = `Download ${format.value.toUpperCase()}`;
+      update();
+    });
+    fgColor.addEventListener('input', update);
+    bgColor.addEventListener('input', update);
+    margin.addEventListener('input', update);
+
+    downloadBtn.addEventListener('click', downloadQR);
+    copyBtn.addEventListener('click', copyQR);
+
+    // Initial setup
+    update();
+    downloadBtn.innerText = `Download ${format.value.toUpperCase()}`;
+  </script>
+</body>
+</html>

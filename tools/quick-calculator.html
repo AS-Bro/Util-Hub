@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quick Calculator — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  .key { border:1px solid rgba(143,176,204,.16); background:#14283b/60; transition: all 0.15s ease; }
+  .key:hover { border-color:#6fd8cb; color:#6fd8cb; background:#14283b; }
+  .key:active { transform: scale(0.96); }
+  .key.op { color:#e8a33d; }
+  .key.action { color:#6fd8cb; }
+  .key.memory { color:#a855f7; font-size:11px; }
+  #screen { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-2xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Quick Calculator</h1>
+    <p class="text-sm text-slate-400 mb-6">Scientific calculations, keyboard support, memory store, and computation history.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Calculator Main -->
+      <div class="md:col-span-2">
+        <!-- Display Screen -->
+        <div id="screen" class="rounded-md p-4 mb-4 relative flex flex-col justify-between min-h-[100px]">
+          <div class="flex justify-between items-center mb-1">
+            <span id="memBadge" class="mono text-[10px] uppercase text-purple-400 opacity-0 font-bold">MEM</span>
+            <div id="subDisplay" class="mono text-xs text-slate-400 overflow-x-auto whitespace-nowrap"></div>
+          </div>
+          
+          <div class="flex items-center justify-between gap-2">
+            <div id="mainDisplay" class="mono text-right text-2xl text-teal-300 font-bold break-all flex-1 cursor-pointer" title="Click to copy result">0</div>
+            <button id="backspace" class="text-slate-400 hover:text-teal-300 p-1 mono text-xs" title="Backspace">⌫</button>
+          </div>
+          <span id="copiedToast" class="mono text-[9px] text-teal-300 absolute bottom-1 left-4 hidden">Copied to clipboard!</span>
+        </div>
+
+        <!-- Mode Toggle & Memory Toolbar -->
+        <div class="flex justify-between items-center mb-3">
+          <div class="grid grid-cols-4 gap-1.5 flex-1 mr-2">
+            <button class="key memory rounded py-1" data-k="MC">MC</button>
+            <button class="key memory rounded py-1" data-k="MR">MR</button>
+            <button class="key memory rounded py-1" data-k="M+">M+</button>
+            <button class="key memory rounded py-1" data-k="M-">M-</button>
+          </div>
+          <button id="toggleSci" class="mono text-xs text-slate-400 hover:text-teal-300 border border-white/10 px-2 py-1 rounded">
+            Sci Mode <span id="sciIndicator">▼</span>
+          </button>
+        </div>
+
+        <!-- Scientific Panel (Collapsible) -->
+        <div id="sciPanel" class="grid grid-cols-4 gap-2 mb-2 hidden">
+          <button class="key action mono text-xs rounded-md py-2" data-k="sin">sin</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="cos">cos</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="tan">tan</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="sqrt">√</button>
+
+          <button class="key action mono text-xs rounded-md py-2" data-k="pow">x^y</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="log">ln</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="pi">π</button>
+          <button class="key action mono text-xs rounded-md py-2" data-k="e">e</button>
+        </div>
+
+        <!-- Primary Keypad -->
+        <div class="grid grid-cols-4 gap-2">
+          <button class="key mono text-sm rounded-md py-3 text-rose-400" data-k="C">C</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="(">(</button>
+          <button class="key mono text-sm rounded-md py-3" data-k=")">)</button>
+          <button class="key op mono text-sm rounded-md py-3" data-k="/">÷</button>
+
+          <button class="key mono text-sm rounded-md py-3" data-k="7">7</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="8">8</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="9">9</button>
+          <button class="key op mono text-sm rounded-md py-3" data-k="*">×</button>
+
+          <button class="key mono text-sm rounded-md py-3" data-k="4">4</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="5">5</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="6">6</button>
+          <button class="key op mono text-sm rounded-md py-3" data-k="-">−</button>
+
+          <button class="key mono text-sm rounded-md py-3" data-k="1">1</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="2">2</button>
+          <button class="key mono text-sm rounded-md py-3" data-k="3">3</button>
+          <button class="key op mono text-sm rounded-md py-3" data-k="+">+</button>
+
+          <button class="key mono text-sm rounded-md py-3" data-k="0">0</button>
+          <button class="key mono text-sm rounded-md py-3" data-k=".">.</button>
+          <button class="key action mono text-sm rounded-md py-3" data-k="factorial">n!</button>
+          <button class="key op mono text-sm rounded-md py-3 bg-teal-500/10 border-teal-500/30 text-teal-300" data-k="=">=</button>
+        </div>
+      </div>
+
+      <!-- Calculation History Drawer -->
+      <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-col h-[380px]">
+        <div class="flex justify-between items-center mb-3">
+          <span class="mono text-xs uppercase font-bold text-slate-400">History</span>
+          <button id="clearHistory" class="mono text-[10px] text-slate-500 hover:text-rose-400">Clear</button>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 mono text-xs">
+          <div class="text-slate-500 text-center py-6 text-xs">No recent calculations</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const mainDisplay = document.getElementById('mainDisplay');
+    const subDisplay = document.getElementById('subDisplay');
+    const memBadge = document.getElementById('memBadge');
+    const sciPanel = document.getElementById('sciPanel');
+    const sciIndicator = document.getElementById('sciIndicator');
+    const historyList = document.getElementById('historyList');
+    const copiedToast = document.getElementById('copiedToast');
+
+    let currentInput = '';
+    let memoryVal = 0;
+    let history = [];
+
+    // Toggle Scientific Drawer
+    document.getElementById('toggleSci').addEventListener('click', () => {
+      sciPanel.classList.toggle('hidden');
+      sciIndicator.textContent = sciPanel.classList.contains('hidden') ? '▼' : '▲';
+    });
+
+    // Factorial Helper
+    function factorial(n) {
+      if (n < 0) return NaN;
+      if (n === 0 || n === 1) return 1;
+      let res = 1;
+      for (let i = 2; i <= n; i++) res *= i;
+      return res;
+    }
+
+    // Evaluator
+    function safeEval(input) {
+      let sanitized = input
+        .replace(/π/g, Math.PI)
+        .replace(/e/g, Math.E)
+        .replace(/sin\(/g, 'Math.sin(')
+        .replace(/cos\(/g, 'Math.cos(')
+        .replace(/tan\(/g, 'Math.tan(')
+        .replace(/sqrt\(/g, 'Math.sqrt(')
+        .replace(/ln\(/g, 'Math.log(');
+
+      // Handle factorial
+      sanitized = sanitized.replace(/(\d+)!/g, (_, num) => factorial(parseInt(num, 10)));
+
+      if (!/^[0-9+\-*/().\sMathMath.pienLgsqrttancofia!]+$/.test(sanitized)) {
+        throw new Error('Invalid Expression');
+      }
+
+      return Function(`"use strict"; return (${sanitized})`)();
+    }
+
+    function updateDisplay() {
+      mainDisplay.textContent = currentInput || '0';
+    }
+
+    function addHistory(expr, result) {
+      history.unshift({ expr, result });
+      if (history.length > 20) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-slate-500 text-center py-6 text-xs">No recent calculations</div>`;
+        return;
+      }
+      historyList.innerHTML = history.map((item, idx) => `
+        <div data-idx="${idx}" class="history-item bg-[#14283b] p-2 rounded border border-white/5 hover:border-teal-500/40 cursor-pointer transition-colors">
+          <div class="text-slate-400 text-[10px] break-all">${item.expr}</div>
+          <div class="text-teal-300 font-bold text-sm text-right break-all">= ${item.result}</div>
+        </div>
+      `).join('');
+    }
+
+    historyList.addEventListener('click', (e) => {
+      const item = e.target.closest('.history-item');
+      if (item) {
+        const idx = item.dataset.idx;
+        currentInput = String(history[idx].result);
+        updateDisplay();
+      }
+    });
+
+    document.getElementById('clearHistory').addEventListener('click', () => {
+      history = [];
+      renderHistory();
+    });
+
+    function executeKey(k) {
+      if (k === 'C') {
+        currentInput = '';
+        subDisplay.textContent = '';
+      } else if (k === '=') {
+        if (!currentInput) return;
+        try {
+          const evalResult = safeEval(currentInput);
+          const formatted = Number.isInteger(evalResult) ? evalResult : Number(evalResult.toFixed(8));
+          subDisplay.textContent = `${currentInput} =`;
+          addHistory(currentInput, formatted);
+          currentInput = String(formatted);
+        } catch {
+          mainDisplay.textContent = 'Error';
+          currentInput = '';
+          return;
+        }
+      } else if (k === 'sin' || k === 'cos' || k === 'tan' || k === 'sqrt' || k === 'log') {
+        currentInput += `${k === 'log' ? 'ln' : k}(`;
+      } else if (k === 'pow') {
+        currentInput += '**';
+      } else if (k === 'pi') {
+        currentInput += 'π';
+      } else if (k === 'factorial') {
+        currentInput += '!';
+      } else if (k === 'MC') {
+        memoryVal = 0;
+        memBadge.style.opacity = '0';
+      } else if (k === 'MR') {
+        currentInput += String(memoryVal);
+      } else if (k === 'M+') {
+        try { memoryVal += safeEval(currentInput || '0'); memBadge.style.opacity = '1'; } catch {}
+      } else if (k === 'M-') {
+        try { memoryVal -= safeEval(currentInput || '0'); memBadge.style.opacity = '1'; } catch {}
+      } else {
+        currentInput += k;
+      }
+      updateDisplay();
+    }
+
+    // Keypad Click Handlers
+    document.querySelectorAll('.key').forEach((btn) => {
+      btn.addEventListener('click', () => executeKey(btn.dataset.k));
+    });
+
+    // Backspace Button
+    document.getElementById('backspace').addEventListener('click', () => {
+      currentInput = currentInput.slice(0, -1);
+      updateDisplay();
+    });
+
+    // Copy Result on Click
+    mainDisplay.addEventListener('click', () => {
+      if (!mainDisplay.textContent || mainDisplay.textContent === 'Error') return;
+      navigator.clipboard.writeText(mainDisplay.textContent).then(() => {
+        copiedToast.classList.remove('hidden');
+        setTimeout(() => copiedToast.classList.add('hidden'), 2000);
+      });
+    });
+
+    // Physical Keyboard Listener
+    window.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') executeKey(e.key);
+      else if (['+', '-', '*', '/', '(', ')', '.'].includes(e.key)) executeKey(e.key);
+      else if (e.key === 'Enter') executeKey('=');
+      else if (e.key === 'Backspace') {
+        currentInput = currentInput.slice(0, -1);
+        updateDisplay();
+      } else if (e.key === 'Escape') executeKey('C');
+    });
+  </script>
+</body>
+</html>

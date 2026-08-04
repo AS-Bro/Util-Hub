@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Case Converter — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  textarea { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  textarea:focus { outline:none; border-color:#6fd8cb; }
+  button.mode { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; transition: all 0.15s ease; }
+  button.mode:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-4xl px-6 py-10">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Case Converter & Text Formatter</h1>
+    <p class="text-sm text-slate-400 mb-6">Convert text between standard typography styles, developer variable cases, and custom formats.</p>
+
+    <!-- Utility Action Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div class="flex items-center gap-2">
+        <button type="button" id="undoBtn" onclick="undo()" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded opacity-50 cursor-not-allowed" disabled>Undo</button>
+        <span id="metrics" class="mono text-xs text-slate-400 ml-2">0 words | 0 chars | 0 lines</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="copyBtn" onclick="copyText()" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded">Copy</button>
+        <button type="button" onclick="downloadText()" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded">Download .txt</button>
+        <button type="button" onclick="clearText()" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded text-rose-400 border-rose-400/30 hover:border-rose-400 hover:text-rose-300">Clear</button>
+      </div>
+    </div>
+
+    <!-- Text Area -->
+    <textarea id="input" rows="8" class="w-full rounded-md p-4 text-sm leading-relaxed mb-6" placeholder="Type or paste text here…"></textarea>
+
+    <!-- Standard Text Cases -->
+    <div class="mb-5">
+      <h3 class="mono text-xs uppercase tracking-widest text-slate-400 mb-2.5">Standard Cases</h3>
+      <div class="flex flex-wrap gap-2">
+        <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="upper">UPPERCASE</button>
+        <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="lower">lowercase</button>
+        <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="title">Title Case</button>
+        <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="sentence">Sentence case</button>
+        <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="capitalized">Capitalized Words</button>
+      </div>
+    </div>
+
+    <!-- Developer & Code Cases -->
+    <div class="mb-5">
+      <h3 class="mono text-xs uppercase tracking-widest text-slate-400 mb-2.5">Code & Variable Cases</h3>
+      <div class="flex flex-wrap gap-2">
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="camel">camelCase</button>
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="pascal">PascalCase</button>
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="snake">snake_case</button>
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="kebab">kebab-case</button>
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="constant">CONSTANT_CASE</button>
+        <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="dot">dot.case</button>
+      </div>
+    </div>
+
+    <!-- Fun & Transformations -->
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div>
+        <h3 class="mono text-xs uppercase tracking-widest text-slate-400 mb-2.5">Style & Effects</h3>
+        <div class="flex flex-wrap gap-2">
+          <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="alternating">aLtErNaTiNg cAsE</button>
+          <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="inverse">iNvErSe cAsE</button>
+          <button class="mode mono text-xs px-3 py-2 rounded-md" data-mode="wide">W I D E  S P A C E</button>
+        </div>
+      </div>
+      <div>
+        <h3 class="mono text-xs uppercase tracking-widest text-slate-400 mb-2.5">Clean & Utilities</h3>
+        <div class="flex flex-wrap gap-2">
+          <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="trim">Trim Spaces</button>
+          <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="nonewlines">Remove Newlines</button>
+          <button class="mode mono text-xs uppercase px-3 py-2 rounded-md" data-mode="reverse">Reverse Text</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const undoBtn = document.getElementById('undoBtn');
+    const metrics = document.getElementById('metrics');
+    let previousText = '';
+
+    // Convert string to words array helper
+    function getWords(str) {
+      return str.replace(/[^a-zA-Z0-9\s-_.]/g, '').trim().split(/[\s-_.]+/).filter(Boolean);
+    }
+
+    const converters = {
+      // Standard
+      upper: (t) => t.toUpperCase(),
+      lower: (t) => t.toLowerCase(),
+      title: (t) => {
+        const smallWords = /^(a|an|and|as|at|but|by|for|if|in|nor|of|on|or|so|the|to|up|yet)$/i;
+        return t.toLowerCase().replace(/\b[a-z]+\b/g, (word, index) => {
+          if (index === 0 || !smallWords.test(word)) {
+            return word.charAt(0).toUpperCase() + word.slice(1);
+          }
+          return word;
+        });
+      },
+      sentence: (t) => t.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, (m) => m.toUpperCase()),
+      capitalized: (t) => t.replace(/\b\w/g, (l) => l.toUpperCase()),
+
+      // Code
+      camel: (t) => getWords(t).map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''),
+      pascal: (t) => getWords(t).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''),
+      snake: (t) => getWords(t).map(w => w.toLowerCase()).join('_'),
+      kebab: (t) => getWords(t).map(w => w.toLowerCase()).join('-'),
+      constant: (t) => getWords(t).map(w => w.toUpperCase()).join('_'),
+      dot: (t) => getWords(t).map(w => w.toLowerCase()).join('.'),
+
+      // Special & Effects
+      alternating: (t) => t.split('').map((c, i) => i % 2 === 0 ? c.toLowerCase() : c.toUpperCase()).join(''),
+      inverse: (t) => t.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join(''),
+      wide: (t) => t.split('').join(' '),
+
+      // Cleaners
+      trim: (t) => t.replace(/\s+/g, ' ').trim(),
+      nonewlines: (t) => t.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim(),
+      reverse: (t) => t.split('').reverse().join('')
+    };
+
+    function applyConversion(mode) {
+      if (!input.value) return;
+      previousText = input.value;
+      undoBtn.disabled = false;
+      undoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      if (converters[mode]) {
+        input.value = converters[mode](input.value);
+        updateMetrics();
+      }
+    }
+
+    function undo() {
+      if (previousText) {
+        input.value = previousText;
+        previousText = '';
+        undoBtn.disabled = true;
+        undoBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        updateMetrics();
+      }
+    }
+
+    function updateMetrics() {
+      const text = input.value;
+      const words = (text.trim().match(/\S+/g) || []).length;
+      const chars = text.length;
+      const lines = text ? text.split(/\r\n|\r|\n/).length : 0;
+      metrics.textContent = `${words.toLocaleString()} words | ${chars.toLocaleString()} chars | ${lines.toLocaleString()} lines`;
+    }
+
+    async function copyText() {
+      if (!input.value) return;
+      const copyBtn = document.getElementById('copyBtn');
+      await navigator.clipboard.writeText(input.value);
+      copyBtn.innerText = 'Copied!';
+      setTimeout(() => copyBtn.innerText = 'Copy', 2000);
+    }
+
+    function clearText() {
+      if (!input.value) return;
+      previousText = input.value;
+      undoBtn.disabled = false;
+      undoBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      input.value = '';
+      updateMetrics();
+    }
+
+    function downloadText() {
+      if (!input.value) return;
+      const blob = new Blob([input.value], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'converted-text.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    document.querySelectorAll('.mode').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        applyConversion(btn.dataset.mode);
+      });
+    });
+
+    input.addEventListener('input', updateMetrics);
+    updateMetrics();
+  </script>
+</body>
+</html>

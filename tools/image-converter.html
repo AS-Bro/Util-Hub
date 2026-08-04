@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Image Converter — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
+  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .preview-checkerboard {
+    background-color: #0b1622;
+    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-4xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Image Converter & Resizer</h1>
+    <p class="text-sm text-slate-400 mb-6">Convert, resize, and compress images in batch directly inside your browser.</p>
+
+    <!-- Controls Panel -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-[#14283b]/30 p-5 rounded-md border border-white/10">
+      <!-- Target Format -->
+      <div>
+        <label class="mono text-xs text-slate-400 uppercase block mb-1">Target Format</label>
+        <select id="targetFormat" class="w-full rounded-md p-2.5 text-sm font-medium">
+          <option value="image/png">PNG (.png)</option>
+          <option value="image/jpeg" selected>JPEG (.jpg)</option>
+          <option value="image/webp">WEBP (.webp)</option>
+          <option value="image/bmp">BMP (.bmp)</option>
+        </select>
+      </div>
+
+      <!-- Quality Slider -->
+      <div>
+        <div class="flex justify-between items-center mb-1">
+          <label class="mono text-xs text-slate-400 uppercase">Quality</label>
+          <span id="qualityVal" class="mono text-xs text-teal-300 font-bold">85%</span>
+        </div>
+        <input id="qualitySlider" type="range" min="10" max="100" value="85" class="w-full accent-teal-400 mt-2" />
+      </div>
+
+      <!-- Resize Mode -->
+      <div>
+        <label class="mono text-xs text-slate-400 uppercase block mb-1">Resize Mode</label>
+        <select id="resizeMode" class="w-full rounded-md p-2.5 text-sm font-medium">
+          <option value="none">Original Dimensions</option>
+          <option value="custom">Custom Dimensions (px)</option>
+          <option value="scale">Scale Percentage (%)</option>
+        </select>
+      </div>
+
+      <!-- Dynamic Dimensions Bar -->
+      <div id="dimensionsBar" class="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-white/5 hidden">
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Width (px)</label>
+          <input id="resizeWidth" type="number" placeholder="Auto" class="w-full rounded-md p-2 text-xs mono" />
+        </div>
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Height (px)</label>
+          <input id="resizeHeight" type="number" placeholder="Auto" class="w-full rounded-md p-2 text-xs mono" />
+        </div>
+        <div class="flex items-end pb-1">
+          <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 select-none">
+            <input id="keepAspect" type="checkbox" checked class="accent-teal-400 h-4 w-4" />
+            Keep Aspect Ratio
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drag & Drop Zone -->
+    <div id="dropZone" class="drop-zone rounded-md p-8 text-center bg-[#14283b]/20 cursor-pointer mb-6">
+      <input type="file" id="fileInput" multiple accept="image/*" class="hidden" />
+      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop images here or click to browse</div>
+      <div class="text-xs text-slate-400">Supports PNG, JPG, WEBP, GIF, SVG, BMP</div>
+    </div>
+
+    <!-- Side-by-Side Visual Preview Inspector -->
+    <div id="visualPreviewCard" class="bg-[#14283b]/40 border border-teal-500/30 rounded-md p-5 mb-6 hidden">
+      <div class="flex justify-between items-center mb-3">
+        <span class="mono text-xs uppercase font-bold text-teal-300">Live Visual Comparison</span>
+        <span id="previewFileName" class="mono text-xs text-slate-400 truncate max-w-xs"></span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Original Image Box -->
+        <div class="bg-[#0e1c2b] p-3 rounded border border-white/10 flex flex-col items-center">
+          <span class="mono text-[10px] uppercase text-slate-400 mb-2">Original Image</span>
+          <div class="w-full h-48 preview-checkerboard rounded flex items-center justify-center overflow-hidden p-2">
+            <img id="previewOrigImg" class="max-h-full max-w-full object-contain rounded" />
+          </div>
+          <div id="previewOrigStats" class="mono text-[11px] text-slate-300 mt-2"></div>
+        </div>
+
+        <!-- Converted Image Box -->
+        <div class="bg-[#0e1c2b] p-3 rounded border border-white/10 flex flex-col items-center">
+          <span class="mono text-[10px] uppercase text-teal-300 mb-2">Converted Preview</span>
+          <div class="w-full h-48 preview-checkerboard rounded flex items-center justify-center overflow-hidden p-2">
+            <img id="previewConvImg" class="max-h-full max-w-full object-contain rounded" />
+          </div>
+          <div id="previewConvStats" class="mono text-[11px] text-teal-300 font-bold mt-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions & Stats Bar -->
+    <div id="batchActions" class="flex flex-wrap items-center justify-between gap-4 mb-4 hidden">
+      <div id="batchStats" class="mono text-xs text-slate-400">0 images queued</div>
+      <div class="flex gap-2">
+        <button id="clearAll" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Clear All</button>
+        <button id="downloadZip" class="primary mono text-xs uppercase px-4 py-2 rounded-md">Download ZIP</button>
+      </div>
+    </div>
+
+    <!-- Image List Preview -->
+    <div id="imageList" class="space-y-3"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const imageList = document.getElementById('imageList');
+    const targetFormat = document.getElementById('targetFormat');
+    const qualitySlider = document.getElementById('qualitySlider');
+    const qualityVal = document.getElementById('qualityVal');
+    const resizeMode = document.getElementById('resizeMode');
+    const dimensionsBar = document.getElementById('dimensionsBar');
+    const resizeWidth = document.getElementById('resizeWidth');
+    const resizeHeight = document.getElementById('resizeHeight');
+    const keepAspect = document.getElementById('keepAspect');
+    const batchActions = document.getElementById('batchActions');
+    const batchStats = document.getElementById('batchStats');
+    const downloadZipBtn = document.getElementById('downloadZip');
+    const clearAllBtn = document.getElementById('clearAll');
+
+    // Visual Inspector Elements
+    const visualPreviewCard = document.getElementById('visualPreviewCard');
+    const previewFileName = document.getElementById('previewFileName');
+    const previewOrigImg = document.getElementById('previewOrigImg');
+    const previewConvImg = document.getElementById('previewConvImg');
+    const previewOrigStats = document.getElementById('previewOrigStats');
+    const previewConvStats = document.getElementById('previewConvStats');
+
+    let filesQueue = [];
+    let selectedPreviewId = null;
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    qualitySlider.addEventListener('input', (e) => {
+      qualityVal.textContent = `${e.target.value}%`;
+      processAll();
+    });
+
+    resizeMode.addEventListener('change', () => {
+      dimensionsBar.classList.toggle('hidden', resizeMode.value === 'none');
+      processAll();
+    });
+
+    targetFormat.addEventListener('change', processAll);
+    [resizeWidth, resizeHeight, keepAspect].forEach(el => el.addEventListener('input', processAll));
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+      const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+      validFiles.forEach(file => {
+        const id = Math.random().toString(36).substr(2, 9);
+        const origUrl = URL.createObjectURL(file);
+        filesQueue.push({ id, file, origUrl, convertedBlob: null, convertedUrl: null, convertedName: '', origWidth: 0, origHeight: 0, convWidth: 0, convHeight: 0 });
+      });
+
+      if (!selectedPreviewId && filesQueue.length > 0) {
+        selectedPreviewId = filesQueue[0].id;
+      }
+
+      processAll();
+    }
+
+    async function processImage(item) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          item.origWidth = img.width;
+          item.origHeight = img.height;
+
+          let w = img.width;
+          let h = img.height;
+          const mode = resizeMode.value;
+
+          if (mode === 'custom') {
+            const rw = parseInt(resizeWidth.value);
+            const rh = parseInt(resizeHeight.value);
+            if (rw && rh) { w = rw; h = rh; }
+            else if (rw) { w = rw; h = keepAspect.checked ? Math.round((rw / img.width) * img.height) : img.height; }
+            else if (rh) { h = rh; w = keepAspect.checked ? Math.round((rh / img.height) * img.width) : img.width; }
+          } else if (mode === 'scale') {
+            const scale = parseFloat(resizeWidth.value) || 100;
+            w = Math.round(img.width * (scale / 100));
+            h = Math.round(img.height * (scale / 100));
+          }
+
+          item.convWidth = Math.max(1, w);
+          item.convHeight = Math.max(1, h);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = item.convWidth;
+          canvas.height = item.convHeight;
+          const ctx = canvas.getContext('2d');
+
+          if (targetFormat.value === 'image/jpeg' || targetFormat.value === 'image/bmp') {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
+
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          const mime = targetFormat.value;
+          const quality = parseFloat(qualitySlider.value) / 100;
+
+          canvas.toBlob((blob) => {
+            if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+            item.convertedBlob = blob;
+            item.convertedUrl = URL.createObjectURL(blob);
+            const ext = mime.split('/')[1].replace('jpeg', 'jpg');
+            const baseName = item.file.name.substring(0, item.file.name.lastIndexOf('.')) || item.file.name;
+            item.convertedName = `${baseName}_converted.${ext}`;
+            resolve(item);
+          }, mime, quality);
+        };
+        img.src = item.origUrl;
+      });
+    }
+
+    async function processAll() {
+      if (filesQueue.length === 0) return;
+      await Promise.all(filesQueue.map(item => processImage(item)));
+      renderList();
+      updateVisualPreview();
+    }
+
+    function updateVisualPreview() {
+      const activeItem = filesQueue.find(i => i.id === selectedPreviewId) || filesQueue[0];
+      if (!activeItem) {
+        visualPreviewCard.classList.add('hidden');
+        return;
+      }
+
+      visualPreviewCard.classList.remove('hidden');
+      previewFileName.textContent = activeItem.file.name;
+      previewOrigImg.src = activeItem.origUrl;
+      previewOrigStats.textContent = `${formatBytes(activeItem.file.size)} | ${activeItem.origWidth}×${activeItem.origHeight}px`;
+
+      if (activeItem.convertedUrl) {
+        previewConvImg.src = activeItem.convertedUrl;
+        previewConvStats.textContent = `${formatBytes(activeItem.convertedBlob.size)} | ${activeItem.convWidth}×${activeItem.convHeight}px`;
+      }
+    }
+
+    function renderList() {
+      if (filesQueue.length === 0) {
+        batchActions.classList.add('hidden');
+        visualPreviewCard.classList.add('hidden');
+        imageList.innerHTML = '';
+        selectedPreviewId = null;
+        return;
+      }
+
+      batchActions.classList.remove('hidden');
+      batchStats.textContent = `${filesQueue.length} image(s) queued`;
+
+      imageList.innerHTML = filesQueue.map((item) => {
+        const origSize = formatBytes(item.file.size);
+        const convSize = item.convertedBlob ? formatBytes(item.convertedBlob.size) : 'Processing...';
+        const isSelected = item.id === selectedPreviewId;
+
+        return `
+          <div onclick="selectItem('${item.id}')" class="bg-[#14283b]/40 border ${isSelected ? 'border-teal-400 bg-[#14283b]/80' : 'border-white/10'} rounded-md p-4 flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer transition-all hover:border-teal-400/50">
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <div class="w-12 h-12 bg-[#0e1c2b] rounded border border-white/5 flex items-center justify-center overflow-hidden shrink-0 preview-checkerboard">
+                <img src="${item.origUrl}" class="object-cover w-full h-full" />
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-semibold text-slate-100 truncate max-w-xs">${item.file.name}</div>
+                <div class="mono text-[10px] text-slate-400 mt-0.5">
+                  Orig: ${origSize} (${item.origWidth}×${item.origHeight}px)
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+              <div class="text-right">
+                <div class="mono text-xs text-teal-300 font-bold">${convSize}</div>
+                <div class="mono text-[10px] text-slate-400 uppercase">${targetFormat.value.split('/')[1]}</div>
+              </div>
+
+              <div class="flex gap-2">
+                <button onclick="event.stopPropagation(); downloadSingle('${item.id}')" class="secondary p-2 rounded-md" title="Download">
+                  <svg class="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
+                <button onclick="event.stopPropagation(); removeItem('${item.id}')" class="secondary p-2 rounded-md hover:text-rose-400" title="Remove">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.selectItem = function(id) {
+      selectedPreviewId = id;
+      renderList();
+      updateVisualPreview();
+    };
+
+    window.removeItem = function(id) {
+      const item = filesQueue.find(i => i.id === id);
+      if (item) {
+        if (item.origUrl) URL.revokeObjectURL(item.origUrl);
+        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+      }
+      filesQueue = filesQueue.filter(i => i.id !== id);
+      if (selectedPreviewId === id) {
+        selectedPreviewId = filesQueue.length > 0 ? filesQueue[0].id : null;
+      }
+      renderList();
+      updateVisualPreview();
+    };
+
+    window.downloadSingle = function(id) {
+      const item = filesQueue.find(i => i.id === id);
+      if (!item || !item.convertedBlob) return;
+      const a = document.createElement('a');
+      a.href = item.convertedUrl;
+      a.download = item.convertedName;
+      a.click();
+    };
+
+    downloadZipBtn.addEventListener('click', async () => {
+      if (filesQueue.length === 0) return;
+      const zip = new JSZip();
+      filesQueue.forEach(item => {
+        if (item.convertedBlob) {
+          zip.file(item.convertedName, item.convertedBlob);
+        }
+      });
+      const content = await zip.generateAsync({ type: 'blob' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = `converted-images-${Date.now()}.zip`;
+      a.click();
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      filesQueue.forEach(item => {
+        if (item.origUrl) URL.revokeObjectURL(item.origUrl);
+        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+      });
+      filesQueue = [];
+      selectedPreviewId = null;
+      renderList();
+      updateVisualPreview();
+    });
+  </script>
+</body>
+</html>

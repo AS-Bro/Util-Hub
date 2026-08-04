@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Todo Checklist — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input[type="text"], input[type="date"], select { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  input[type="text"]:focus, input[type="date"]:focus, select:focus { outline:none; border-color:#6fd8cb; }
+  li { border:1px solid rgba(143,176,204,.16); background:#14283b/30; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .done { text-decoration: line-through; opacity: 0.5; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-2xl px-6 py-10">
+    <!-- Navigation & Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Todo Checklist</h1>
+    <p class="text-sm text-slate-400 mb-6">Manage tasks with priorities, due dates, categories, and local autosave.</p>
+
+    <!-- Progress Bar -->
+    <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 mb-6">
+      <div class="flex justify-between items-center mb-2">
+        <span class="mono text-xs text-slate-400 uppercase">Task Completion</span>
+        <span id="statsText" class="mono text-xs text-teal-300 font-bold">0% (0/0)</span>
+      </div>
+      <div class="w-full bg-[#17304a] h-2 rounded-full overflow-hidden">
+        <div id="progressBar" class="bg-teal-400 h-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Task Input Form -->
+    <form id="form" class="flex flex-col gap-3 mb-6 bg-[#14283b]/30 p-4 rounded-md border border-white/10">
+      <div class="flex gap-2">
+        <input id="input" type="text" placeholder="What needs to be done?" class="flex-1 rounded-md p-3 text-sm" />
+        <button type="submit" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md font-semibold">Add Task</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+        <!-- Priority -->
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Priority</label>
+          <select id="priority" class="w-full rounded-md p-2 text-xs mono">
+            <option value="low">Low Priority</option>
+            <option value="medium" selected>Medium Priority</option>
+            <option value="high">High Priority</option>
+          </select>
+        </div>
+
+        <!-- Category -->
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Category</label>
+          <select id="category" class="w-full rounded-md p-2 text-xs mono">
+            <option value="General" selected>General</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Ideas">Ideas</option>
+          </select>
+        </div>
+
+        <!-- Due Date -->
+        <div>
+          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Due Date</label>
+          <input id="dueDate" type="date" class="w-full rounded-md p-2 text-xs mono" />
+        </div>
+      </div>
+    </form>
+
+    <!-- Toolbar: Filters & Search -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <!-- Status Tabs -->
+      <div class="flex gap-1 bg-[#14283b] p-1 rounded-md border border-white/5">
+        <button data-filter="all" class="filter-tab active mono text-xs px-3 py-1 rounded text-teal-300 bg-[#17304a]">All</button>
+        <button data-filter="active" class="filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white">Active</button>
+        <button data-filter="completed" class="filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white">Completed</button>
+      </div>
+
+      <!-- Search Input -->
+      <input id="search" type="text" placeholder="Search tasks..." class="rounded-md px-3 py-1.5 text-xs mono w-full sm:w-48" />
+    </div>
+
+    <!-- Task List -->
+    <ul id="list" class="space-y-2.5 mb-6"></ul>
+
+    <!-- Bottom Actions Toolbar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+      <div class="flex gap-2">
+        <button id="toggleAll" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Mark All Completed</button>
+        <button id="clearCompleted" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md text-rose-400 hover:text-rose-300">Clear Completed</button>
+      </div>
+
+      <div class="flex gap-2">
+        <input type="file" id="importFile" class="hidden" accept=".json" />
+        <button id="importBtn" class="secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Import</button>
+        <button id="exportBtn" class="secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Export</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'utilityhub-tool:todo-checklist';
+    const list = document.getElementById('list');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const prioritySelect = document.getElementById('priority');
+    const categorySelect = document.getElementById('category');
+    const dueDateInput = document.getElementById('dueDate');
+    const searchInput = document.getElementById('search');
+    const progressBar = document.getElementById('progressBar');
+    const statsText = document.getElementById('statsText');
+
+    let currentFilter = 'all';
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
+    }
+    function save(items) { localStorage.setItem(KEY, JSON.stringify(items)); }
+
+    function getPriorityBadge(priority) {
+      if (priority === 'high') return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">High</span>';
+      if (priority === 'medium') return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Med</span>';
+      return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-500/20 text-slate-300 border border-slate-500/30">Low</span>';
+    }
+
+    function render() {
+      const items = load();
+      const searchQuery = searchInput.value.toLowerCase().trim();
+
+      // Stats calculation
+      const total = items.length;
+      const completedCount = items.filter(i => i.done).length;
+      const pct = total === 0 ? 0 : Math.round((completedCount / total) * 100);
+      progressBar.style.width = `${pct}%`;
+      statsText.textContent = `${pct}% (${completedCount}/${total})`;
+
+      // Filter logic
+      const filtered = items.filter((item) => {
+        const matchesFilter = 
+          currentFilter === 'all' || 
+          (currentFilter === 'active' && !item.done) || 
+          (currentFilter === 'completed' && item.done);
+        
+        const matchesSearch = item.text.toLowerCase().includes(searchQuery) || 
+                              (item.category && item.category.toLowerCase().includes(searchQuery));
+        
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<li class="border-dashed text-center text-sm text-slate-500 p-8 rounded-md bg-[#14283b]/10">No tasks found.</li>`;
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      list.innerHTML = filtered.map((item) => {
+        const actualIndex = items.indexOf(item);
+        const isOverdue = item.dueDate && item.dueDate < todayStr && !item.done;
+
+        return `
+          <li class="flex items-center gap-3 rounded-md p-3.5 transition-all">
+            <input type="checkbox" data-i="${actualIndex}" class="check h-4 w-4 accent-teal-400 cursor-pointer" ${item.done ? 'checked' : ''} />
+            
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-0.5">
+                <span data-i="${actualIndex}" class="task-text text-sm cursor-pointer ${item.done ? 'done' : 'text-slate-100'} break-words">${item.text.replace(/</g, '&lt;')}</span>
+              </div>
+              
+              <div class="flex flex-wrap items-center gap-2 mt-1">
+                ${getPriorityBadge(item.priority)}
+                <span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20">${item.category || 'General'}</span>
+                ${item.dueDate ? `
+                  <span class="mono text-[10px] ${isOverdue ? 'text-rose-400 font-bold' : 'text-slate-400'}">
+                    📅 ${item.dueDate} ${isOverdue ? '(Overdue)' : ''}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+
+            <button data-i="${actualIndex}" class="remove text-slate-400 hover:text-rose-400 mono text-xs p-1" title="Delete Task">✕</button>
+          </li>
+        `;
+      }).join('');
+    }
+
+    // Add Task
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+
+      const items = load();
+      items.push({
+        text,
+        done: false,
+        priority: prioritySelect.value,
+        category: categorySelect.value,
+        dueDate: dueDateInput.value || null,
+        createdAt: new Date().toISOString()
+      });
+
+      save(items);
+      input.value = '';
+      dueDateInput.value = '';
+      render();
+    });
+
+    // List Actions
+    list.addEventListener('click', (e) => {
+      const check = e.target.closest('.check');
+      const remove = e.target.closest('.remove');
+      const items = load();
+
+      if (check) {
+        items[check.dataset.i].done = check.checked;
+        save(items);
+        render();
+      }
+
+      if (remove) {
+        items.splice(remove.dataset.i, 1);
+        save(items);
+        render();
+      }
+    });
+
+    // Filter Tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        document.querySelectorAll('.filter-tab').forEach(t => {
+          t.className = 'filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white';
+        });
+        e.target.className = 'filter-tab active mono text-xs px-3 py-1 rounded text-teal-300 bg-[#17304a]';
+        currentFilter = e.target.dataset.filter;
+        render();
+      });
+    });
+
+    // Search
+    searchInput.addEventListener('input', render);
+
+    // Bulk Actions
+    document.getElementById('toggleAll').addEventListener('click', () => {
+      const items = load();
+      const allDone = items.every(i => i.done);
+      items.forEach(i => i.done = !allDone);
+      save(items);
+      render();
+    });
+
+    document.getElementById('clearCompleted').addEventListener('click', () => {
+      const items = load().filter(i => !i.done);
+      save(items);
+      render();
+    });
+
+    // Import & Export
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(load(), null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `todo-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    });
+
+    const importFile = document.getElementById('importFile');
+    document.getElementById('importBtn').addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const imported = JSON.parse(evt.target.result);
+            if (Array.isArray(imported)) {
+              save(imported);
+              render();
+            }
+          } catch (err) {}
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

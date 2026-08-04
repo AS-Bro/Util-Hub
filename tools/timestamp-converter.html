@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Timestamp Converter — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+  input:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-3xl px-6 py-10">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Timestamp Converter</h1>
+    <p class="text-sm text-slate-400 mb-6">Switch between Unix timestamps and human-readable dates and times.</p>
+
+    <div class="mb-6">
+      <label class="mono text-xs text-slate-400 uppercase block mb-1">Unix timestamp (seconds)</label>
+      <input id="unix" type="number" class="w-full rounded-md p-3 text-sm mono" />
+    </div>
+    <div class="mb-6">
+      <label class="mono text-xs text-slate-400 uppercase block mb-1">Date &amp; time (local)</label>
+      <input id="datetime" type="datetime-local" class="w-full rounded-md p-3 text-sm mono" />
+    </div>
+    <button id="now" class="primary mono text-xs uppercase px-4 py-2 rounded-md">Use current time</button>
+  </div>
+
+  <script>
+    const unix = document.getElementById('unix');
+    const datetime = document.getElementById('datetime');
+
+    function toLocalInputValue(date) {
+      const off = date.getTimezoneOffset();
+      return new Date(date.getTime() - off * 60000).toISOString().slice(0, 16);
+    }
+
+    function setFromDate(date) {
+      unix.value = Math.floor(date.getTime() / 1000);
+      datetime.value = toLocalInputValue(date);
+    }
+
+    unix.addEventListener('input', () => {
+      if (!unix.value) return;
+      setFromDate(new Date(Number(unix.value) * 1000));
+    });
+    datetime.addEventListener('input', () => {
+      if (!datetime.value) return;
+      const date = new Date(datetime.value);
+      unix.value = Math.floor(date.getTime() / 1000);
+    });
+    document.getElementById('now').addEventListener('click', () => setFromDate(new Date()));
+
+    setFromDate(new Date());
+  </script>
+</body>
+</html>

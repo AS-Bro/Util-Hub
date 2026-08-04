@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Utility Hub — Everyday tools, one sheet</title>
+<meta name="description" content="A central dashboard for everyday utility tools." />
+
+<!-- Set theme before first paint to avoid a light/dark flash -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('utilityhub:theme');
+      var theme = saved === 'light' || saved === 'dark'
+        ? saved
+        : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.classList.add(theme);
+      document.documentElement.style.colorScheme = theme;
+    } catch (e) {}
+  })();
+</script>
+
+<!-- Fonts: Space Grotesk (display), Inter (body), IBM Plex Mono (utility/data) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<!-- Tailwind CSS (CDN, JIT) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          bg: 'var(--bg)',
+          panel: 'var(--bg-panel)',
+          elevated: 'var(--bg-elevated)',
+          line: 'var(--line)',
+          'line-strong': 'var(--line-strong)',
+          ink: 'var(--text)',
+          muted: 'var(--text-muted)',
+          faint: 'var(--text-faint)',
+          accent: 'var(--accent)',
+          'accent-strong': 'var(--accent-strong)',
+          signal: 'var(--signal)',
+          'signal-strong': 'var(--signal-strong)',
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+        borderRadius: { card: '10px' },
+        boxShadow: {
+          glow: '0 0 0 1px var(--accent), 0 10px 30px -12px var(--accent)',
+        },
+      },
+    },
+  };
+</script>
+
+<!-- Lucide icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+
+<style>
+  /* ------------------------- Design tokens ------------------------- */
+  /* Blueprint / schematic console: a technical-drawing palette rather
+     than a generic dark-mode or cream-and-serif default. Two accents
+     used deliberately — cyan for interaction, amber for signal/favorite
+     states — everything else stays quiet. */
+  html.dark {
+    --bg: #0e1c2b;
+    --bg-panel: #14283b;
+    --bg-elevated: #17304a;
+    --line: rgba(143, 176, 204, 0.16);
+    --line-strong: rgba(143, 176, 204, 0.4);
+    --text: #e7eef4;
+    --text-muted: #93a9bd;
+    --text-faint: #5b7288;
+    --accent: #6fd8cb;
+    --accent-strong: #93e5da;
+    --signal: #e8a33d;
+    --signal-strong: #f2bc6b;
+  }
+  html.light {
+    --bg: #eef2f4;
+    --bg-panel: #ffffff;
+    --bg-elevated: #ffffff;
+    --line: rgba(24, 55, 79, 0.14);
+    --line-strong: rgba(24, 55, 79, 0.32);
+    --text: #142536;
+    --text-muted: #4f6779;
+    --text-faint: #869aab;
+    --accent: #0f8f80;
+    --accent-strong: #0c7267;
+    --signal: #b6741a;
+    --signal-strong: #93590f;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Blueprint grid backdrop — faint, fixed, purely atmospheric */
+  .blueprint-grid {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: 0.6;
+  }
+  html.light .blueprint-grid { opacity: 0.5; }
+
+  /* Signature element: schematic corner brackets on every card */
+  .card-frame { position: relative; }
+  .corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: var(--line-strong);
+    transition: border-color 0.2s ease;
+    pointer-events: none;
+  }
+  .corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; border-color: var(--line-strong); }
+  .corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; border-color: var(--line-strong); }
+  .corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; border-color: var(--line-strong); }
+  .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; border-color: var(--line-strong); }
+  .tool-card:hover .corner,
+  .tool-card:focus-visible .corner { border-color: var(--accent); }
+
+  /* Favorite star fill state */
+  .favorite-btn[data-favorited="true"] .star-icon { fill: var(--signal); stroke: var(--signal); }
+  .favorite-btn[data-favorited="false"] .star-icon { fill: none; }
+
+  /* Focus visibility, kept crisp and on-theme */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Recents strip scroller */
+  #recents-track { scrollbar-width: thin; }
+  #recents-track::-webkit-scrollbar { height: 6px; }
+  #recents-track::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
+
+  /* Modals */
+  .modal-panel {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .modal-backdrop { opacity: 0; transition: opacity 0.15s ease; }
+  .is-open .modal-backdrop { opacity: 1; }
+  .is-open .modal-panel { opacity: 1; transform: translateY(0) scale(1); }
+
+  /* Rocker-style theme switch */
+  .switch-track { background: var(--bg); border: 1px solid var(--line-strong); }
+  .switch-knob { background: var(--accent); transition: transform 0.2s ease; }
+  html.light .switch-knob { transform: translateX(18px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
+</head>
+
+<body class="min-h-screen font-body antialiased">
+  <div class="blueprint-grid" aria-hidden="true"></div>
+
+  <!-- ============================== HEADER ============================== -->
+  <header class="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between gap-4">
+        <!-- Brand, styled like a drawing title block -->
+        <div class="flex items-center gap-3">
+          <div class="flex h-9 w-9 items-center justify-center rounded-md border border-line-strong text-accent">
+            <i data-lucide="layout-grid" class="h-5 w-5" aria-hidden="true"></i>
+          </div>
+          <div class="leading-tight">
+            <h1 class="font-display text-lg font-semibold tracking-tight text-ink">Utility Hub</h1>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-faint">Sheet 01 — Everyday Tools</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Request a Tool -->
+          <button
+            id="request-tool-btn"
+            type="button"
+            class="flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent"
+          >
+            <i data-lucide="plus" class="h-3.5 w-3.5" aria-hidden="true"></i>
+            <span class="hidden sm:inline">Request a Tool</span>
+            <span class="sm:hidden">Request</span>
+          </button>
+
+          <!-- Theme toggle: rocker switch -->
+          <button
+            id="theme-toggle"
+            type="button"
+            role="switch"
+            aria-checked="false"
+            aria-label="Toggle light and dark theme"
+            class="switch-track relative flex h-8 w-[52px] items-center rounded-full px-1"
+          >
+            <span class="switch-knob absolute left-1 flex h-6 w-6 items-center justify-center rounded-full text-bg">
+              <i data-lucide="moon" class="h-3.5 w-3.5 dark:block hidden" aria-hidden="true"></i>
+              <i data-lucide="sun" class="h-3.5 w-3.5 dark:hidden block" aria-hidden="true"></i>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="relative">
+        <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden="true"></i>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search tools by name or purpose…"
+          autocomplete="off"
+          class="w-full rounded-md border border-line bg-panel py-2.5 pl-10 pr-20 text-sm text-ink placeholder:text-faint outline-none transition focus:border-accent"
+        />
+        <button
+          id="clear-search"
+          type="button"
+          class="absolute right-16 top-1/2 hidden -translate-y-1/2 rounded p-1 text-faint hover:text-ink"
+          aria-label="Clear search"
+        >
+          <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+        </button>
+        <kbd class="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-faint">
+          ⌘K
+        </kbd>
+      </div>
+
+      <!-- Category tabs (auto-generated) -->
+      <div id="category-tabs" class="flex flex-wrap gap-2" role="tablist" aria-label="Filter tools by category"></div>
+    </div>
+  </header>
+
+  <!-- ============================== MAIN ============================== -->
+  <main id="browse" class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Recently used -->
+    <section id="recents-section" class="mb-8 hidden">
+      <div class="mb-3 flex items-center gap-2">
+        <i data-lucide="history" class="h-4 w-4 text-faint" aria-hidden="true"></i>
+        <h2 class="font-mono text-xs uppercase tracking-widest text-faint">Recently Accessed</h2>
+      </div>
+      <div id="recents-track" class="flex gap-4 overflow-x-auto pb-2"></div>
+    </section>
+
+    <!-- Favorites -->
+    <section id="favorites-section" class="mb-10 hidden">
+      <div class="mb-3 flex items-center gap-2">
+        <i data-lucide="star" class="h-4 w-4 text-signal" aria-hidden="true"></i>
+        <h2 class="font-mono text-xs uppercase tracking-widest text-faint">Favorites</h2>
+      </div>
+      <div id="favorites-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+    </section>
+
+    <!-- All tools -->
+    <section>
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="font-mono text-xs uppercase tracking-widest text-faint">All Tools</h2>
+        <span id="results-count" class="font-mono text-xs text-faint"></span>
+      </div>
+
+      <div id="tool-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden flex-col items-center justify-center rounded-card border border-dashed border-line py-16 text-center">
+        <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-line-strong text-faint">
+          <i data-lucide="search-x" class="h-6 w-6" aria-hidden="true"></i>
+        </div>
+        <p class="font-display text-base font-semibold text-ink">Nothing on this sheet</p>
+        <p class="mt-1 max-w-xs text-sm text-muted">
+          No tools match your current search or category. Try a different term, or clear your filters.
+        </p>
+        <button
+          id="clear-filters-btn"
+          type="button"
+          class="mt-4 rounded-md border border-line-strong px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent"
+        >
+          Clear filters
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================== FOOTER ============================== -->
+  <footer class="border-t border-line bg-panel">
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div class="mb-6">
+        <h2 class="mb-3 font-mono text-xs uppercase tracking-widest text-faint">Browse by category</h2>
+        <div id="footer-categories" class="flex flex-wrap gap-x-5 gap-y-2"></div>
+      </div>
+
+      <!-- Title-block style footer strip -->
+      <div class="grid grid-cols-2 gap-4 border-t border-line pt-5 font-mono text-[11px] uppercase tracking-wide text-faint sm:grid-cols-4">
+        <div>
+          <div class="text-faint/70">Tools</div>
+          <div class="text-muted" id="footer-tool-count">00</div>
+        </div>
+        <div>
+          <div class="text-faint/70">Rev</div>
+          <div class="text-muted" id="footer-rev-date">—</div>
+        </div>
+        <div>
+          <div class="text-faint/70">Drawn by</div>
+          <div class="text-muted">AS BRO</div>
+        </div>
+        <div>
+          <div class="text-faint/70">© <span id="footer-year"></span></div>
+          <div class="text-muted">Utility Hub</div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================== PREVIEW MODAL ============================== -->
+  <div id="preview-modal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0 bg-black/60" data-backdrop></div>
+    <div class="relative flex h-full items-center justify-center p-4">
+      <div
+        class="modal-panel flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-card border border-line bg-elevated shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="preview-title"
+      >
+        <div class="flex items-center justify-between border-b border-line px-5 py-3">
+          <h3 id="preview-title" class="font-display text-sm font-semibold text-ink" tabindex="-1" data-autofocus>Preview</h3>
+          <div class="flex items-center gap-2">
+            <a
+              id="preview-open-full"
+              href="#"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wide text-muted transition hover:border-accent hover:text-accent"
+            >
+              <i data-lucide="external-link" class="h-3.5 w-3.5" aria-hidden="true"></i>
+              Open full
+            </a>
+            <button id="preview-close" type="button" class="rounded-md p-1.5 text-muted transition hover:text-ink" aria-label="Close preview">
+              <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <iframe id="preview-iframe" title="Tool preview" class="h-full w-full flex-1 bg-white" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== REQUEST A TOOL MODAL ============================== -->
+  <div id="request-modal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0 bg-black/60" data-backdrop></div>
+    <div class="relative flex h-full items-center justify-center p-4">
+      <div
+        class="modal-panel w-full max-w-md rounded-card border border-line bg-elevated p-6 shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="request-title"
+      >
+        <div class="mb-4 flex items-center justify-between">
+          <h3 id="request-title" class="font-display text-base font-semibold text-ink" tabindex="-1" data-autofocus>Request a tool</h3>
+          <button id="request-close" type="button" class="rounded-md p-1.5 text-muted transition hover:text-ink" aria-label="Close">
+            <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <form id="request-form" class="space-y-4">
+          <div>
+            <label for="tool-name" class="mb-1 block font-mono text-[11px] uppercase tracking-wide text-faint">Tool idea</label>
+            <input
+              id="tool-name"
+              name="tool-name"
+              type="text"
+              required
+              placeholder="e.g. CSV to JSON converter"
+              class="w-full rounded-md border border-line bg-panel px-3 py-2 text-sm text-ink placeholder:text-faint outline-none focus:border-accent"
+            />
+          </div>
+          <div>
+            <label for="tool-details" class="mb-1 block font-mono text-[11px] uppercase tracking-wide text-faint">What should it do? (optional)</label>
+            <textarea
+              id="tool-details"
+              name="tool-details"
+              rows="3"
+              placeholder="A sentence or two is plenty."
+              class="w-full resize-none rounded-md border border-line bg-panel px-3 py-2 text-sm text-ink placeholder:text-faint outline-none focus:border-accent"
+            ></textarea>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <button id="request-cancel" type="button" class="rounded-md px-3 py-2 font-mono text-xs uppercase tracking-wide text-muted hover:text-ink">
+              Cancel
+            </button>
+            <button type="submit" class="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-wide text-bg transition hover:bg-accent-strong">
+              <i data-lucide="send" class="h-3.5 w-3.5" aria-hidden="true"></i>
+              Send
+            </button>
+          </div>
+        </form>
+
+        <div id="request-success" class="hidden text-center">
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-accent text-accent">
+            <i data-lucide="check" class="h-6 w-6" aria-hidden="true"></i>
+          </div>
+          <p class="font-display text-sm font-semibold text-ink">Logged. Thanks!</p>
+          <p class="mt-1 text-sm text-muted">
+            Saved locally for now — or
+            <a id="request-mailto-fallback" href="#" class="text-accent underline underline-offset-2">send it as an email</a> instead.
+          </p>
+          <button id="request-cancel-2" type="button" onclick="document.getElementById('request-close').click()" class="mt-4 rounded-md border border-line-strong px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast / live region -->
+  <div
+    id="toast-region"
+    role="status"
+    aria-live="polite"
+    class="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 translate-y-2 rounded-md border border-line-strong bg-elevated px-4 py-2 font-mono text-xs text-ink opacity-0 shadow-lg transition-all"
+  ></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
