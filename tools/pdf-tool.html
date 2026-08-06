@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF Super Studio</title>
+
+<!-- External Libraries -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
+  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  
+  /* Buttons */
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
+  button.primary:hover:not(:disabled) { background:#93e5da; box-shadow: 0 0 15px rgba(111,216,203,0.4); }
+  button.primary:disabled { opacity:0.5; cursor:not-allowed; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
+  
+  button.tab-btn.active { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
+  button.tab-btn:not(.active) { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.tab-btn:not(.active):hover { border-color:#6fd8cb; color:#6fd8cb; }
+
+  /* Highly Visible Download Button Styling */
+  .dl-btn-prominent {
+    background: linear-gradient(135deg, #6fd8cb 0%, #38bdf8 100%);
+    color: #08111a;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    transition: all 0.2s ease;
+  }
+  .dl-btn-prominent:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(111, 216, 203, 0.5);
+    filter: brightness(1.08);
+  }
+  
+  /* Custom styled scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0e1c2b; }
+  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+      <div>
+        <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+        <h1 class="display text-2xl font-bold mt-1">PDF Super Studio</h1>
+        <p class="text-xs text-slate-400">Split, extract, rotate, organize, and convert PDF pages offline inside your browser.</p>
+      </div>
+      <div class="mono text-xs bg-[#14283b] px-3 py-1.5 rounded-full border border-teal-400/20 text-teal-300">
+        🔒 100% Client-Side Privacy
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Upload Panel -->
+      <div id="uploadPanel" class="lg:col-span-12">
+        <div id="dropZone" class="drop-zone rounded-lg p-12 text-center bg-[#14283b]/20 cursor-pointer">
+          <input type="file" id="pdfUploader" accept="application/pdf" class="hidden" />
+          <div class="text-5xl mb-3">📄</div>
+          <div class="mono text-teal-300 text-base font-semibold mb-1">Click or drag PDF document here</div>
+          <div class="text-xs text-slate-400">Supports single PDF files up to 150MB+</div>
+        </div>
+      </div>
+
+      <!-- Studio Workspace Panel -->
+      <div id="studioWorkspace" class="hidden lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Options Column -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <!-- File Overview Info Box -->
+          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 flex items-center justify-between">
+            <div>
+              <div id="fileNameLabel" class="font-semibold text-sm truncate max-w-[200px]">document.pdf</div>
+              <div id="fileMetaLabel" class="mono text-[11px] text-slate-400 mt-0.5">0 MB | 0 Pages</div>
+            </div>
+            <button onclick="resetStudio()" class="secondary text-xs px-3 py-1.5 rounded mono">Change PDF</button>
+          </div>
+
+          <!-- Configuration Card -->
+          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-4">
+            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Tools & Actions</span>
+
+            <!-- Operation Selector Mode Tabs -->
+            <div class="grid grid-cols-4 gap-1.5">
+              <button id="btnTabSplit" onclick="switchMode('split')" class="tab-btn active text-[11px] py-2 rounded mono transition">Split</button>
+              <button id="btnTabExtract" onclick="switchMode('extract')" class="tab-btn text-[11px] py-2 rounded mono transition">Extract</button>
+              <button id="btnTabRotate" onclick="switchMode('rotate')" class="tab-btn text-[11px] py-2 rounded mono transition">Rotate</button>
+              <button id="btnTabConvert" onclick="switchMode('convert')" class="tab-btn text-[11px] py-2 rounded mono transition">Images</button>
+            </div>
+
+            <!-- Global Output Base Filename -->
+            <div>
+              <label class="mono text-xs text-slate-400 block mb-1">Export File Base Name</label>
+              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono" placeholder="document_export" />
+            </div>
+
+            <!-- MODE 1: SPLIT CONTROLS -->
+            <div id="modeSplit" class="space-y-3">
+              <div>
+                <label class="mono text-xs text-slate-400 block mb-1">Split Every N Pages</label>
+                <input type="number" id="splitInterval" min="1" value="5" class="w-full rounded-md p-2 text-xs mono" />
+              </div>
+              <button onclick="processSplit()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+                ✂️ Execute Split PDF
+              </button>
+            </div>
+
+            <!-- MODE 2: EXTRACT CONTROLS -->
+            <div id="modeExtract" class="hidden space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">Start Page</label>
+                  <input type="number" id="extractStart" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                </div>
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">End Page</label>
+                  <input type="number" id="extractEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                </div>
+              </div>
+              <button onclick="processExtract()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+                📄 Extract Page Range
+              </button>
+            </div>
+
+            <!-- MODE 3: ROTATE & MANAGE CONTROLS -->
+            <div id="modeRotate" class="hidden space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">Rotate Degree</label>
+                  <select id="rotateDegree" class="w-full rounded-md p-2 text-xs">
+                    <option value="90">90° Clockwise</option>
+                    <option value="180">180° Flip</option>
+                    <option value="270">270° Counter-Clockwise</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">Apply To</label>
+                  <select id="rotateScope" class="w-full rounded-md p-2 text-xs">
+                    <option value="all">All Pages</option>
+                    <option value="odd">Odd Pages Only</option>
+                    <option value="even">Even Pages Only</option>
+                  </select>
+                </div>
+              </div>
+              <button onclick="processRotate()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+                🔄 Apply Rotation & Save
+              </button>
+            </div>
+
+            <!-- MODE 4: CONVERT CONTROLS -->
+            <div id="modeConvert" class="hidden space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">Image Format</label>
+                  <select id="imageFormat" class="w-full rounded-md p-2 text-xs">
+                    <option value="png" selected>PNG (Lossless)</option>
+                    <option value="jpeg">JPEG (Compressed)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">DPI Resolution</label>
+                  <select id="imageDpi" class="w-full rounded-md p-2 text-xs">
+                    <option value="1.0">1x (Standard)</option>
+                    <option value="2.0" selected>2x (High Quality)</option>
+                    <option value="3.0">3x (Ultra HD)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="mono text-xs text-slate-400 block mb-1">Selection Mode</label>
+                <select id="pngMode" onchange="togglePngInputs()" class="w-full rounded-md p-2 text-xs">
+                  <option value="range" selected>Page Range</option>
+                  <option value="single">Single Page</option>
+                </select>
+              </div>
+
+              <div id="pngSingleGroup" class="hidden">
+                <label class="mono text-xs text-slate-400 block mb-1">Target Page</label>
+                <input type="number" id="pngSinglePage" min="1" value="1" class="w-full rounded-md p-2 text-xs mono" />
+              </div>
+
+              <div id="pngRangeGroup" class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">From Page</label>
+                  <input type="number" id="pngStart" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                </div>
+                <div>
+                  <label class="mono text-xs text-slate-400 block mb-1">To Page</label>
+                  <input type="number" id="pngEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                </div>
+              </div>
+
+              <button id="pngExportBtn" onclick="processPngExport()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+                🖼️ Export Selected Image(s)
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right Preview & Processing Column -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- Status HUD -->
+          <div id="statusHud" class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 hidden space-y-2">
+            <div id="statusText" class="mono text-xs text-teal-300">Processing request...</div>
+            <div class="w-full bg-[#0e1c2b] rounded-full h-2 overflow-hidden border border-white/10">
+              <div id="progressElement" class="bg-teal-300 h-full w-0 transition-all duration-200"></div>
+            </div>
+          </div>
+
+          <!-- Document Pages Visualizer Grid -->
+          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="mono text-xs uppercase text-teal-300 font-bold">Document Page Previews</span>
+              <span id="pagePreviewCounter" class="mono text-xs text-slate-400">Click page thumbnail to inspect</span>
+            </div>
+
+            <!-- Page Thumbnails Container Grid -->
+            <div id="pageGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[340px] overflow-y-auto p-1 bg-[#08111a] rounded-md border border-white/5">
+              <!-- Rendered canvas elements appear here -->
+            </div>
+          </div>
+
+          <!-- Generated Download Files Results List -->
+          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-2">
+            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-1.5">Processed Outputs & Downloads</span>
+            <div id="resultsList" class="space-y-2 max-h-[180px] overflow-y-auto">
+              <div class="mono text-xs text-slate-500 py-3 text-center">No processed files generated yet. Choose an action on the left.</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive Lightbox Modal Preview -->
+  <div id="previewModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#14283b] border border-white/10 rounded-lg max-w-2xl w-full p-5 space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div>
+          <h3 id="modalTitle" class="display font-bold text-base text-teal-300">Page Preview</h3>
+          <span id="modalDimensions" class="mono text-[11px] text-slate-400">Dimensions: Loading...</span>
+        </div>
+        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-white mono text-lg px-2">✕</button>
+      </div>
+
+      <div class="flex justify-center bg-[#08111a] p-3 rounded border border-white/5 max-h-[60vh] overflow-auto">
+        <canvas id="modalCanvas" class="max-w-full height-auto rounded shadow-lg"></canvas>
+      </div>
+
+      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-white/10">
+        <div class="flex gap-2">
+          <button id="modalExtractBtn" class="secondary text-xs px-3 py-1.5 rounded mono">📄 Extract This Page</button>
+          <button id="modalPngBtn" class="secondary text-xs px-3 py-1.5 rounded mono">🖼️ Download PNG</button>
+        </div>
+        <button onclick="closePreviewModal()" class="primary text-xs px-4 py-1.5 rounded mono">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const pdfUploader = document.getElementById('pdfUploader');
+    const dropZone = document.getElementById('dropZone');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const studioWorkspace = document.getElementById('studioWorkspace');
+
+    const fileNameLabel = document.getElementById('fileNameLabel');
+    const fileMetaLabel = document.getElementById('fileMetaLabel');
+
+    const statusHud = document.getElementById('statusHud');
+    const statusText = document.getElementById('statusText');
+    const progressElement = document.getElementById('progressElement');
+
+    const outputFileName = document.getElementById('outputFileName');
+    const splitInterval = document.getElementById('splitInterval');
+    const extractStart = document.getElementById('extractStart');
+    const extractEnd = document.getElementById('extractEnd');
+
+    const pngMode = document.getElementById('pngMode');
+    const pngSinglePage = document.getElementById('pngSinglePage');
+    const pngStart = document.getElementById('pngStart');
+    const pngEnd = document.getElementById('pngEnd');
+    const pngSingleGroup = document.getElementById('pngSingleGroup');
+    const pngRangeGroup = document.getElementById('pngRangeGroup');
+
+    const pageGrid = document.getElementById('pageGrid');
+    const resultsList = document.getElementById('resultsList');
+    const pagePreviewCounter = document.getElementById('pagePreviewCounter');
+
+    // Modal Elements
+    const previewModal = document.getElementById('previewModal');
+    const modalCanvas = document.getElementById('modalCanvas');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDimensions = document.getElementById('modalDimensions');
+    const modalExtractBtn = document.getElementById('modalExtractBtn');
+    const modalPngBtn = document.getElementById('modalPngBtn');
+
+    let originalArrayBuffer = null;
+    let totalPages = 0;
+    let pdfJsDoc = null;
+    let activeMode = 'split';
+    let currentPreviewPageNum = 1;
+
+    // File Drop Zone Listeners
+    dropZone.addEventListener('click', () => pdfUploader.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) loadPdfFile(e.dataTransfer.files[0]);
+    });
+
+    pdfUploader.addEventListener('change', (e) => {
+      if (e.target.files.length) loadPdfFile(e.target.files[0]);
+    });
+
+    function switchMode(mode) {
+      activeMode = mode;
+      ['btnTabSplit', 'btnTabExtract', 'btnTabRotate', 'btnTabConvert'].forEach(id => document.getElementById(id).classList.remove('active'));
+      ['modeSplit', 'modeExtract', 'modeRotate', 'modeConvert'].forEach(id => document.getElementById(id).classList.add('hidden'));
+
+      if (mode === 'split') {
+        document.getElementById('btnTabSplit').classList.add('active');
+        document.getElementById('modeSplit').classList.remove('hidden');
+      } else if (mode === 'extract') {
+        document.getElementById('btnTabExtract').classList.add('active');
+        document.getElementById('modeExtract').classList.remove('hidden');
+      } else if (mode === 'rotate') {
+        document.getElementById('btnTabRotate').classList.add('active');
+        document.getElementById('modeRotate').classList.remove('hidden');
+      } else if (mode === 'convert') {
+        document.getElementById('btnTabConvert').classList.add('active');
+        document.getElementById('modeConvert').classList.remove('hidden');
+      }
+    }
+
+    function togglePngInputs() {
+      const isSingle = pngMode.value === 'single';
+      pngSingleGroup.classList.toggle('hidden', !isSingle);
+      pngRangeGroup.classList.toggle('hidden', isSingle);
+    }
+
+    async function loadPdfFile(file) {
+      if (file.type !== "application/pdf" && !file.name.endsWith('.pdf')) {
+        alert("Please upload a valid PDF document.");
+        return;
+      }
+
+      fileNameLabel.textContent = file.name;
+      const sanitizeName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-z0-9_\-]/gi, '_');
+      outputFileName.value = sanitizeName || "document_export";
+
+      uploadPanel.classList.add('hidden');
+      studioWorkspace.classList.remove('hidden');
+      statusHud.classList.remove('hidden');
+
+      statusText.textContent = "Loading PDF file into memory...";
+      progressElement.style.width = "30%";
+
+      try {
+        originalArrayBuffer = await file.arrayBuffer();
+        
+        // CRITICAL FIX: Pass ArrayBuffer slice to avoid Detached ArrayBuffer errors
+        const pdfDoc = await PDFLib.PDFDocument.load(originalArrayBuffer.slice(0));
+        totalPages = pdfDoc.getPageCount();
+
+        pdfJsDoc = await pdfjsLib.getDocument({ data: new Uint8Array(originalArrayBuffer.slice(0)) }).promise;
+
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileMetaLabel.textContent = `${sizeMB} MB | ${totalPages} Pages`;
+        pagePreviewCounter.textContent = `${totalPages} Pages Loaded (Click page to inspect)`;
+
+        // Configure input constraints
+        [extractStart, extractEnd, pngStart, pngEnd, pngSinglePage].forEach(input => {
+          input.min = "1";
+          input.max = totalPages.toString();
+        });
+
+        extractStart.value = "1";
+        extractEnd.value = totalPages.toString();
+        pngStart.value = "1";
+        pngEnd.value = totalPages.toString();
+        pngSinglePage.value = "1";
+
+        progressElement.style.width = "100%";
+        statusText.textContent = "⚡ PDF Loaded Successfully";
+
+        renderThumbnails();
+        setTimeout(() => statusHud.classList.add('hidden'), 800);
+      } catch (err) {
+        console.error(err);
+        statusText.textContent = "❌ Failed to read PDF file.";
+      }
+    }
+
+    async function renderThumbnails() {
+      pageGrid.innerHTML = "";
+      const renderCount = Math.min(totalPages, 24); // Render thumbnails batch
+
+      for (let i = 1; i <= renderCount; i++) {
+        const page = await pdfJsDoc.getPage(i);
+        const viewport = page.getViewport({ scale: 0.25 });
+
+        const card = document.createElement('div');
+        card.className = "bg-[#14283b] p-2 rounded border border-white/10 flex flex-col items-center justify-between hover:border-[#6fd8cb] cursor-pointer transition transform hover:-translate-y-0.5";
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const label = document.createElement('span');
+        label.className = "mono text-[10px] text-teal-300 mt-1.5 font-semibold";
+        label.textContent = `Page ${i}`;
+
+        card.appendChild(canvas);
+        card.appendChild(label);
+
+        // Click thumbnail to trigger full preview modal
+        card.addEventListener('click', () => {
+          openPreviewModal(i);
+        });
+
+        pageGrid.appendChild(card);
+      }
+    }
+
+    /* MODAL LIGHTBOX PREVIEW */
+    async function openPreviewModal(pageNum) {
+      currentPreviewPageNum = pageNum;
+      modalTitle.textContent = `Preview - Page ${pageNum} of ${totalPages}`;
+      modalDimensions.textContent = "Rendering page...";
+      previewModal.classList.remove('hidden');
+
+      const page = await pdfJsDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.2 });
+
+      modalDimensions.textContent = `Dimensions: ${Math.round(viewport.width)} x ${Math.round(viewport.height)} px`;
+
+      const ctx = modalCanvas.getContext('2d');
+      modalCanvas.height = viewport.height;
+      modalCanvas.width = viewport.width;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      modalExtractBtn.onclick = () => {
+        closePreviewModal();
+        switchMode('extract');
+        extractStart.value = pageNum;
+        extractEnd.value = pageNum;
+        processExtract();
+      };
+
+      modalPngBtn.onclick = async () => {
+        const dataUrl = await renderPageDataUrl(pageNum, 2.0);
+        const blob = await (await fetch(dataUrl)).blob();
+        appendResultRow(`${getBaseName()}_page_${pageNum}.png`, URL.createObjectURL(blob), `High-Res Image`);
+        closePreviewModal();
+      };
+    }
+
+    function closePreviewModal() {
+      previewModal.classList.add('hidden');
+    }
+
+    /* SPLIT PDF FUNCTION */
+    async function processSplit() {
+      const interval = parseInt(splitInterval.value) || 5;
+      showStatus("Splitting PDF into segments...", 30);
+
+      try {
+        // ALWAYS pass cloned buffer slice
+        const srcPdf = await PDFLib.PDFDocument.load(originalArrayBuffer.slice(0));
+        const baseName = getBaseName();
+        let chunkIdx = 1;
+
+        resultsList.innerHTML = "";
+
+        for (let start = 0; start < totalPages; start += interval) {
+          const end = Math.min(start + interval, totalPages);
+          const chunkPdf = await PDFLib.PDFDocument.create();
+
+          const indices = [];
+          for (let i = start; i < end; i++) indices.push(i);
+
+          const pages = await chunkPdf.copyPages(srcPdf, indices);
+          pages.forEach(p => chunkPdf.addPage(p));
+
+          const bytes = await chunkPdf.save();
+          const blob = new Blob([bytes], { type: "application/pdf" });
+          const fileName = `${baseName}_part${chunkIdx}_pg${start + 1}-${end}.pdf`;
+
+          appendResultRow(fileName, URL.createObjectURL(blob), `${end - start} pages`);
+          chunkIdx++;
+        }
+
+        showStatus("⚡ Split completed!", 100);
+      } catch (err) {
+        showStatus("❌ Split failed: " + err.message, 0);
+      }
+    }
+
+    /* EXTRACT RANGE FUNCTION */
+    async function processExtract() {
+      const start = parseInt(extractStart.value);
+      const end = parseInt(extractEnd.value);
+
+      if (start < 1 || end > totalPages || start > end) {
+        alert("Invalid page extract range specified.");
+        return;
+      }
+
+      showStatus("Extracting requested pages...", 40);
+
+      try {
+        // ALWAYS pass cloned buffer slice
+        const srcPdf = await PDFLib.PDFDocument.load(originalArrayBuffer.slice(0));
+        const outPdf = await PDFLib.PDFDocument.create();
+
+        const indices = [];
+        for (let i = start - 1; i < end; i++) indices.push(i);
+
+        const pages = await outPdf.copyPages(srcPdf, indices);
+        pages.forEach(p => outPdf.addPage(p));
+
+        const bytes = await outPdf.save();
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const fileName = `${getBaseName()}_extracted_pg${start}-${end}.pdf`;
+
+        resultsList.innerHTML = "";
+        appendResultRow(fileName, URL.createObjectURL(blob), `${indices.length} pages extracted`);
+        showStatus("⚡ Extraction completed!", 100);
+      } catch (err) {
+        showStatus("❌ Extraction failed: " + err.message, 0);
+      }
+    }
+
+    /* ROTATE PAGES FUNCTION */
+    async function processRotate() {
+      const deg = parseInt(document.getElementById('rotateDegree').value);
+      const scope = document.getElementById('rotateScope').value;
+
+      showStatus("Applying page rotations...", 40);
+
+      try {
+        const srcPdf = await PDFLib.PDFDocument.load(originalArrayBuffer.slice(0));
+        const pages = srcPdf.getPages();
+
+        pages.forEach((page, idx) => {
+          const pageNum = idx + 1;
+          let rotate = false;
+
+          if (scope === 'all') rotate = true;
+          else if (scope === 'odd' && pageNum % 2 !== 0) rotate = true;
+          else if (scope === 'even' && pageNum % 2 === 0) rotate = true;
+
+          if (rotate) {
+            const currentRot = page.getRotation().angle;
+            page.setRotation(PDFLib.degrees((currentRot + deg) % 360));
+          }
+        });
+
+        const bytes = await srcPdf.save();
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const fileName = `${getBaseName()}_rotated_${deg}deg.pdf`;
+
+        resultsList.innerHTML = "";
+        appendResultRow(fileName, URL.createObjectURL(blob), `Rotated Document`);
+        showStatus("⚡ Rotation applied successfully!", 100);
+      } catch (err) {
+        showStatus("❌ Rotation failed: " + err.message, 0);
+      }
+    }
+
+    /* CONVERT TO IMAGE FUNCTION */
+    async function processPngExport() {
+      const mode = pngMode.value;
+      const baseName = getBaseName();
+      const format = document.getElementById('imageFormat').value;
+      const scale = parseFloat(document.getElementById('imageDpi').value) || 2.0;
+
+      if (mode === 'single') {
+        const pageNum = parseInt(pngSinglePage.value);
+        showStatus(`Rendering Page ${pageNum} to ${format.toUpperCase()}...`, 50);
+        
+        const dataUrl = await renderPageDataUrl(pageNum, scale, format);
+        const blob = await (await fetch(dataUrl)).blob();
+        
+        resultsList.innerHTML = "";
+        appendResultRow(`${baseName}_page_${pageNum}.${format}`, URL.createObjectURL(blob), `High-Res Image`);
+        showStatus("⚡ Export finished!", 100);
+      } else {
+        const start = parseInt(pngStart.value);
+        const end = parseInt(pngEnd.value);
+
+        if (start > end) {
+          alert("Start page must be less than or equal to End page.");
+          return;
+        }
+
+        if (start === end) {
+          const dataUrl = await renderPageDataUrl(start, scale, format);
+          const blob = await (await fetch(dataUrl)).blob();
+          resultsList.innerHTML = "";
+          appendResultRow(`${baseName}_page_${start}.${format}`, URL.createObjectURL(blob), `High-Res Image`);
+          showStatus("⚡ Export finished!", 100);
+        } else {
+          showStatus("Rendering pages to images...", 20);
+          const zip = new JSZip();
+
+          for (let i = start; i <= end; i++) {
+            const pct = 20 + Math.floor(((i - start) / (end - start + 1)) * 70);
+            showStatus(`Rendering Page ${i} of ${end}...`, pct);
+
+            const dataUrl = await renderPageDataUrl(i, scale, format);
+            const base64 = dataUrl.replace(/^data:image\/(png|jpeg);base64,/, "");
+            zip.file(`${baseName}_page_${i}.${format}`, base64, { base64: true });
+          }
+
+          showStatus("Packaging ZIP archive...", 95);
+          const zipBlob = await zip.generateAsync({ type: 'blob' });
+          
+          resultsList.innerHTML = "";
+          appendResultRow(`${baseName}_pages_${start}_to_${end}.zip`, URL.createObjectURL(zipBlob), `ZIP Archive`);
+          showStatus("⚡ Export finished!", 100);
+        }
+      }
+    }
+
+    async function renderPageDataUrl(pageNum, scale = 2.0, format = 'png') {
+      const page = await pdfJsDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+      return canvas.toDataURL(mime, 0.92);
+    }
+
+    /* HIGH VISIBILITY RESULT ROWS */
+    function appendResultRow(fileName, downloadUrl, infoStr) {
+      if (resultsList.children.length === 1 && resultsList.children[0].classList.contains('text-center')) {
+        resultsList.innerHTML = "";
+      }
+
+      const item = document.createElement('div');
+      item.className = "bg-[#0e1c2b] p-3 rounded-md border border-teal-400/30 flex items-center justify-between shadow-md hover:border-teal-400 transition";
+      item.innerHTML = `
+        <div class="truncate max-w-[240px] sm:max-w-[300px]">
+          <div class="font-bold text-xs truncate text-teal-300">${fileName}</div>
+          <div class="mono text-[10px] text-slate-400">${infoStr}</div>
+        </div>
+        <a href="${downloadUrl}" download="${fileName}" class="dl-btn-prominent text-xs px-4 py-2 rounded-md mono font-bold flex items-center gap-1.5 shrink-0">
+          💾 Download File
+        </a>
+      `;
+      resultsList.appendChild(item);
+    }
+
+    function getBaseName() {
+      let name = outputFileName.value.trim();
+      return name ? name.replace(/[^a-z0-9_\-]/gi, '_') : 'document_export';
+    }
+
+    function showStatus(text, percentage) {
+      statusHud.classList.remove('hidden');
+      statusText.textContent = text;
+      progressElement.style.width = `${percentage}%`;
+      if (percentage >= 100) {
+        setTimeout(() => statusHud.classList.add('hidden'), 1000);
+      }
+    }
+
+    function resetStudio() {
+      uploadPanel.classList.remove('hidden');
+      studioWorkspace.classList.add('hidden');
+      statusHud.classList.add('hidden');
+      pdfUploader.value = "";
+      originalArrayBuffer = null;
+      pdfJsDoc = null;
+      totalPages = 0;
+      pageGrid.innerHTML = "";
+      resultsList.innerHTML = `<div class="mono text-xs text-slate-500 py-3 text-center">No processed files generated yet. Choose an action on the left.</div>`;
+    }
+  </script>
+</body>
+</html>

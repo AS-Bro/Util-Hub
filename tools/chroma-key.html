@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chroma Key Studio — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
+  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .picker-img { max-width: 100%; max-height: 200px; cursor: crosshair; object-fit: contain; image-rendering: pixelated; }
+  .native-color-picker {
+    width: 38px; height: 34px; padding: 0; cursor: pointer;
+    border: 1px solid rgba(143,176,204,.2); border-radius: 6px; background: none;
+  }
+  .native-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+  .native-color-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
+  .checkerboard-preview {
+    background-color: #0b1622;
+    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  }
+  #resultImg {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-6xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Chroma Key Studio</h1>
+    <p class="text-sm text-slate-400 mb-6">Professional real-time green screen removal, spill suppression, and matte refinement studio.</p>
+
+    <!-- Initial Upload Zone -->
+    <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer mb-6">
+      <input type="file" id="fileUpload" accept="image/*" class="hidden" />
+      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop green/blue screen image here or click to browse</div>
+      <div class="text-xs text-slate-400">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
+    </div>
+
+    <!-- Studio Workspace -->
+    <div id="studioControls" class="grid grid-cols-1 lg:grid-cols-12 gap-6 hidden">
+      
+      <!-- Left Config Sidebar -->
+      <div class="lg:col-span-5 space-y-4 bg-[#14283b]/30 p-5 rounded-md border border-white/10 max-h-[820px] overflow-y-auto">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-white/10 pb-2 gap-2">
+          <button id="tabKeyBtn" onclick="switchTab('key')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">Chroma Key</button>
+          <button id="tabCompBtn" onclick="switchTab('comp')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Backdrop</button>
+          <button id="tabEngineBtn" onclick="switchTab('engine')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Engine</button>
+        </div>
+
+        <!-- TAB 1: KEYING & MATTE CONTROLS -->
+        <div id="tabKey" class="space-y-4">
+          
+          <!-- Key Presets -->
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Key Preset Profile</label>
+            <select id="keyPreset" class="w-full rounded-md p-2 text-xs">
+              <option value="custom" selected>Custom Eyedropper Sample</option>
+              <option value="green">Standard Green Screen (#00FF00)</option>
+              <option value="blue">Standard Blue Screen (#0000FF)</option>
+              <option value="magenta">Magenta Screen (#FF00FF)</option>
+            </select>
+          </div>
+
+          <!-- Color Sampler Picker -->
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Sample Backdrop Key Color</label>
+            <div class="bg-[#0e1c2b] p-2 rounded border border-white/10 text-center checkerboard-preview">
+              <img id="sourcePreview" class="picker-img rounded mx-auto" title="Click anywhere on green screen to sample key color" />
+            </div>
+            <div class="flex items-center justify-between mt-2 bg-[#0e1c2b]/50 p-2 rounded border border-white/5">
+              <span class="mono text-xs text-slate-400 uppercase">Selected Key Color:</span>
+              <div class="flex items-center gap-2">
+                <div id="keySwatch" class="w-5 h-5 rounded border border-white/20" style="background-color:#00FF00;"></div>
+                <span id="keyHex" class="mono text-xs text-teal-300 font-bold">#00FF00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cutoff Sensitivity Slider -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="mono text-[11px] text-slate-400 uppercase">Color Clip Sensitivity (Cutoff)</label>
+              <span id="clipVal" class="mono text-xs text-teal-300 font-bold">45</span>
+            </div>
+            <input id="clipSlider" type="range" min="5" max="150" value="45" class="w-full accent-teal-400" />
+          </div>
+
+          <!-- Shadow / Feathering Range Slider -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="mono text-[11px] text-slate-400 uppercase">Edge Feathering / Softness</label>
+              <span id="shadowVal" class="mono text-xs text-teal-300 font-bold">30</span>
+            </div>
+            <input id="shadowSlider" type="range" min="1" max="100" value="30" class="w-full accent-teal-400" />
+          </div>
+
+          <!-- Spill Suppression Slider -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="mono text-[11px] text-slate-400 uppercase">Spill Suppression (Removes Glow)</label>
+              <span id="spillVal" class="mono text-xs text-teal-300 font-bold">60%</span>
+            </div>
+            <input id="spillSlider" type="range" min="0" max="100" value="60" class="w-full accent-teal-400" />
+          </div>
+
+          <!-- Matte Alpha Mask Preview Mode -->
+          <div class="pt-2 border-t border-white/5">
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="showMatteMask" class="accent-teal-400 w-4 h-4 rounded" />
+              <span class="mono text-xs">Preview Pure Alpha Matte Mask (B&W)</span>
+            </label>
+          </div>
+
+        </div>
+
+        <!-- TAB 2: COMPOSITING & REPLACEMENT BACKDROP -->
+        <div id="tabComp" class="space-y-3 hidden">
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Replacement Fill Mode</label>
+            <select id="bgMode" class="w-full rounded-md p-2 text-xs">
+              <option value="transparent" selected>Transparent Alpha (None)</option>
+              <option value="solid">Solid Replacement Color</option>
+              <option value="customImage">Custom Replacement Background Image</option>
+            </select>
+          </div>
+
+          <!-- Solid Replacement Color -->
+          <div id="solidBgControls" class="hidden space-y-2">
+            <label class="mono text-xs text-slate-400 uppercase block">Fill Color</label>
+            <div class="flex items-center gap-2">
+              <input type="color" id="bgColor" class="native-color-picker" value="#17304A" />
+              <span id="bgHex" class="mono text-xs text-teal-300 font-bold uppercase">#17304A</span>
+            </div>
+          </div>
+
+          <!-- Custom Image Fill -->
+          <div id="customBgControls" class="hidden space-y-2 bg-[#0e1c2b]/50 p-3 rounded border border-white/5">
+            <label class="mono text-xs text-teal-300 uppercase block font-bold">Upload Custom Background</label>
+            <button onclick="document.getElementById('bgFileUpload').click()" class="secondary w-full mono text-xs p-2 rounded">Choose Background Image...</button>
+            <input type="file" id="bgFileUpload" accept="image/*" class="hidden" />
+          </div>
+        </div>
+
+        <!-- TAB 3: ENGINE & RESOLUTION SETTINGS -->
+        <div id="tabEngine" class="space-y-3 hidden">
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Pixel Rendering</label>
+            <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs">
+              <option value="false" selected>Pixel Art Crisp (No Anti-aliasing Grid)</option>
+              <option value="true">Smooth (For HD Photos)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Export Scale Resolution</label>
+            <select id="exportScale" class="w-full rounded-md p-2 text-xs">
+              <option value="1" selected>1x (Original Size)</option>
+              <option value="2">2x HD Scale</option>
+              <option value="4">4x Ultra Scale</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Output Display Panel -->
+      <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+        
+        <!-- Live Result Canvas Preview Container -->
+        <div class="bg-[#14283b]/40 border border-white/10 p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
+          <img id="resultImg" class="max-h-[460px] max-w-full rounded shadow-2xl object-contain" />
+        </div>
+
+        <!-- Export Toolbar -->
+        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <label class="mono text-xs text-slate-400 uppercase">Export Format</label>
+            <select id="exportFormat" class="rounded p-2 text-xs font-semibold">
+              <option value="image/png">PNG (.png)</option>
+              <option value="image/webp">WEBP (.webp)</option>
+            </select>
+          </div>
+          
+          <div class="flex gap-2">
+            <button onclick="goBackToUpload()" class="secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Image</button>
+            <button id="downloadBtn" onclick="downloadKeyedAsset()" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Keyed Image</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <canvas id="hiddenCanvas" class="hidden"></canvas>
+
+  <script>
+    const fileUpload = document.getElementById('fileUpload');
+    const bgFileUpload = document.getElementById('bgFileUpload');
+    const dropZone = document.getElementById('dropZone');
+    const studioControls = document.getElementById('studioControls');
+    const sourcePreview = document.getElementById('sourcePreview');
+    const resultImg = document.getElementById('resultImg');
+    const hiddenCanvas = document.getElementById('hiddenCanvas');
+
+    const keyPreset = document.getElementById('keyPreset');
+    const keySwatch = document.getElementById('keySwatch');
+    const keyHex = document.getElementById('keyHex');
+
+    const clipSlider = document.getElementById('clipSlider');
+    const clipVal = document.getElementById('clipVal');
+    const shadowSlider = document.getElementById('shadowSlider');
+    const shadowVal = document.getElementById('shadowVal');
+    const spillSlider = document.getElementById('spillSlider');
+    const spillVal = document.getElementById('spillVal');
+    const showMatteMask = document.getElementById('showMatteMask');
+
+    const bgMode = document.getElementById('bgMode');
+    const solidBgControls = document.getElementById('solidBgControls');
+    const customBgControls = document.getElementById('customBgControls');
+    const bgColor = document.getElementById('bgColor');
+    const bgHex = document.getElementById('bgHex');
+
+    const pixelSmoothing = document.getElementById('pixelSmoothing');
+    const exportScale = document.getElementById('exportScale');
+    const exportFormat = document.getElementById('exportFormat');
+
+    let activeImage = new Image();
+    let activeBgImg = new Image();
+    let keyRGB = { r: 0, g: 255, b: 0 };
+
+    window.switchTab = function(tab) {
+      ['key', 'comp', 'engine'].forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
+      activeBtn.classList.remove('text-slate-400');
+      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+    };
+
+    dropZone.addEventListener('click', () => fileUpload.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) loadMainImage(e.dataTransfer.files[0]);
+    });
+
+    fileUpload.addEventListener('change', (e) => {
+      if (e.target.files.length) loadMainImage(e.target.files[0]);
+    });
+
+    bgFileUpload.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          activeBgImg.onload = () => processAdvancedKey();
+          activeBgImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+
+    function loadMainImage(file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        activeImage.onload = () => {
+          sourcePreview.src = evt.target.result;
+          dropZone.classList.add('hidden');
+          studioControls.classList.remove('hidden');
+          processAdvancedKey();
+        };
+        activeImage.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    sourcePreview.addEventListener('click', (e) => {
+      const tmpCanvas = document.createElement('canvas');
+      const ctx = tmpCanvas.getContext('2d');
+      tmpCanvas.width = activeImage.width;
+      tmpCanvas.height = activeImage.height;
+      ctx.drawImage(activeImage, 0, 0);
+
+      const rect = sourcePreview.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * activeImage.width;
+      const y = ((e.clientY - rect.top) / rect.height) * activeImage.height;
+
+      const p = ctx.getImageData(x, y, 1, 1).data;
+      keyRGB = { r: p[0], g: p[1], b: p[2] };
+
+      const hex = "#" + ((1 << 24) + (p[0] << 16) + (p[1] << 8) + p[2]).toString(16).slice(1).toUpperCase();
+      keySwatch.style.backgroundColor = hex;
+      keyHex.textContent = hex;
+      keyPreset.value = "custom";
+
+      processAdvancedKey();
+    });
+
+    keyPreset.addEventListener('change', () => {
+      const val = keyPreset.value;
+      if (val === 'green') keyRGB = { r: 0, g: 255, b: 0 };
+      if (val === 'blue') keyRGB = { r: 0, g: 0, b: 255 };
+      if (val === 'magenta') keyRGB = { r: 255, g: 0, b: 255 };
+
+      if (val !== 'custom') {
+        const hex = "#" + ((1 << 24) + (keyRGB.r << 16) + (keyRGB.g << 8) + keyRGB.b).toString(16).slice(1).toUpperCase();
+        keySwatch.style.backgroundColor = hex;
+        keyHex.textContent = hex;
+      }
+      processAdvancedKey();
+    });
+
+    clipSlider.addEventListener('input', () => { clipVal.textContent = clipSlider.value; processAdvancedKey(); });
+    shadowSlider.addEventListener('input', () => { shadowVal.textContent = shadowSlider.value; processAdvancedKey(); });
+    spillSlider.addEventListener('input', () => { spillVal.textContent = `${spillSlider.value}%`; processAdvancedKey(); });
+    showMatteMask.addEventListener('change', processAdvancedKey);
+
+    bgMode.addEventListener('change', () => {
+      const val = bgMode.value;
+      solidBgControls.classList.toggle('hidden', val !== 'solid');
+      customBgControls.classList.toggle('hidden', val !== 'customImage');
+      processAdvancedKey();
+    });
+
+    bgColor.addEventListener('input', () => {
+      bgHex.textContent = bgColor.value.toUpperCase();
+      processAdvancedKey();
+    });
+
+    pixelSmoothing.addEventListener('change', processAdvancedKey);
+    exportScale.addEventListener('change', processAdvancedKey);
+
+    function processAdvancedKey() {
+      if (!activeImage.src) return;
+
+      const mult = parseFloat(exportScale.value) || 1;
+      const w = activeImage.width * mult;
+      const h = activeImage.height * mult;
+
+      hiddenCanvas.width = w;
+      hiddenCanvas.height = h;
+
+      const ctx = hiddenCanvas.getContext('2d');
+
+      const enableSmoothing = pixelSmoothing.value === 'true';
+      ctx.imageSmoothingEnabled = enableSmoothing;
+      ctx.mozImageSmoothingEnabled = enableSmoothing;
+      ctx.webkitImageSmoothingEnabled = enableSmoothing;
+
+      // 1. DRAW BACKDROP REPLACEMENT LAYER IF CONFIGURED
+      const mode = bgMode.value;
+      if (!showMatteMask.checked) {
+        if (mode === 'solid') {
+          ctx.fillStyle = bgColor.value;
+          ctx.fillRect(0, 0, w, h);
+        } else if (mode === 'customImage' && activeBgImg.src) {
+          ctx.drawImage(activeBgImg, 0, 0, w, h);
+        }
+      }
+
+      // Render foreground onto secondary memory buffer
+      const fgCanvas = document.createElement('canvas');
+      fgCanvas.width = w;
+      fgCanvas.height = h;
+      const fgCtx = fgCanvas.getContext('2d');
+      fgCtx.imageSmoothingEnabled = enableSmoothing;
+      fgCtx.drawImage(activeImage, 0, 0, w, h);
+
+      const imgData = fgCtx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      const clipLimit = parseInt(clipSlider.value);
+      const featherRange = parseInt(shadowSlider.value);
+      const spillFactor = parseInt(spillSlider.value) / 100;
+      const renderMatteOnly = showMatteMask.checked;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i+1];
+        const b = data[i+2];
+
+        const colorDistance = Math.sqrt(
+          Math.pow(r - keyRGB.r, 2) +
+          Math.pow(g - keyRGB.g, 2) +
+          Math.pow(b - keyRGB.b, 2)
+        );
+
+        let alpha = 255;
+
+        if (colorDistance <= clipLimit) {
+          alpha = 0;
+        } else if (colorDistance < (clipLimit + featherRange)) {
+          const weight = (colorDistance - clipLimit) / featherRange;
+          alpha = Math.floor(weight * 255);
+          applySpillSuppression(data, i, r, g, b, spillFactor);
+        } else {
+          applySpillSuppression(data, i, r, g, b, spillFactor);
+        }
+
+        if (renderMatteOnly) {
+          data[i] = alpha;
+          data[i+1] = alpha;
+          data[i+2] = alpha;
+          data[i+3] = 255;
+        } else {
+          data[i+3] = alpha;
+        }
+      }
+
+      fgCtx.putImageData(imgData, 0, 0);
+      ctx.drawImage(fgCanvas, 0, 0);
+
+      resultImg.src = hiddenCanvas.toDataURL('image/png');
+    }
+
+    function applySpillSuppression(data, index, r, g, b, factor) {
+      if (keyRGB.g > keyRGB.r && keyRGB.g > keyRGB.b) {
+        if (g > r && g > b) {
+          const avg = (r + b) / 2;
+          data[index+1] = g - ((g - avg) * factor);
+        }
+      } else if (keyRGB.b > keyRGB.r && keyRGB.b > keyRGB.g) {
+        if (b > r && b > g) {
+          const avg = (r + g) / 2;
+          data[index+2] = b - ((b - avg) * factor);
+        }
+      }
+    }
+
+    function downloadKeyedAsset() {
+      const mime = exportFormat.value;
+      const ext = mime.split('/')[1];
+      const link = document.createElement('a');
+      link.download = `chroma_matte_${Date.now()}.${ext}`;
+      link.href = hiddenCanvas.toDataURL(mime);
+      link.click();
+    }
+
+    function goBackToUpload() {
+      fileUpload.value = "";
+      keyRGB = { r: 0, g: 255, b: 0 };
+      keySwatch.style.backgroundColor = '#00FF00';
+      keyHex.textContent = '#00FF00';
+      
+      clipSlider.value = 45; clipVal.textContent = "45";
+      shadowSlider.value = 30; shadowVal.textContent = "30";
+      spillSlider.value = 60; spillVal.textContent = "60%";
+      showMatteMask.checked = false;
+      
+      studioControls.classList.add('hidden');
+      dropZone.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

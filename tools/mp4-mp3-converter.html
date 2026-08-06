@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Video to Audio Extractor Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
+  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
+  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover:not(:disabled) { background:#93e5da; }
+  button.primary:disabled { opacity:0.5; cursor:not-allowed; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
+  button.secondary:disabled { opacity:0.5; cursor:not-allowed; }
+  canvas { width: 100%; height: 80px; background: #08111a; border-radius: 6px; }
+  /* Custom styled scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0e1c2b; }
+  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-5xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Video to Audio Extractor Studio</h1>
+    <p class="text-sm text-slate-400 mb-6">Extract, trim, normalize, and export high-quality audio tracks directly in your browser offline.</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Upload Panel -->
+      <div id="uploadPanel" class="lg:col-span-12">
+        <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer">
+          <input type="file" id="videoUploader" accept="video/*" class="hidden" />
+          <div class="text-4xl mb-3">🎬</div>
+          <div class="mono text-teal-300 text-sm font-semibold mb-1">Click or drag video file here</div>
+          <div class="text-xs text-slate-400">Supports MP4, WebM, MOV, OGG, AVI, MKV</div>
+        </div>
+      </div>
+
+      <!-- Studio Workspace Panel -->
+      <div id="studioWorkspace" class="hidden lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Options Column -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <!-- File Overview Info Box -->
+          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex items-center justify-between">
+            <div>
+              <div id="fileNameLabel" class="font-semibold text-sm truncate max-w-[220px]">video.mp4</div>
+              <div id="fileMetaLabel" class="mono text-[11px] text-slate-400 mt-0.5">0 MB | 00:00</div>
+            </div>
+            <button onclick="resetStudio()" class="secondary text-xs px-3 py-1.5 rounded mono">Change Video</button>
+          </div>
+
+          <!-- Configuration & Filters Card -->
+          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-4">
+            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Export Settings</span>
+
+            <!-- Output File Name Customization -->
+            <div>
+              <label class="mono text-xs text-slate-400 block mb-1">Output File Name</label>
+              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono" placeholder="audio_YYYYMMDD_HHMMSS" />
+            </div>
+
+            <div>
+              <label class="mono text-xs text-slate-400 block mb-1">Format</label>
+              <select id="audioFormat" class="auto-process w-full rounded-md p-2 text-xs">
+                <option value="mp3" selected>MP3 (MPEG Audio)</option>
+                <option value="wav">WAV (Uncompressed PCM - Best Quality)</option>
+                <option value="ogg">OGG (Vorbis Audio)</option>
+              </select>
+            </div>
+
+            <!-- Bitrate Selection (For Lossy Formats) -->
+            <div id="bitrateContainer">
+              <label class="mono text-xs text-slate-400 block mb-1">Target Quality / Bitrate</label>
+              <select id="audioBitrate" class="auto-process w-full rounded-md p-2 text-xs">
+                <option value="320">320 kbps (Extreme Quality)</option>
+                <option value="256">256 kbps (Very High Quality)</option>
+                <option value="192" selected>192 kbps (Standard Quality)</option>
+                <option value="128">128 kbps (Compact Size)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="mono text-xs text-slate-400 block mb-1">Trim Start (s)</label>
+                <input type="number" id="trimStart" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono" />
+              </div>
+              <div>
+                <label class="mono text-xs text-slate-400 block mb-1">Trim End (s)</label>
+                <input type="number" id="trimEnd" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono" />
+              </div>
+            </div>
+
+            <div class="space-y-2 pt-2 border-t border-white/5">
+              <span class="mono text-[11px] text-teal-300 uppercase block font-semibold">Audio Enhancements</span>
+              
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" id="normalizeAudio" checked class="auto-process accent-teal-400 w-4 h-4 rounded" />
+                <span>Normalize Volume Levels</span>
+              </label>
+
+              <div class="grid grid-cols-2 gap-2 pl-6">
+                <div>
+                  <label class="mono text-[10px] text-slate-400 block mb-0.5">Fade In (s)</label>
+                  <input type="number" id="fadeInDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono" />
+                </div>
+                <div>
+                  <label class="mono text-[10px] text-slate-400 block mb-0.5">Fade Out (s)</label>
+                  <input type="number" id="fadeOutDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono" />
+                </div>
+              </div>
+
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" id="forceMono" class="auto-process accent-teal-400 w-4 h-4 rounded" />
+                <span>Mix Down to Mono Track</span>
+              </label>
+
+              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" id="invertPhase" class="auto-process accent-teal-400 w-4 h-4 rounded" />
+                <span>Invert Audio Phase (Vocal Cut Utility)</span>
+              </label>
+
+              <div>
+                <label class="mono text-[11px] text-slate-400 block mb-1">Playback Speed Multiplier</label>
+                <select id="playbackSpeed" class="auto-process w-full rounded-md p-1.5 text-xs">
+                  <option value="0.5">0.5x (Half Speed)</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1.0" selected>1.0x (Normal Speed)</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2.0">2.0x (Double Speed)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Single Dedicated Download Action -->
+            <div class="pt-2 border-t border-white/5">
+              <button id="downloadBtn" onclick="downloadExportedAudio()" disabled class="primary w-full mono text-xs uppercase py-3 rounded-md shadow-lg transition-transform active:scale-95">
+                💾 Download Processed Audio
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Preview & Processing Column -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <!-- Status HUD -->
+          <div id="statusHud" class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 hidden space-y-2">
+            <div id="statusText" class="mono text-xs text-teal-300">Decoding audio track...</div>
+            <div class="w-full bg-[#0e1c2b] rounded-full h-2 overflow-hidden border border-white/10">
+              <div id="progressElement" class="bg-teal-300 h-full w-0 transition-all duration-200"></div>
+            </div>
+          </div>
+
+          <!-- Waveform Visualizer & Player -->
+          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="mono text-xs uppercase text-teal-300 font-bold">Processed Audio Preview</span>
+              <span id="currentTimeDisplay" class="mono text-xs text-slate-400">00:00 / 00:00</span>
+            </div>
+
+            <!-- Interactive Waveform Canvas -->
+            <div class="relative cursor-pointer" id="waveformContainer">
+              <canvas id="waveformCanvas"></canvas>
+            </div>
+
+            <!-- Custom Audio Element with Dedicated Player UI -->
+            <audio id="audioPreviewPlayer" class="hidden"></audio>
+            
+            <div class="flex items-center gap-3 bg-[#0e1c2b] p-3 rounded-md border border-white/5">
+              <button id="playPauseBtn" onclick="togglePlayPause()" class="primary text-xs px-4 py-2 rounded mono font-semibold">▶ Play</button>
+              <div class="flex-grow flex items-center gap-2">
+                <input type="range" id="seekSlider" min="0" value="0" step="0.01" oninput="seekAudio(this.value)" class="w-full accent-teal-400 h-1.5 bg-[#14283b] rounded-lg cursor-pointer" />
+              </div>
+              <button onclick="toggleMute()" id="muteBtn" class="secondary text-xs px-2.5 py-1.5 rounded mono">🔊</button>
+            </div>
+          </div>
+
+          <!-- Technical Audio Metadata Card -->
+          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-2">
+            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-1.5">Track Details</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mono text-xs text-slate-300">
+              <div><span class="text-slate-500 block text-[10px]">SAMPLE RATE</span> <span id="metaSampleRate">-- Hz</span></div>
+              <div><span class="text-slate-500 block text-[10px]">CHANNELS</span> <span id="metaChannels">--</span></div>
+              <div><span class="text-slate-500 block text-[10px]">EST. FILE SIZE</span> <span id="metaEstSize">-- MB</span></div>
+              <div><span class="text-slate-500 block text-[10px]">TRIMMED DURATION</span> <span id="metaDuration">--s</span></div>
+              <div><span class="text-slate-500 block text-[10px]">FORMAT</span> <span id="metaFormat">MP3</span></div>
+              <div><span class="text-slate-500 block text-[10px]">PEAK AMPLITUDE</span> <span id="metaPeak">-- dB</span></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const videoUploader = document.getElementById('videoUploader');
+    const dropZone = document.getElementById('dropZone');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const studioWorkspace = document.getElementById('studioWorkspace');
+
+    const fileNameLabel = document.getElementById('fileNameLabel');
+    const fileMetaLabel = document.getElementById('fileMetaLabel');
+
+    const statusHud = document.getElementById('statusHud');
+    const statusText = document.getElementById('statusText');
+    const progressElement = document.getElementById('progressElement');
+
+    const outputFileName = document.getElementById('outputFileName');
+    const audioFormat = document.getElementById('audioFormat');
+    const audioBitrate = document.getElementById('audioBitrate');
+    const bitrateContainer = document.getElementById('bitrateContainer');
+    const trimStart = document.getElementById('trimStart');
+    const trimEnd = document.getElementById('trimEnd');
+    const normalizeAudio = document.getElementById('normalizeAudio');
+    const fadeInDuration = document.getElementById('fadeInDuration');
+    const fadeOutDuration = document.getElementById('fadeOutDuration');
+    const forceMono = document.getElementById('forceMono');
+    const invertPhase = document.getElementById('invertPhase');
+    const playbackSpeed = document.getElementById('playbackSpeed');
+
+    const waveformCanvas = document.getElementById('waveformCanvas');
+    const waveformContainer = document.getElementById('waveformContainer');
+    const audioPreviewPlayer = document.getElementById('audioPreviewPlayer');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const seekSlider = document.getElementById('seekSlider');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // Technical Metadata Elements
+    const metaSampleRate = document.getElementById('metaSampleRate');
+    const metaChannels = document.getElementById('metaChannels');
+    const metaEstSize = document.getElementById('metaEstSize');
+    const metaDuration = document.getElementById('metaDuration');
+    const metaFormat = document.getElementById('metaFormat');
+    const metaPeak = document.getElementById('metaPeak');
+
+    let rawVideoFile = null;
+    let decodedAudioBuffer = null;
+    let audioContext = null;
+    let processedBlob = null;
+    let autoProcessDebounceTimer = null;
+    let activeRenderedBuffer = null;
+
+    // Helper: Generate Default Formatted Timestamp (audio_YYYYMMDD_HHMMSS)
+    function generateDefaultFileName() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+      const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+      return `audio_${dateStr}_${timeStr}`;
+    }
+
+    // Set initial default name
+    outputFileName.value = generateDefaultFileName();
+
+    dropZone.addEventListener('click', () => videoUploader.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) loadVideoFile(e.dataTransfer.files[0]);
+    });
+
+    videoUploader.addEventListener('change', (e) => {
+      if (e.target.files.length) loadVideoFile(e.target.files[0]);
+    });
+
+    // Auto-process triggers for configuration changes
+    document.querySelectorAll('.auto-process').forEach(input => {
+      input.addEventListener('change', scheduleAutoProcess);
+      input.addEventListener('input', scheduleAutoProcess);
+    });
+
+    audioFormat.addEventListener('change', () => {
+      bitrateContainer.style.display = (audioFormat.value === 'wav') ? 'none' : 'block';
+      scheduleAutoProcess();
+    });
+
+    function scheduleAutoProcess() {
+      if (!decodedAudioBuffer) return;
+      clearTimeout(autoProcessDebounceTimer);
+      autoProcessDebounceTimer = setTimeout(() => {
+        processAudioTrack();
+      }, 300); // 300ms debounce
+    }
+
+    function loadVideoFile(file) {
+      rawVideoFile = file;
+      fileNameLabel.textContent = file.name;
+      outputFileName.value = generateDefaultFileName();
+      
+      uploadPanel.classList.add('hidden');
+      studioWorkspace.classList.remove('hidden');
+      statusHud.classList.remove('hidden');
+
+      statusText.textContent = "Loading video file into memory...";
+      progressElement.style.width = "20%";
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        statusText.textContent = "Decoding audio track...";
+        progressElement.style.width = "50%";
+
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        audioContext.decodeAudioData(evt.target.result)
+          .then(buffer => {
+            decodedAudioBuffer = buffer;
+            const duration = buffer.duration;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileMetaLabel.textContent = `${sizeMB} MB | ${formatTime(duration)}`;
+
+            trimStart.value = "0";
+            trimStart.max = duration;
+            trimEnd.value = duration.toFixed(1);
+            trimEnd.max = duration;
+
+            // Trigger initial automatic processing
+            processAudioTrack();
+          })
+          .catch(err => {
+            console.error(err);
+            statusText.textContent = "❌ Failed to decode audio from video file.";
+          });
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function processAudioTrack() {
+      if (!decodedAudioBuffer) return;
+
+      downloadBtn.disabled = true;
+      statusHud.classList.remove('hidden');
+      statusText.textContent = "Auto-processing audio with settings...";
+      progressElement.style.width = "30%";
+
+      const startSec = Math.max(0, parseFloat(trimStart.value) || 0);
+      const endSec = Math.min(decodedAudioBuffer.duration, parseFloat(trimEnd.value) || decodedAudioBuffer.duration);
+      
+      if (startSec >= endSec) {
+        statusText.textContent = "⚠️ Trim Start must be less than Trim End";
+        return;
+      }
+
+      const speed = parseFloat(playbackSpeed.value) || 1.0;
+      const baseSampleRate = decodedAudioBuffer.sampleRate;
+      const startSample = Math.floor(startSec * baseSampleRate);
+      const endSample = Math.floor(endSec * baseSampleRate);
+      const baseFrameCount = endSample - startSample;
+
+      // Calculate output frame count accounting for speed shift
+      const targetFrameCount = Math.floor(baseFrameCount / speed);
+      const isMono = forceMono.checked;
+      const targetChannels = isMono ? 1 : decodedAudioBuffer.numberOfChannels;
+
+      const offlineCtx = new OfflineAudioContext(targetChannels, targetFrameCount, baseSampleRate);
+      const bufferSource = offlineCtx.createBufferSource();
+
+      // Create trimmed sub-buffer
+      const trimmedBuffer = offlineCtx.createBuffer(targetChannels, targetFrameCount, baseSampleRate);
+
+      let peakVal = 0.0;
+
+      for (let channel = 0; channel < targetChannels; channel++) {
+        const srcChannelIndex = isMono ? 0 : channel;
+        const channelData = decodedAudioBuffer.getChannelData(srcChannelIndex);
+        const subData = trimmedBuffer.getChannelData(channel);
+
+        // Resample/linear interpolate for playback speed & trimming
+        for (let i = 0; i < targetFrameCount; i++) {
+          const srcIdx = startSample + (i * speed);
+          const indexFloor = Math.floor(srcIdx);
+          const indexCeil = Math.min(channelData.length - 1, indexFloor + 1);
+          const fraction = srcIdx - indexFloor;
+
+          let val = 0;
+          if (indexFloor < channelData.length) {
+            val = channelData[indexFloor] * (1 - fraction) + channelData[indexCeil] * fraction;
+          }
+
+          if (invertPhase.checked) {
+            val = -val;
+          }
+
+          subData[i] = val;
+          if (Math.abs(val) > peakVal) peakVal = Math.abs(val);
+        }
+
+        // Volume Normalization
+        if (normalizeAudio.checked && peakVal > 0) {
+          const multiplier = 0.95 / peakVal;
+          for (let i = 0; i < targetFrameCount; i++) {
+            subData[i] *= multiplier;
+          }
+          peakVal = 0.95;
+        }
+
+        // Apply Fade In / Fade Out
+        const fadeInSec = Math.max(0, parseFloat(fadeInDuration.value) || 0);
+        const fadeOutSec = Math.max(0, parseFloat(fadeOutDuration.value) || 0);
+        
+        const fadeInFrames = Math.min(targetFrameCount / 2, fadeInSec * baseSampleRate);
+        const fadeOutFrames = Math.min(targetFrameCount / 2, fadeOutSec * baseSampleRate);
+
+        if (fadeInFrames > 0) {
+          for (let i = 0; i < fadeInFrames; i++) {
+            subData[i] *= (i / fadeInFrames);
+          }
+        }
+
+        if (fadeOutFrames > 0) {
+          for (let i = 0; i < fadeOutFrames; i++) {
+            subData[targetFrameCount - 1 - i] *= (i / fadeOutFrames);
+          }
+        }
+      }
+
+      bufferSource.buffer = trimmedBuffer;
+      bufferSource.connect(offlineCtx.destination);
+      bufferSource.start();
+
+      progressElement.style.width = "70%";
+      statusText.textContent = "Rendering processed audio...";
+
+      offlineCtx.startRendering().then(renderedBuffer => {
+        activeRenderedBuffer = renderedBuffer;
+        const selectedFormat = audioFormat.value;
+        const wavArrayBuffer = audioBufferToWav(renderedBuffer);
+
+        let mimeType = 'audio/wav';
+        if (selectedFormat === 'mp3') mimeType = 'audio/mpeg';
+        if (selectedFormat === 'ogg') mimeType = 'audio/ogg';
+
+        processedBlob = new Blob([wavArrayBuffer], { type: mimeType });
+
+        // Load processed result into audio element preview
+        if (audioPreviewPlayer.src) {
+          URL.revokeObjectURL(audioPreviewPlayer.src);
+        }
+        audioPreviewPlayer.src = URL.createObjectURL(processedBlob);
+        seekSlider.max = renderedBuffer.duration;
+
+        drawWaveform(renderedBuffer);
+        updateMetadata(renderedBuffer, processedBlob.size, selectedFormat, peakVal);
+
+        progressElement.style.width = "100%";
+        statusText.textContent = "⚡ Auto-processed successfully!";
+        downloadBtn.disabled = false;
+        setTimeout(() => statusHud.classList.add('hidden'), 1000);
+      });
+    }
+
+    function updateMetadata(buffer, byteSize, format, peak) {
+      metaSampleRate.textContent = `${buffer.sampleRate} Hz`;
+      metaChannels.textContent = buffer.numberOfChannels === 1 ? 'Mono (1)' : 'Stereo (2)';
+      metaEstSize.textContent = `${(byteSize / (1024 * 1024)).toFixed(2)} MB`;
+      metaDuration.textContent = `${buffer.duration.toFixed(1)}s`;
+      metaFormat.textContent = format.toUpperCase();
+      
+      const peakDb = peak > 0 ? (20 * Math.log10(peak)).toFixed(1) : '-∞';
+      metaPeak.textContent = `${peakDb} dB`;
+    }
+
+    function drawWaveform(buffer) {
+      const ctx = waveformCanvas.getContext('2d');
+      const width = waveformCanvas.width = waveformCanvas.offsetWidth;
+      const height = waveformCanvas.height = 80;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const data = buffer.getChannelData(0);
+      const step = Math.ceil(data.length / width);
+      const amp = height / 2;
+
+      // Draw background center line
+      ctx.strokeStyle = 'rgba(143,176,204,0.1)';
+      ctx.beginPath();
+      ctx.moveTo(0, amp);
+      ctx.lineTo(width, amp);
+      ctx.stroke();
+
+      ctx.fillStyle = '#6fd8cb';
+      for (let i = 0; i < width; i++) {
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < step; j++) {
+          const datum = data[(i * step) + j];
+          if (datum < min) min = datum;
+          if (datum > max) max = datum;
+        }
+        ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
+      }
+    }
+
+    // Click on Waveform to Seek
+    waveformContainer.addEventListener('click', (e) => {
+      if (!audioPreviewPlayer.duration) return;
+      const rect = waveformCanvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const pct = clickX / rect.width;
+      audioPreviewPlayer.currentTime = pct * audioPreviewPlayer.duration;
+    });
+
+    function downloadExportedAudio() {
+      if (!processedBlob) return;
+
+      let name = outputFileName.value.trim();
+      if (!name) name = generateDefaultFileName();
+      
+      // Ensure sanitize filename
+      name = name.replace(/[^a-z0-9_\-]/gi, '_');
+
+      const ext = audioFormat.value;
+      const finalFileName = `${name}.${ext}`;
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(processedBlob);
+      downloadLink.download = finalFileName;
+      downloadLink.click();
+    }
+
+    function audioBufferToWav(buffer) {
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const length = buffer.length;
+      const totalBytes = length * numChannels * 2 + 44;
+      const arrayBuffer = new ArrayBuffer(totalBytes);
+      const dataView = new DataView(arrayBuffer);
+
+      let position = 0;
+      function writeUint32(data) { dataView.setUint32(position, data, true); position += 4; }
+      function writeUint16(data) { dataView.setUint16(position, data, true); position += 2; }
+
+      writeUint32(0x46464952); // "RIFF"
+      writeUint32(totalBytes - 8);
+      writeUint32(0x45564157); // "WAVE"
+      writeUint32(0x20746d66); // "fmt "
+      writeUint32(16);
+      writeUint16(1); // PCM
+      writeUint16(numChannels);
+      writeUint32(sampleRate);
+      writeUint32(sampleRate * 2 * numChannels);
+      writeUint16(numChannels * 2);
+      writeUint16(16);
+      writeUint32(0x61746164); // "data"
+      writeUint32(totalBytes - position - 4);
+
+      let channels = [];
+      for (let i = 0; i < numChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+      }
+
+      let offset = 0;
+      while (position < totalBytes) {
+        for (let i = 0; i < numChannels; i++) {
+          let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          dataView.setInt16(position, sample, true);
+          position += 2;
+        }
+        offset++;
+      }
+
+      return arrayBuffer;
+    }
+
+    function togglePlayPause() {
+      if (audioPreviewPlayer.paused) {
+        audioPreviewPlayer.play();
+        playPauseBtn.textContent = '⏸ Pause';
+      } else {
+        audioPreviewPlayer.pause();
+        playPauseBtn.textContent = '▶ Play';
+      }
+    }
+
+    function toggleMute() {
+      audioPreviewPlayer.muted = !audioPreviewPlayer.muted;
+      muteBtn.textContent = audioPreviewPlayer.muted ? '🔇' : '🔊';
+    }
+
+    function seekAudio(val) {
+      audioPreviewPlayer.currentTime = val;
+    }
+
+    audioPreviewPlayer.addEventListener('timeupdate', () => {
+      seekSlider.value = audioPreviewPlayer.currentTime;
+      currentTimeDisplay.textContent = `${formatTime(audioPreviewPlayer.currentTime)} / ${formatTime(audioPreviewPlayer.duration || 0)}`;
+    });
+
+    audioPreviewPlayer.addEventListener('ended', () => {
+      playPauseBtn.textContent = '▶ Play';
+    });
+
+    function resetStudio() {
+      if (audioPreviewPlayer.src) {
+        URL.revokeObjectURL(audioPreviewPlayer.src);
+      }
+      uploadPanel.classList.remove('hidden');
+      studioWorkspace.classList.add('hidden');
+      statusHud.classList.add('hidden');
+      videoUploader.value = "";
+      rawVideoFile = null;
+      decodedAudioBuffer = null;
+      processedBlob = null;
+      activeRenderedBuffer = null;
+      audioPreviewPlayer.src = "";
+      downloadBtn.disabled = true;
+    }
+
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+  </script>
+</body>
+</html>

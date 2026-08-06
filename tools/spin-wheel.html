@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Decision Wheel Studio Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  
+  select, input[type="text"], input[type="number"], textarea { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color:#e7eef4; 
+  }
+  select:focus, input:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  
+  /* Buttons */
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
+  button.primary:hover:not(:disabled) { background:#93e5da; box-shadow: 0 0 15px rgba(111,216,203,0.3); }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
+  
+  /* Wheel Container Mechanics */
+  .wheel-box { position: relative; width: 340px; height: 340px; margin: 0 auto; transition: all 0.3s ease; }
+  @media (min-width: 640px) { .wheel-box { width: 420px; height: 420px; } }
+
+  .wheel-box.fullscreen {
+    position: fixed;
+    inset: 0;
+    width: 90vw !important;
+    height: 90vh !important;
+    max-width: 650px;
+    max-height: 650px;
+    margin: auto;
+    z-index: 80;
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 26px solid #f43f5e;
+    filter: drop-shadow(0 2px 6px rgba(244,63,94,0.6));
+    z-index: 30;
+  }
+
+  /* Result Overlay Blur Modal */
+  .result-screen {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(8, 17, 26, 0.94);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .result-screen.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* Custom styled scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0e1c2b; }
+  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen py-8 px-4">
+  <div class="mx-auto max-w-5xl">
+    
+    <!-- Header -->
+    <div class="border-b border-white/10 pb-4 mb-6 flex flex-wrap justify-between items-end gap-3">
+      <div>
+        <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+        <h1 class="display text-2xl font-bold mt-2">Decision Wheel Studio Pro</h1>
+        <p class="text-xs text-slate-400 mt-1">Controlled rotation speeds, weighted probabilities, history logs, and audio feedback.</p>
+      </div>
+
+      <div class="flex items-center gap-3 bg-[#14283b]/50 p-2 rounded-md border border-white/10 text-xs mono">
+        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
+          <input type="checkbox" id="soundToggle" checked class="accent-teal-400 w-4 h-4 rounded" />
+          <span>Audio FX</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Configurator Panel -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- Options & Preset Panel -->
+        <div class="bg-[#14283b]/30 p-5 rounded-lg border border-white/10 space-y-4">
+          <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Wheel Choices & Weights</span>
+
+          <!-- Preset Selector -->
+          <div>
+            <label class="mono text-[11px] text-slate-400 block mb-1">Load Quick Preset</label>
+            <select id="presetSelect" onchange="loadPreset(this.value)" class="w-full rounded-md p-2 text-xs">
+              <option value="">-- Choose Preset --</option>
+              <option value="yesno">Yes / No / Maybe</option>
+              <option value="dice">Standard 6-Sided Dice</option>
+              <option value="food">What Should We Eat?</option>
+              <option value="coin">Coin Flip (Heads/Tails)</option>
+              <option value="numbers">Numbers 1 to 10</option>
+            </select>
+          </div>
+
+          <!-- Speed Physics Adjustment (Relocated Here) -->
+          <div>
+            <label class="mono text-[11px] text-slate-400 block mb-1">Rotation Speed</label>
+            <select id="speedProfile" class="w-full rounded-md p-2 text-xs mono text-teal-300 font-medium">
+              <option value="slow">Very Slow (Gentle Drift)</option>
+              <option value="medium" selected>Slow & Smooth (Standard)</option>
+              <option value="fast">Medium Smooth</option>
+            </select>
+          </div>
+
+          <!-- Input Controls with Weighting -->
+          <div>
+            <label class="mono text-[11px] text-slate-400 block mb-1">Add Choice & Weight</label>
+            <div class="flex gap-2">
+              <input type="text" id="optionInput" placeholder="Option name..." class="w-full rounded-md p-2 text-xs mono" />
+              <input type="number" id="weightInput" min="1" max="10" value="1" title="Slice weight (1-10)" class="w-16 rounded-md p-2 text-xs mono text-center" />
+              <button onclick="addOptionFromInput()" class="primary px-3 rounded-md text-xs mono font-bold">Add</button>
+            </div>
+          </div>
+
+          <!-- Options List Table -->
+          <div>
+            <div class="flex justify-between items-center mb-1 mono text-[11px]">
+              <span class="text-slate-400">Items & Probabilities</span>
+              <span id="counterLabel" class="text-teal-300 font-semibold">0 options</span>
+            </div>
+            
+            <div id="optionsList" class="flex flex-col gap-1.5 p-2 bg-[#08111a] border border-white/10 rounded-md max-h-[180px] overflow-y-auto">
+              <!-- Options rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Action Utilities -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+            <button onclick="shuffleOptions()" class="secondary py-2 rounded-md text-xs mono">🔀 Shuffle Order</button>
+            <button onclick="clearAllOptions()" class="secondary py-2 rounded-md text-xs mono text-rose-300 border-rose-500/20 hover:border-rose-400">🗑️ Clear All</button>
+          </div>
+        </div>
+
+        <!-- Spin History Log -->
+        <div class="bg-[#14283b]/30 p-4 rounded-lg border border-white/10 space-y-2">
+          <div class="flex justify-between items-center border-b border-white/10 pb-2">
+            <span class="mono text-xs uppercase text-teal-300 font-bold">Spin History</span>
+            <button onclick="clearHistory()" class="mono text-[10px] text-slate-400 hover:text-white">Clear</button>
+          </div>
+          <div id="historyLog" class="mono text-xs space-y-1 max-h-[100px] overflow-y-auto text-slate-300">
+            <div class="text-slate-500 text-[11px]">No spins recorded yet.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Interactive Wheel Canvas Arena -->
+      <div class="lg:col-span-7">
+        <div class="bg-[#14283b]/30 p-6 rounded-lg border border-white/10 flex flex-col items-center justify-center space-y-5 min-h-[460px]">
+          
+          <!-- Top Utility Bar -->
+          <div class="w-full flex justify-end">
+            <button onclick="toggleFullscreen()" class="text-slate-400 hover:text-teal-300 text-xs mono bg-[#08111a] px-3 py-1.5 rounded border border-white/10" title="Toggle Focus Mode">⛶ Focus Mode</button>
+          </div>
+
+          <!-- Wheel Wrapper Box -->
+          <div id="wheelBox" class="wheel-box">
+            <div class="wheel-pointer"></div>
+            <canvas id="wheelCanvas" width="800" height="800" class="w-full h-full rounded-full drop-shadow-2xl"></canvas>
+          </div>
+
+          <!-- Spin Controller Buttons -->
+          <div class="flex gap-3 w-full max-w-sm">
+            <button id="spinBtn" onclick="triggerWheelSpin()" class="primary w-full py-3.5 rounded-md mono text-sm uppercase tracking-wider shadow-lg transition-transform active:scale-95">
+              ⚡ SPIN WHEEL
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Animated Winner Result Overlay -->
+  <div id="resultOverlay" class="result-screen">
+    <div class="text-center space-y-4 max-w-md w-full">
+      <span class="mono text-xs uppercase tracking-widest text-teal-300 font-bold block">🎉 Random Selection Winner</span>
+      
+      <div class="bg-gradient-to-br from-[#17304a] to-[#0e1c2b] p-8 rounded-xl border border-teal-400/30 shadow-[0_0_50px_rgba(111,216,203,0.15)]">
+        <h2 id="winnerDisplay" class="display text-3xl sm:text-4xl font-extrabold text-teal-300 break-words leading-tight">--</h2>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 pt-4">
+        <button onclick="eliminateWinnerAndSpin()" class="secondary w-full py-3 rounded-md mono text-xs uppercase border-rose-500/40 text-rose-300 hover:border-rose-400">
+          ❌ Eliminate & Spin
+        </button>
+        <button onclick="keepWinnerAndClose()" class="primary w-full py-3 rounded-md mono text-xs uppercase">
+          🔄 Spin Again
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // DOM Elements
+  const optionInput = document.getElementById('optionInput');
+  const weightInput = document.getElementById('weightInput');
+  const optionsList = document.getElementById('optionsList');
+  const counterLabel = document.getElementById('counterLabel');
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.getElementById('spinBtn');
+  const resultOverlay = document.getElementById('resultOverlay');
+  const winnerDisplay = document.getElementById('winnerDisplay');
+  const soundToggle = document.getElementById('soundToggle');
+  const historyLog = document.getElementById('historyLog');
+  const speedProfile = document.getElementById('speedProfile');
+
+  // Core State with Weights
+  let optionsArray = [
+    { label: "Yes", weight: 1 },
+    { label: "No", weight: 1 },
+    { label: "Maybe", weight: 1 },
+    { label: "Try Again", weight: 1 }
+  ];
+  let currentAngle = 0;
+  let isSpinning = false;
+  let lastSectorIndex = -1;
+  let audioCtx = null;
+  let spinHistory = [];
+
+  const presets = {
+    yesno: ["Yes", "No", "Maybe", "Definitely", "No Way"],
+    dice: ["1", "2", "3", "4", "5", "6"],
+    food: ["Pizza 🍕", "Burgers 🍔", "Sushi 🍣", "Tacos 🌮", "Pasta 🍝", "Salad 🥗"],
+    coin: ["Heads 🪙", "Tails 🪙"],
+    numbers: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+  };
+
+  const palette = [
+    '#6fd8cb', '#0ea5e9', '#6366f1', '#a855f7', 
+    '#ec4899', '#f43f5e', '#f59e0b', '#10b981',
+    '#14b8a6', '#3b82f6', '#8b5cf6', '#d946ef'
+  ];
+
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  function playTickSound() {
+    if (!soundToggle.checked) return;
+    try {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.03);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.03);
+    } catch(e){}
+  }
+
+  function playWinFanfare() {
+    if (!soundToggle.checked) return;
+    try {
+      initAudio();
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.08));
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime + (idx * 0.08));
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.08) + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + (idx * 0.08));
+        osc.stop(audioCtx.currentTime + (idx * 0.08) + 0.3);
+      });
+    } catch(e){}
+  }
+
+  optionInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addOptionFromInput();
+  });
+
+  function addOptionFromInput() {
+    const text = optionInput.value.trim();
+    const weight = parseInt(weightInput.value) || 1;
+    if (!text) return;
+
+    const items = text.split(',').map(s => s.trim()).filter(Boolean);
+    items.forEach(item => {
+      optionsArray.push({ label: item, weight: Math.max(1, weight) });
+    });
+
+    optionInput.value = '';
+    weightInput.value = '1';
+    updateInterface();
+  }
+
+  function removeOption(idx) {
+    if (isSpinning) return;
+    optionsArray.splice(idx, 1);
+    updateInterface();
+  }
+
+  function clearAllOptions() {
+    if (isSpinning) return;
+    optionsArray = [];
+    updateInterface();
+  }
+
+  function shuffleOptions() {
+    if (isSpinning || optionsArray.length < 2) return;
+    optionsArray.sort(() => Math.random() - 0.5);
+    updateInterface();
+  }
+
+  function loadPreset(key) {
+    if (!key || !presets[key]) return;
+    optionsArray = presets[key].map(item => ({ label: item, weight: 1 }));
+    document.getElementById('presetSelect').value = '';
+    updateInterface();
+  }
+
+  function toggleFullscreen() {
+    document.getElementById('wheelBox').classList.toggle('fullscreen');
+  }
+
+  function updateInterface() {
+    optionsList.innerHTML = '';
+    const totalWeight = optionsArray.reduce((acc, curr) => acc + curr.weight, 0);
+
+    if (optionsArray.length === 0) {
+      optionsList.innerHTML = `<span class="text-xs text-slate-500 p-2">No options added yet.</span>`;
+      spinBtn.disabled = true;
+    } else {
+      spinBtn.disabled = optionsArray.length < 2;
+    }
+
+    optionsArray.forEach((opt, idx) => {
+      const chance = totalWeight > 0 ? ((opt.weight / totalWeight) * 100).toFixed(1) : 0;
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between bg-[#17304a] text-slate-200 border border-white/10 px-2.5 py-1.5 rounded-md text-xs mono';
+      row.innerHTML = `
+        <div class="flex items-center gap-2 overflow-hidden">
+          <span class="truncate max-w-[140px]">${escapeHtml(opt.label)}</span>
+          <span class="text-[10px] text-teal-300/80">(${chance}%)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-slate-400">w:${opt.weight}</span>
+          <button onclick="removeOption(${idx})" class="text-slate-400 hover:text-rose-400 font-bold">×</button>
+        </div>`;
+      optionsList.appendChild(row);
+    });
+
+    counterLabel.textContent = `${optionsArray.length} option${optionsArray.length === 1 ? '' : 's'}`;
+    drawWheel();
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // Draw Weighted Canvas Wheel
+  function drawWheel() {
+    const totalWeight = optionsArray.reduce((acc, curr) => acc + curr.weight, 0);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = centerX - 16;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (optionsArray.length === 0 || totalWeight === 0) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#14283b';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(143,176,204,0.2)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      return;
+    }
+
+    let startAngle = currentAngle;
+
+    for (let i = 0; i < optionsArray.length; i++) {
+      const sliceAngle = (optionsArray[i].weight / totalWeight) * (Math.PI * 2);
+      const endAngle = startAngle + sliceAngle;
+
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.fillStyle = palette[i % palette.length];
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#0e1c2b';
+      ctx.stroke();
+
+      // Text label
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(startAngle + sliceAngle / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#0e1c2b';
+      ctx.font = 'bold 26px "Space Grotesk", sans-serif';
+      
+      let text = optionsArray[i].label;
+      if (text.length > 14) text = text.substring(0, 12) + '...';
+      
+      ctx.fillText(text, radius - 40, 9);
+      ctx.restore();
+
+      startAngle = endAngle;
+    }
+
+    // Rim & Center Pin
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = '#17304a';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 38, 0, Math.PI * 2);
+    ctx.fillStyle = '#0e1c2b';
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#6fd8cb';
+    ctx.stroke();
+  }
+
+  // Reduced Velocity Spin Engine
+  function triggerWheelSpin() {
+    if (isSpinning || optionsArray.length < 2) return;
+
+    initAudio();
+    isSpinning = true;
+    spinBtn.disabled = true;
+    resultOverlay.classList.remove('active');
+
+    // Reduced Velocity Parameters for Smooth, Controlled Rotation
+    const profile = speedProfile.value;
+    let speed = profile === 'slow' ? 0.12 : (profile === 'fast' ? 0.28 : 0.19);
+    const friction = profile === 'slow' ? 0.993 : (profile === 'fast' ? 0.988 : 0.991);
+
+    const totalWeight = optionsArray.reduce((acc, curr) => acc + curr.weight, 0);
+
+    function step() {
+      currentAngle += speed;
+      speed *= friction;
+      drawWheel();
+
+      // Current sector calculation
+      let normAngle = (Math.PI * 1.5 - currentAngle) % (Math.PI * 2);
+      if (normAngle < 0) normAngle += Math.PI * 2;
+
+      let accumulated = 0;
+      let currentSector = 0;
+      for (let i = 0; i < optionsArray.length; i++) {
+        const sliceAngle = (optionsArray[i].weight / totalWeight) * (Math.PI * 2);
+        accumulated += sliceAngle;
+        if (normAngle <= accumulated) {
+          currentSector = i;
+          break;
+        }
+      }
+
+      if (currentSector !== lastSectorIndex) {
+        playTickSound();
+        lastSectorIndex = currentSector;
+      }
+
+      if (speed > 0.001) {
+        requestAnimationFrame(step);
+      } else {
+        isSpinning = false;
+        spinBtn.disabled = false;
+        announceWinner(currentSector);
+      }
+    }
+
+    step();
+  }
+
+  function announceWinner(idx) {
+    const winner = optionsArray[idx].label;
+    winnerDisplay.textContent = winner;
+    resultOverlay.classList.add('active');
+    
+    // Log to History
+    spinHistory.unshift({ winner, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) });
+    renderHistory();
+
+    playWinFanfare();
+  }
+
+  function renderHistory() {
+    if (!spinHistory.length) {
+      historyLog.innerHTML = `<div class="text-slate-500 text-[11px]">No spins recorded yet.</div>`;
+      return;
+    }
+    historyLog.innerHTML = spinHistory.map(item => 
+      `<div class="flex justify-between items-center py-0.5 border-b border-white/5">
+        <span class="text-teal-300 font-semibold truncate max-w-[180px]">${escapeHtml(item.winner)}</span>
+        <span class="text-[10px] text-slate-400">${item.time}</span>
+      </div>`
+    ).join('');
+  }
+
+  function clearHistory() {
+    spinHistory = [];
+    renderHistory();
+  }
+
+  function keepWinnerAndClose() {
+    resultOverlay.classList.remove('active');
+  }
+
+  function eliminateWinnerAndSpin() {
+    const winnerText = winnerDisplay.textContent;
+    const idx = optionsArray.findIndex(opt => opt.label === winnerText);
+    if (idx !== -1) {
+      optionsArray.splice(idx, 1);
+      updateInterface();
+    }
+    resultOverlay.classList.remove('active');
+    if (optionsArray.length >= 2) {
+      setTimeout(triggerWheelSpin, 300);
+    }
+  }
+
+  // Initialize
+  updateInterface();
+</script>
+</body>
+</html>

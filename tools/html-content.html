@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Structured Text Extractor Studio — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  select, input[type="text"], textarea { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
+  select:focus, input:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
+  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-6xl px-6 py-10">
+    <!-- Header -->
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Structured Text Extractor Studio</h1>
+    <p class="text-sm text-slate-400 mb-6">Extract clean, structured Markdown, Plain Text, or JSON AST from HTML documents while preserving layout layout, tables, and headings.</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Input & Configuration Left Panel -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-white/10 pb-2 gap-2">
+          <button id="tabInputBtn" onclick="switchTab('input')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">HTML Input</button>
+          <button id="tabOptionsBtn" onclick="switchTab('options')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Extraction Filters</button>
+        </div>
+
+        <!-- TAB 1: HTML INPUT SOURCE -->
+        <div id="tabInput" class="space-y-4">
+          <!-- Drop Zone -->
+          <div id="dropZone" class="drop-zone rounded-md p-6 text-center bg-[#14283b]/20 cursor-pointer">
+            <input type="file" id="fileInput" accept=".html,.htm,.txt" class="hidden" />
+            <div class="mono text-teal-300 text-xs font-semibold mb-1">Click or drag HTML document here</div>
+            <div id="fileLabel" class="text-[11px] text-slate-400">Supports .html and .htm files</div>
+          </div>
+
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-white/10"></div>
+            <span class="flex-shrink mx-2 mono text-[10px] text-slate-500 uppercase">OR Paste Markup</span>
+            <div class="flex-grow border-t border-white/10"></div>
+          </div>
+
+          <!-- Raw Input Textarea -->
+          <div>
+            <textarea id="rawInput" rows="10" placeholder="Paste HTML markup here..." class="w-full p-3 rounded-md text-xs mono leading-relaxed"></textarea>
+          </div>
+
+          <button id="extractBtn" onclick="processHTML()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md">Extract Structured Data</button>
+        </div>
+
+        <!-- TAB 2: FILTERS & RULES -->
+        <div id="tabOptions" class="space-y-4 hidden bg-[#14283b]/30 p-4 rounded-md border border-white/10">
+          <div>
+            <label class="mono text-xs text-slate-400 uppercase block mb-1">Target Output Format</label>
+            <select id="outputFormat" onchange="processHTML()" class="w-full rounded-md p-2 text-xs">
+              <option value="markdown" selected>Structured Markdown (.md)</option>
+              <option value="plaintext">Pure Plain Text (.txt)</option>
+              <option value="cleanHtml">Sanitized Clean HTML</option>
+              <option value="json">Parsed JSON AST Tree (.json)</option>
+              <option value="csvTables">Extracted Tables Only (.csv)</option>
+            </select>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-white/5">
+            <label class="mono text-[11px] text-teal-300 uppercase block font-semibold">Extraction Toggles</label>
+            
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="keepLinks" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+              <span>Include Hyperlinks [Text](URL)</span>
+            </label>
+
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="keepImages" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+              <span>Include Image Alt Descriptions</span>
+            </label>
+
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="stripStyles" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+              <span>Remove Scripts, Inline CSS, & SVGs</span>
+            </label>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-white/5">
+            <label class="mono text-[11px] text-teal-300 uppercase block font-semibold">Sanitization Rules</label>
+            
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="trimWhitespace" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+              <span>Collapse Blank Lines & Spaces</span>
+            </label>
+
+            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              <input type="checkbox" id="maskEmails" onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+              <span>Anonymize Detected Email Addresses</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Extracted Result Right Display Panel -->
+      <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+        
+        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex-grow flex flex-col">
+          
+          <!-- Search & Header Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-white/10">
+            <span class="mono text-xs uppercase text-teal-300 font-bold">Extracted Output</span>
+            <input type="text" id="searchFilter" oninput="filterOutputText()" placeholder="Search extracted text..." class="p-1.5 rounded text-xs px-2 w-48" />
+          </div>
+
+          <!-- Output Content Area -->
+          <textarea id="outputText" readonly class="w-full h-[420px] p-3 rounded bg-[#0e1c2b] text-xs mono leading-relaxed resize-none border border-white/5"></textarea>
+
+          <!-- Live Character Statistics Bar -->
+          <div class="flex flex-wrap justify-between items-center text-[11px] mono text-slate-400 mt-3 pt-2 border-t border-white/5">
+            <div id="statCounts">Characters: 0 | Words: 0 | Lines: 0</div>
+            <div id="statElements">Headings: 0 | Tables: 0 | Links: 0</div>
+          </div>
+
+        </div>
+
+        <!-- Toolbar Actions -->
+        <div class="bg-[#14283b]/30 p-3 rounded-md border border-white/10 flex justify-between items-center gap-2">
+          <button id="copyBtn" onclick="copyExtractedText()" class="secondary mono text-xs uppercase px-4 py-2 rounded-md">Copy Text</button>
+          <button id="downloadBtn" onclick="downloadExtractedText()" class="primary mono text-xs uppercase px-5 py-2 rounded-md">Download Output</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileLabel = document.getElementById('fileLabel');
+    const rawInput = document.getElementById('rawInput');
+    const outputText = document.getElementById('outputText');
+    const searchFilter = document.getElementById('searchFilter');
+
+    const outputFormat = document.getElementById('outputFormat');
+    const keepLinks = document.getElementById('keepLinks');
+    const keepImages = document.getElementById('keepImages');
+    const stripStyles = document.getElementById('stripStyles');
+    const trimWhitespace = document.getElementById('trimWhitespace');
+    const maskEmails = document.getElementById('maskEmails');
+
+    const statCounts = document.getElementById('statCounts');
+    const statElements = document.getElementById('statElements');
+
+    let fullExtractedCache = "";
+
+    window.switchTab = function(tab) {
+      ['input', 'options'].forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+        const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
+        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
+      activeBtn.classList.remove('text-slate-400');
+      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+    };
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('active');
+      if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) loadFile(e.target.files[0]);
+    });
+
+    function loadFile(file) {
+      fileLabel.textContent = `File: ${file.name}`;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        rawInput.value = evt.target.result;
+        processHTML();
+      };
+      reader.readAsText(file);
+    }
+
+    function processHTML() {
+      const htmlString = rawInput.value;
+      if (!htmlString.trim()) {
+        outputText.value = "";
+        updateStats("", 0, 0, 0);
+        return;
+      }
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, 'text/html');
+
+      const headingsCount = doc.querySelectorAll('h1, h2, h3, h4, h5, h6').length;
+      const tablesCount = doc.querySelectorAll('table').length;
+      const linksCount = doc.querySelectorAll('a').length;
+
+      if (stripStyles.checked) {
+        doc.querySelectorAll('script, style, noscript, iframe, svg, head').forEach(el => el.remove());
+      }
+
+      const fmt = outputFormat.value;
+      let result = "";
+
+      if (fmt === 'markdown') {
+        result = parseNodeStructure(doc.body || doc.documentElement).trim();
+      } else if (fmt === 'plaintext') {
+        result = (doc.body || doc.documentElement).innerText || (doc.body || doc.documentElement).textContent;
+      } else if (fmt === 'cleanHtml') {
+        result = doc.body ? doc.body.innerHTML : doc.documentElement.innerHTML;
+      } else if (fmt === 'json') {
+        result = JSON.stringify(htmlToJsonAst(doc.body || doc.documentElement), null, 2);
+      } else if (fmt === 'csvTables') {
+        result = extractTablesAsCsv(doc);
+      }
+
+      if (trimWhitespace.checked && fmt !== 'json') {
+        result = result.replace(/\n{3,}/g, '\n\n').trim();
+      }
+
+      if (maskEmails.checked) {
+        result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[ANONYMIZED_EMAIL]');
+      }
+
+      fullExtractedCache = result;
+      filterOutputText();
+
+      updateStats(result, headingsCount, tablesCount, linksCount);
+    }
+
+    function parseNodeStructure(node) {
+      let result = '';
+
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent.replace(/\s+/g, ' ');
+          if (text.trim()) result += text;
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          const tag = child.tagName.toLowerCase();
+
+          if (/^h[1-6]$/.test(tag)) {
+            const level = '#'.repeat(parseInt(tag[1]));
+            result += `\n\n${level} ${parseNodeStructure(child).trim()}\n\n`;
+          } else if (tag === 'p') {
+            result += `\n\n${parseNodeStructure(child).trim()}\n\n`;
+          } else if (tag === 'a' && keepLinks.checked) {
+            const href = child.getAttribute('href') || '#';
+            result += ` [${parseNodeStructure(child).trim()}](${href}) `;
+          } else if (tag === 'img' && keepImages.checked) {
+            const alt = child.getAttribute('alt') || 'Image';
+            result += ` ![${alt}] `;
+          } else if (tag === 'ul' || tag === 'ol') {
+            result += `\n${parseListStructure(child, tag === 'ol')}\n`;
+          } else if (tag === 'table') {
+            result += `\n\n${parseTableStructure(child)}\n\n`;
+          } else if (tag === 'blockquote') {
+            result += `\n\n> ${parseNodeStructure(child).trim()}\n\n`;
+          } else if (tag === 'br') {
+            result += '\n';
+          } else if (tag === 'hr') {
+            result += '\n\n---\n\n';
+          } else {
+            result += parseNodeStructure(child);
+          }
+        }
+      });
+
+      return result;
+    }
+
+    function parseListStructure(listNode, isOrdered) {
+      let listText = '';
+      let idx = 1;
+
+      listNode.querySelectorAll(':scope > li').forEach(li => {
+        const prefix = isOrdered ? `${idx++}. ` : '* ';
+        listText += `${prefix}${parseNodeStructure(li).trim()}\n`;
+      });
+
+      return listText;
+    }
+
+    function parseTableStructure(tableNode) {
+      const rows = Array.from(tableNode.querySelectorAll('tr'));
+      if (rows.length === 0) return '';
+
+      return rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'))
+          .map(cell => parseNodeStructure(cell).trim().replace(/\s+/g, ' '));
+        return '| ' + cells.join(' | ') + ' |';
+      }).join('\n');
+    }
+
+    function extractTablesAsCsv(doc) {
+      const tables = doc.querySelectorAll('table');
+      if (!tables.length) return "No tables found in document.";
+
+      let csvContent = "";
+      tables.forEach((tbl, idx) => {
+        csvContent += `--- Table #${idx + 1} ---\n`;
+        tbl.querySelectorAll('tr').forEach(row => {
+          const rowData = Array.from(row.querySelectorAll('th, td'))
+            .map(c => `"${c.textContent.trim().replace(/"/g, '""')}"`);
+          csvContent += rowData.join(',') + '\n';
+        });
+        csvContent += '\n';
+      });
+      return csvContent;
+    }
+
+    function htmlToJsonAst(node) {
+      const obj = { tag: node.nodeName.toLowerCase() };
+      if (node.attributes && node.attributes.length > 0) {
+        obj.attributes = {};
+        Array.from(node.attributes).forEach(attr => {
+          obj.attributes[attr.name] = attr.value;
+        });
+      }
+      const children = [];
+      node.childNodes.forEach(child => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          if (child.textContent.trim()) children.push(child.textContent.trim());
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          children.push(htmlToJsonAst(child));
+        }
+      });
+      if (children.length > 0) obj.children = children;
+      return obj;
+    }
+
+    function filterOutputText() {
+      const query = searchFilter.value.toLowerCase();
+      if (!query) {
+        outputText.value = fullExtractedCache;
+        return;
+      }
+
+      const filteredLines = fullExtractedCache.split('\n').filter(line => line.toLowerCase().includes(query));
+      outputText.value = filteredLines.join('\n');
+    }
+
+    function updateStats(str, hCount, tCount, lCount) {
+      const chars = str.length;
+      const words = str ? str.trim().split(/\s+/).filter(Boolean).length : 0;
+      const lines = str ? str.split('\n').length : 0;
+
+      statCounts.textContent = `Chars: ${chars.toLocaleString()} | Words: ${words.toLocaleString()} | Lines: ${lines.toLocaleString()}`;
+      statElements.textContent = `Headings: ${hCount} | Tables: ${tCount} | Links: ${lCount}`;
+    }
+
+    function copyExtractedText() {
+      if (!outputText.value) return;
+      navigator.clipboard.writeText(outputText.value).then(() => {
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = 'Copy Text', 2000);
+      });
+    }
+
+    function downloadExtractedText() {
+      if (!outputText.value) return;
+
+      const extMap = {
+        markdown: 'md',
+        plaintext: 'txt',
+        cleanHtml: 'html',
+        json: 'json',
+        csvTables: 'csv'
+      };
+
+      const ext = extMap[outputFormat.value] || 'txt';
+      const blob = new Blob([outputText.value], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `extracted_output_${Date.now()}.${ext}`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
