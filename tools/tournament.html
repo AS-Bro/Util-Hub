@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tournament Arena Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  
+  select, input[type="text"], textarea { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color:#e7eef4; 
+  }
+  select:focus, input:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  
+  /* Buttons */
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
+  button.primary:hover:not(:disabled) { background:#93e5da; box-shadow: 0 0 15px rgba(111,216,203,0.3); }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
+
+  /* Match Slot Styling */
+  .match-card {
+    background: #14283b;
+    border: 1px solid rgba(143,176,204,0.2);
+    transition: all 0.2s ease;
+  }
+  .match-card:hover {
+    border-color: #6fd8cb;
+    box-shadow: 0 4px 12px rgba(111,216,203,0.1);
+  }
+  .match-card.completed {
+    border-color: rgba(111,216,203,0.4);
+    background: #0f2234;
+  }
+
+  /* Podium Overlay Blur Modal */
+  .modal-screen {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(8, 17, 26, 0.94);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 1.5rem;
+    backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .modal-screen.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0e1c2b; }
+  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+</style>
+</head>
+<body class="min-h-screen py-8 px-4">
+  <div class="mx-auto max-w-6xl">
+    
+    <!-- Header -->
+    <div class="border-b border-white/10 pb-4 mb-6 flex flex-wrap justify-between items-end gap-3">
+      <div>
+        <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+        <h1 class="display text-2xl font-bold mt-2">Tournament Arena Studio</h1>
+        <p class="text-xs text-slate-400 mt-1">Live bracket generator, auto-seeding, match score tracking, and podium celebrations.</p>
+      </div>
+
+      <div class="flex items-center gap-3 bg-[#14283b]/50 p-2 rounded-md border border-white/10 text-xs mono">
+        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
+          <input type="checkbox" id="soundToggle" checked class="accent-teal-400 w-4 h-4 rounded" />
+          <span>Audio FX</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Configurator Panel -->
+      <div class="lg:col-span-4 space-y-4">
+        
+        <!-- Roster & Setup Panel -->
+        <div class="bg-[#14283b]/30 p-5 rounded-lg border border-white/10 space-y-4">
+          <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Roster & Tournament Setup</span>
+
+          <!-- Add Player Form -->
+          <div>
+            <label class="mono text-[11px] text-slate-400 block mb-1">Add Competitors (comma separated)</label>
+            <div class="flex gap-2">
+              <input type="text" id="playerInput" placeholder="Alpha, Bravo, Charlie..." class="w-full rounded-md p-2 text-xs mono" />
+              <button onclick="addPlayersFromInput()" class="primary px-3 rounded-md text-xs mono font-bold">Add</button>
+            </div>
+          </div>
+
+          <!-- Roster List Box -->
+          <div>
+            <div class="flex justify-between items-center mb-1 mono text-[11px]">
+              <span class="text-slate-400">Current Competitors</span>
+              <span id="playerCounter" class="text-teal-300 font-semibold">0 entered</span>
+            </div>
+            <div id="rosterList" class="flex flex-col gap-1.5 p-2 bg-[#08111a] border border-white/10 rounded-md max-h-[160px] overflow-y-auto">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Quick Seed Utilities -->
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+            <button onclick="shuffleRoster()" class="secondary py-2 rounded-md text-xs mono">🔀 Shuffle Seeds</button>
+            <button onclick="clearRoster()" class="secondary py-2 rounded-md text-xs mono text-rose-300 border-rose-500/20 hover:border-rose-400">🗑️ Clear Roster</button>
+          </div>
+
+          <!-- Bracket Generate CTA -->
+          <button onclick="generateTournamentBracket()" class="primary w-full py-3 rounded-md mono text-xs uppercase tracking-wider shadow-lg">
+            ⚡ Generate Tournament Bracket
+          </button>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="bg-[#14283b]/30 p-4 rounded-lg border border-white/10 space-y-2">
+          <div class="flex justify-between items-center border-b border-white/10 pb-2">
+            <span class="mono text-xs uppercase text-teal-300 font-bold">Match History</span>
+            <button onclick="clearMatchLog()" class="mono text-[10px] text-slate-400 hover:text-white">Clear</button>
+          </div>
+          <div id="matchLog" class="mono text-xs space-y-1 max-h-[120px] overflow-y-auto text-slate-300">
+            <div class="text-slate-500 text-[11px]">No matches finished yet.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Interactive Bracket Arena -->
+      <div class="lg:col-span-8">
+        <div class="bg-[#14283b]/30 p-6 rounded-lg border border-white/10 min-h-[500px] flex flex-col justify-between">
+          
+          <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
+            <span class="mono text-xs uppercase text-teal-300 font-bold" id="tournamentStatus">Bracket View</span>
+            <button onclick="resetTournament()" class="secondary px-3 py-1 text-xs mono">Reset Bracket</button>
+          </div>
+
+          <!-- Bracket Flow Canvas Container -->
+          <div id="bracketDisplay" class="flex gap-6 overflow-x-auto pb-4 items-center justify-start min-h-[380px]">
+            <div class="m-auto text-center text-slate-500 mono text-xs">
+              Add at least 2 competitors and click <strong>Generate Tournament Bracket</strong> to begin.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Winner Celebration Overlay Modal -->
+  <div id="podiumOverlay" class="modal-screen">
+    <div class="text-center space-y-4 max-w-md w-full">
+      <span class="mono text-xs uppercase tracking-widest text-teal-300 font-bold block">👑 Tournament Champion</span>
+      
+      <div class="bg-gradient-to-br from-[#17304a] to-[#0e1c2b] p-8 rounded-xl border border-teal-400/30 shadow-[0_0_50px_rgba(111,216,203,0.2)]">
+        <div class="text-5xl mb-3">🏆</div>
+        <h2 id="championName" class="display text-3xl sm:text-4xl font-extrabold text-teal-300 break-words">--</h2>
+        <p class="mono text-xs text-slate-400 mt-2">Undefeated Champion</p>
+      </div>
+
+      <button onclick="closePodium()" class="primary w-full py-3 rounded-md mono text-xs uppercase">
+        Back To Arena
+      </button>
+    </div>
+  </div>
+
+<script>
+  // DOM Elements
+  const playerInput = document.getElementById('playerInput');
+  const rosterList = document.getElementById('rosterList');
+  const playerCounter = document.getElementById('playerCounter');
+  const bracketDisplay = document.getElementById('bracketDisplay');
+  const tournamentStatus = document.getElementById('tournamentStatus');
+  const matchLog = document.getElementById('matchLog');
+  const podiumOverlay = document.getElementById('podiumOverlay');
+  const championName = document.getElementById('championName');
+  const soundToggle = document.getElementById('soundToggle');
+
+  // Core State
+  let roster = ["Player 1", "Player 2", "Player 3", "Player 4"];
+  let tournamentTree = [];
+  let matchHistory = [];
+  let audioCtx = null;
+
+  function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function playSound(type) {
+    if (!soundToggle.checked) return;
+    try {
+      initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'advance') {
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } else if (type === 'champion') {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.1));
+          g.gain.setValueAtTime(0.12, audioCtx.currentTime + (idx * 0.1));
+          g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.1) + 0.4);
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.start(audioCtx.currentTime + (idx * 0.1));
+          o.stop(audioCtx.currentTime + (idx * 0.1) + 0.4);
+        });
+      }
+    } catch(e){}
+  }
+
+  playerInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addPlayersFromInput(); });
+
+  function addPlayersFromInput() {
+    const raw = playerInput.value.trim();
+    if (!raw) return;
+    const names = raw.split(',').map(s => s.trim()).filter(Boolean);
+    names.forEach(n => { if (!roster.includes(n)) roster.push(n); });
+    playerInput.value = '';
+    updateRosterUI();
+  }
+
+  function removePlayer(idx) {
+    roster.splice(idx, 1);
+    updateRosterUI();
+  }
+
+  function clearRoster() {
+    roster = [];
+    updateRosterUI();
+  }
+
+  function shuffleRoster() {
+    roster.sort(() => Math.random() - 0.5);
+    updateRosterUI();
+  }
+
+  function updateRosterUI() {
+    rosterList.innerHTML = '';
+    if (!roster.length) {
+      rosterList.innerHTML = `<span class="text-xs text-slate-500 p-2">Roster is empty.</span>`;
+    }
+    roster.forEach((player, idx) => {
+      const item = document.createElement('div');
+      item.className = 'flex justify-between items-center bg-[#17304a] px-2.5 py-1.5 rounded border border-white/10 text-xs mono';
+      item.innerHTML = `
+        <span class="truncate max-w-[180px]">${escapeHtml(player)}</span>
+        <button onclick="removePlayer(${idx})" class="text-slate-400 hover:text-rose-400 font-bold">×</button>
+      `;
+      rosterList.appendChild(item);
+    });
+    playerCounter.textContent = `${roster.length} entered`;
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function generateTournamentBracket() {
+    if (roster.length < 2) {
+      alert("Please add at least 2 competitors.");
+      return;
+    }
+
+    // Pad roster to next power of 2 for clean bracket math
+    let count = roster.length;
+    let pow = 1;
+    while (pow < count) pow *= 2;
+
+    let paddedRoster = [...roster];
+    while (paddedRoster.length < pow) {
+      paddedRoster.push("BYE");
+    }
+
+    // Create Round 1
+    tournamentTree = [];
+    let round1 = [];
+    for (let i = 0; i < paddedRoster.length; i += 2) {
+      round1.push({
+        p1: paddedRoster[i],
+        p2: paddedRoster[i+1],
+        score1: 0,
+        score2: 0,
+        winner: paddedRoster[i+1] === "BYE" ? paddedRoster[i] : null
+      });
+    }
+    tournamentTree.push(round1);
+
+    // Build structure for remaining rounds
+    let currentRoundMatches = round1.length;
+    while (currentRoundMatches > 1) {
+      currentRoundMatches = Math.floor(currentRoundMatches / 2);
+      let nextRound = [];
+      for (let i = 0; i < currentRoundMatches; i++) {
+        nextRound.push({ p1: "TBD", p2: "TBD", score1: 0, score2: 0, winner: null });
+      }
+      tournamentTree.push(nextRound);
+    }
+
+    // Auto propagate BYEs
+    propagateWinners();
+    renderBracket();
+    tournamentStatus.textContent = `Live Tournament - ${roster.length} Players`;
+  }
+
+  function advanceWinner(roundIdx, matchIdx, playerNum) {
+    const match = tournamentTree[roundIdx][matchIdx];
+    const winner = playerNum === 1 ? match.p1 : match.p2;
+    if (winner === "TBD" || winner === "BYE" || match.winner) return;
+
+    match.winner = winner;
+    
+    // Log Match
+    const p1Name = match.p1;
+    const p2Name = match.p2;
+    matchHistory.unshift({
+      text: `${winner} defeated ${winner === p1Name ? p2Name : p1Name}`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    renderHistory();
+    playSound('advance');
+
+    propagateWinners();
+    renderBracket();
+
+    // Check if tournament is finished
+    const finalMatch = tournamentTree[tournamentTree.length - 1][0];
+    if (finalMatch.winner) {
+      championName.textContent = finalMatch.winner;
+      setTimeout(() => {
+        podiumOverlay.classList.add('active');
+        playSound('champion');
+      }, 300);
+    }
+  }
+
+  function propagateWinners() {
+    for (let r = 0; r < tournamentTree.length - 1; r++) {
+      for (let m = 0; m < tournamentTree[r].length; m++) {
+        const winner = tournamentTree[r][m].winner;
+        if (winner) {
+          const nextMatchIdx = Math.floor(m / 2);
+          const isP1 = m % 2 === 0;
+          if (isP1) {
+            tournamentTree[r+1][nextMatchIdx].p1 = winner;
+          } else {
+            tournamentTree[r+1][nextMatchIdx].p2 = winner;
+          }
+
+          // Auto-advance if playing BYE
+          const targetMatch = tournamentTree[r+1][nextMatchIdx];
+          if (targetMatch.p1 !== "TBD" && targetMatch.p2 === "BYE") {
+            targetMatch.winner = targetMatch.p1;
+          }
+        }
+      }
+    }
+  }
+
+  function renderBracket() {
+    bracketDisplay.innerHTML = '';
+
+    tournamentTree.forEach((round, rIdx) => {
+      const col = document.createElement('div');
+      col.className = 'flex flex-col justify-around gap-4 min-w-[200px]';
+      
+      const title = document.createElement('div');
+      title.className = 'mono text-[11px] text-teal-300 font-bold uppercase tracking-wider mb-2 text-center';
+      title.textContent = rIdx === tournamentTree.length - 1 ? '👑 Finals' : `Round ${rIdx + 1}`;
+      col.appendChild(title);
+
+      round.forEach((match, mIdx) => {
+        const card = document.createElement('div');
+        card.className = `match-card p-3 rounded-md text-xs mono ${match.winner ? 'completed' : ''}`;
+        
+        card.innerHTML = `
+          <div class="space-y-1.5">
+            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 1)" class="flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p1 ? 'bg-teal-400/20 text-teal-300 font-bold' : 'hover:bg-white/5'}">
+              <span class="truncate max-w-[130px]">${escapeHtml(match.p1)}</span>
+              ${match.winner === match.p1 ? '✓' : ''}
+            </div>
+            <div class="border-t border-white/5"></div>
+            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 2)" class="flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p2 ? 'bg-teal-400/20 text-teal-300 font-bold' : 'hover:bg-white/5'}">
+              <span class="truncate max-w-[130px]">${escapeHtml(match.p2)}</span>
+              ${match.winner === match.p2 ? '✓' : ''}
+            </div>
+          </div>
+        `;
+        col.appendChild(card);
+      });
+
+      bracketDisplay.appendChild(col);
+    });
+  }
+
+  function renderHistory() {
+    if (!matchHistory.length) {
+      matchLog.innerHTML = `<div class="text-slate-500 text-[11px]">No matches finished yet.</div>`;
+      return;
+    }
+    matchLog.innerHTML = matchHistory.map(item => `
+      <div class="flex justify-between items-center py-1 border-b border-white/5">
+        <span class="text-teal-300 font-medium truncate max-w-[180px]">${escapeHtml(item.text)}</span>
+        <span class="text-[10px] text-slate-400">${item.time}</span>
+      </div>
+    `).join('');
+  }
+
+  function clearMatchLog() {
+    matchHistory = [];
+    renderHistory();
+  }
+
+  function resetTournament() {
+    tournamentTree = [];
+    bracketDisplay.innerHTML = `<div class="m-auto text-center text-slate-500 mono text-xs">Add competitors and generate a bracket to start.</div>`;
+    tournamentStatus.textContent = "Bracket View";
+  }
+
+  function closePodium() {
+    podiumOverlay.classList.remove('active');
+  }
+
+  // Initialize
+  updateRosterUI();
+</script>
+</body>
+</html>

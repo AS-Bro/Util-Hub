@@ -81,6 +81,14 @@ const toolsData = [
     icon: 'rotate-cw',
   },
   {
+    id: 'tournament',
+    title: 'Tournament Bracket',
+    description: 'Create and manage tournament brackets for your competitions.',
+    category: 'Fun',
+    url: 'tools/tournament.html',
+    icon: 'users',
+  },
+  {
     id: 'text-repeater',
     title: 'Text Repeater',
     description: 'Repeat any block of text a specified number of times.',
