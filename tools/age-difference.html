@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Difference & Comparison Hub — Utility Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+    .mono { font-family:'IBM Plex Mono',monospace; }
+    .display { font-family:'Space Grotesk',sans-serif; }
+    .card { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+    .input-field { background:#0e1c2b; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+    .input-field:focus { border-color:#6fd8cb; outline:none; }
+    .btn-action { background:#6fd8cb; color:#0e1c2b; font-weight:600; transition: all 0.15s ease; }
+    .btn-action:hover { background:#5bc4b7; transform: translateY(-1px); }
+    .btn-action:active { transform: translateY(0); }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(143,176,204,0.2); border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    
+    <div class="flex justify-between items-center mb-6">
+      <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+      <span class="mono text-xs text-slate-400 bg-white/5 px-2.5 py-1 rounded border border-white/10">v3.0 Comparison Suite</span>
+    </div>
+
+    <div class="mb-6">
+      <h1 class="display text-3xl font-bold mb-1">Age Difference & Compatibility Hub</h1>
+      <p class="text-sm text-slate-400">Precision gap analytics, generational overlap, half-age convergence milestones, and timeline projections.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <div class="lg:col-span-1 space-y-6">
+        
+        <div class="card p-5 rounded-md space-y-5">
+          <span class="mono text-xs uppercase font-bold text-teal-300 block">1. Person Profiles</span>
+
+          <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/10 space-y-3">
+            <span class="mono text-xs uppercase font-bold text-teal-300 flex items-center justify-between">
+              <span>Person 1</span>
+              <span id="p1ZodiacBadge" class="text-[10px] text-slate-400 font-normal"></span>
+            </span>
+            <div>
+              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Name / Label</label>
+              <input type="text" id="p1Name" value="Alex" class="input-field w-full rounded px-3 py-1.5 text-xs mono" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="col-span-2">
+                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Date</label>
+                <input type="date" id="p1Dob" value="1995-05-15" class="input-field w-full rounded px-2 py-1.5 text-xs mono" />
+              </div>
+              <div>
+                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Time</label>
+                <input type="time" id="p1Time" value="08:00" class="input-field w-full rounded px-1.5 py-1.5 text-xs mono" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/10 space-y-3">
+            <span class="mono text-xs uppercase font-bold text-amber-400 flex items-center justify-between">
+              <span>Person 2</span>
+              <span id="p2ZodiacBadge" class="text-[10px] text-slate-400 font-normal"></span>
+            </span>
+            <div>
+              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Name / Label</label>
+              <input type="text" id="p2Name" value="Sam" class="input-field w-full rounded px-3 py-1.5 text-xs mono" />
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="col-span-2">
+                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Date</label>
+                <input type="date" id="p2Dob" value="2000-11-20" class="input-field w-full rounded px-2 py-1.5 text-xs mono" />
+              </div>
+              <div>
+                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Time</label>
+                <input type="time" id="p2Time" value="14:30" class="input-field w-full rounded px-1.5 py-1.5 text-xs mono" />
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="liveTick" class="rounded accent-teal-400 h-4 w-4" checked />
+              <label for="liveTick" class="mono text-xs text-slate-300 cursor-pointer">Live Precision Clock</label>
+            </div>
+            <button id="calcBtn" class="btn-action w-full py-2.5 rounded text-xs display uppercase tracking-wider">Analyze Difference</button>
+            <button id="swapBtn" class="mono text-xs text-slate-400 hover:text-teal-300 w-full py-1.5 border border-white/10 rounded">Swap Profiles ⇄</button>
+          </div>
+
+        </div>
+
+        <div class="card p-4 rounded-md flex flex-col h-[230px]">
+          <div class="flex justify-between items-center mb-3">
+            <span class="mono text-xs uppercase font-bold text-slate-400">Comparison Log</span>
+            <button id="clearHistory" class="mono text-[10px] text-slate-500 hover:text-rose-400">Clear</button>
+          </div>
+          <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 mono text-xs">
+            <div class="text-slate-500 text-center py-6 text-xs">No saved comparisons</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="lg:col-span-2 space-y-6">
+        
+        <div class="card p-6 rounded-md relative overflow-hidden">
+          <span class="mono text-xs uppercase tracking-wider text-teal-300 block mb-2">Age Gap Headline</span>
+          <div id="primaryHeadline" class="display text-2xl sm:text-3xl font-bold mb-4 text-slate-100">
+            Alex is older than Sam
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center mb-4">
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapYears" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Years</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapMonths" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Months</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapDays" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Days</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapHours" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Hours</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapMins" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Mins</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="gapSecs" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Secs</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-xs">
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Days Gap</span>
+              <span id="totDaysGap" class="font-bold text-slate-200 text-sm">0</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Hours Gap</span>
+              <span id="totHoursGap" class="font-bold text-slate-200 text-sm">0</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Current Age Ratio</span>
+              <span id="ageRatio" class="font-bold text-teal-300 text-sm">1.00x</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Percentage Gap</span>
+              <span id="pctGap" class="font-bold text-amber-400 text-sm">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <div class="flex justify-between items-center mb-3">
+            <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold">Standard Social Rules & Half-Age Thresholds</span>
+            <span class="mono text-[10px] bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">Rule: (Age / 2) + 7</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mono text-xs">
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5 space-y-1">
+              <div class="text-teal-300 font-bold" id="p1SocialStatus">Checking rule...</div>
+              <div class="text-slate-400 text-[11px]" id="p1SocialDesc">Minimum socially standard age for older partner.</div>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5 space-y-1">
+              <div class="text-amber-400 font-bold" id="convergenceDate">Calculating Convergence...</div>
+              <div class="text-slate-400 text-[11px]" id="convergenceDesc">Date when older person will be exactly twice the younger person's age.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider text-slate-400 block mb-3 font-bold">Generational & Demographic Profiles</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5 space-y-2 mono text-xs">
+              <div class="font-bold text-teal-300 text-sm" id="p1Header">Alex</div>
+              <div class="flex justify-between"><span class="text-slate-400">Current Age:</span> <span id="p1CurrentAge" class="font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Generation:</span> <span id="p1Gen" class="text-amber-400 font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Zodiac:</span> <span id="p1Zodiac">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Chinese Sign:</span> <span id="p1ChineseSign">-</span></div>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5 space-y-2 mono text-xs">
+              <div class="font-bold text-amber-400 text-sm" id="p2Header">Sam</div>
+              <div class="flex justify-between"><span class="text-slate-400">Current Age:</span> <span id="p2CurrentAge" class="font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Generation:</span> <span id="p2Gen" class="text-amber-400 font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Zodiac:</span> <span id="p2Zodiac">-</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Chinese Sign:</span> <span id="p2ChineseSign">-</span></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider text-slate-400 block mb-3 font-bold">Relative Life Milestone Comparison</span>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left mono text-xs">
+              <thead>
+                <tr class="border-b border-white/10 text-slate-400 text-[11px] uppercase">
+                  <th class="pb-2">Milestone / Event</th>
+                  <th class="pb-2" id="thP1">Alex's Age</th>
+                  <th class="pb-2" id="thP2">Sam's Age</th>
+                  <th class="pb-2">Calendar Year</th>
+                </tr>
+              </thead>
+              <tbody id="milestoneTable" class="divide-y divide-white/5 text-slate-300">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+            <div>
+              <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold block">Future & Historical Projection</span>
+              <span class="text-xs text-slate-400">Calculate how old both people were or will be on any target date.</span>
+            </div>
+            <input type="date" id="targetProjDate" value="2035-01-01" class="input-field rounded px-3 py-1.5 text-xs mono" />
+          </div>
+
+          <div id="projectionBox" class="bg-[#0e1c2b] p-4 rounded border border-teal-500/20 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mono text-xs">
+            <div>
+              <span class="text-slate-400 text-[10px] uppercase block" id="projP1Label">Alex in 2035</span>
+              <span id="projP1Age" class="display text-xl font-bold text-teal-300">0 yrs</span>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] uppercase block" id="projP2Label">Sam in 2035</span>
+              <span id="projP2Age" class="display text-xl font-bold text-amber-400">0 yrs</span>
+            </div>
+            <div>
+              <span class="text-slate-400 text-[10px] uppercase block">Age Ratio Then</span>
+              <span id="projRatio" class="display text-xl font-bold text-slate-200">1.00x</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // State & References
+    const p1Name = document.getElementById('p1Name');
+    const p1Dob = document.getElementById('p1Dob');
+    const p1Time = document.getElementById('p1Time');
+    const p2Name = document.getElementById('p2Name');
+    const p2Dob = document.getElementById('p2Dob');
+    const p2Time = document.getElementById('p2Time');
+    const liveTick = document.getElementById('liveTick');
+    const targetProjDate = document.getElementById('targetProjDate');
+
+    let timerInterval = null;
+    let history = [];
+
+    // Helper: Western Zodiac
+    function getZodiac(date) {
+      const day = date.getUTCDate();
+      const month = date.getUTCMonth() + 1;
+      const z = [
+        { name: 'Capricorn ♑', end: 19 }, { name: 'Aquarius ♒', end: 18 },
+        { name: 'Pisces ♓', end: 20 }, { name: 'Aries ♈', end: 19 },
+        { name: 'Taurus ♉', end: 20 }, { name: 'Gemini ♊', end: 20 },
+        { name: 'Cancer ♋', end: 22 }, { name: 'Leo ♌', end: 22 },
+        { name: 'Virgo ♍', end: 22 }, { name: 'Libra ♎', end: 23 },
+        { name: 'Scorpio ♏', end: 21 }, { name: 'Sagittarius ♐', end: 21 },
+        { name: 'Capricorn ♑', end: 31 }
+      ];
+      return day <= z[month - 1].end ? z[month - 1].name : z[month].name;
+    }
+
+    // Helper: Chinese Zodiac
+    function getChineseZodiac(year) {
+      const animals = ['Rat 🐀', 'Ox 🐂', 'Tiger 🐅', 'Rabbit 🐇', 'Dragon 🐉', 'Snake 🐍', 'Horse 🐎', 'Goat 🐐', 'Monkey 🐒', 'Rooster 🐓', 'Dog 🐕', 'Pig 🐖'];
+      return animals[(year - 4) % 12];
+    }
+
+    // Helper: Demographic Generation
+    function getGeneration(year) {
+      if (year >= 2013) return 'Gen Alpha';
+      if (year >= 1997) return 'Gen Z (Zoomer)';
+      if (year >= 1981) return 'Millennial (Gen Y)';
+      if (year >= 1965) return 'Gen X';
+      if (year >= 1946) return 'Baby Boomer';
+      if (year >= 1928) return 'Silent Generation';
+      return 'Greatest Generation';
+    }
+
+    // Calculate Precision Breakdown
+    function analyzeDifference() {
+      if (!p1Dob.value || !p2Dob.value) return;
+
+      const t1 = p1Time.value.split(':');
+      const t2 = p2Time.value.split(':');
+
+      const d1 = new Date(p1Dob.value);
+      d1.setHours(parseInt(t1[0] || 0), parseInt(t1[1] || 0), 0);
+
+      const d2 = new Date(p2Dob.value);
+      d2.setHours(parseInt(t2[0] || 0), parseInt(t2[1] || 0), 0);
+
+      const now = new Date();
+
+      const olderDate = d1 < d2 ? d1 : d2;
+      const youngerDate = d1 < d2 ? d2 : d1;
+
+      const olderName = d1 < d2 ? (p1Name.value || 'Person 1') : (p2Name.value || 'Person 2');
+      const youngerName = d1 < d2 ? (p2Name.value || 'Person 2') : (p1Name.value || 'Person 1');
+
+      // Main Headline
+      document.getElementById('primaryHeadline').innerHTML = `
+        <span class="text-teal-300">${olderName}</span> is older than <span class="text-amber-400">${youngerName}</span>
+      `;
+
+      // Year/Month/Day Breakdown
+      let y1 = olderDate.getFullYear(), m1 = olderDate.getMonth(), day1 = olderDate.getDate();
+      let y2 = youngerDate.getFullYear(), m2 = youngerDate.getMonth(), day2 = youngerDate.getDate();
+
+      let years = y2 - y1;
+      let months = m2 - m1;
+      let days = day2 - day1;
+
+      if (days < 0) {
+        months--;
+        const prevMonth = new Date(y2, m2, 0);
+        days += prevMonth.getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const diffMs = Math.abs(d2 - d1);
+      const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diffMs / (1000 * 60)) % 60);
+      const secs = Math.floor((diffMs / 1000) % 60);
+
+      document.getElementById('gapYears').textContent = years;
+      document.getElementById('gapMonths').textContent = months;
+      document.getElementById('gapDays').textContent = days;
+      document.getElementById('gapHours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('gapMins').textContent = String(mins).padStart(2, '0');
+      document.getElementById('gapSecs').textContent = String(secs).padStart(2, '0');
+
+      // Totals
+      const totalDaysVal = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const totalHoursVal = totalDaysVal * 24;
+
+      document.getElementById('totDaysGap').textContent = totalDaysVal.toLocaleString();
+      document.getElementById('totHoursGap').textContent = totalHoursVal.toLocaleString();
+
+      // Current Ages & Ratios
+      const olderAgeDays = (now - olderDate) / (1000 * 60 * 60 * 24);
+      const youngerAgeDays = (now - youngerDate) / (1000 * 60 * 60 * 24);
+
+      const olderAgeYrs = olderAgeDays / 365.25;
+      const youngerAgeYrs = youngerAgeDays / 365.25;
+
+      const ratio = youngerAgeDays > 0 ? (olderAgeDays / youngerAgeDays).toFixed(2) : 'N/A';
+      const pct = youngerAgeDays > 0 ? (((olderAgeDays - youngerAgeDays) / youngerAgeDays) * 100).toFixed(1) : '0';
+
+      document.getElementById('ageRatio').textContent = `${ratio}x`;
+      document.getElementById('pctGap').textContent = `${pct}% older`;
+
+      // Social Rule (Half Age + 7)
+      const minAgeLimit = (olderAgeYrs / 2) + 7;
+      const p1SocialStatus = document.getElementById('p1SocialStatus');
+      if (youngerAgeYrs >= minAgeLimit) {
+        p1SocialStatus.textContent = `✓ Socially Compatible Rule Pass`;
+        p1SocialStatus.className = 'text-teal-300 font-bold';
+      } else {
+        p1SocialStatus.textContent = `! Below Standard (Age/2 + 7 = ${minAgeLimit.toFixed(1)} yrs)`;
+        p1SocialStatus.className = 'text-amber-400 font-bold';
+      }
+
+      // Age Convergence (When older is exactly 2x younger)
+      // olderAge = youngerAge + gap -> (2 * youngerAge) = youngerAge + gap -> youngerAge = gap
+      const convergenceYoungerAge = totalDaysVal; // in days
+      const convergenceDateObj = new Date(youngerDate.getTime() + (convergenceYoungerAge * 24 * 60 * 60 * 1000));
+      
+      document.getElementById('convergenceDate').textContent = `${convergenceDateObj.toISOString().split('T')[0]}`;
+      document.getElementById('convergenceDesc').textContent = `When ${youngerName} turns ${years} years old, ${olderName} will be ${years * 2} (2x age).`;
+
+      // Profiles Overview
+      const name1 = p1Name.value || 'Person 1';
+      const name2 = p2Name.value || 'Person 2';
+
+      document.getElementById('p1Header').textContent = name1;
+      document.getElementById('p2Header').textContent = name2;
+
+      document.getElementById('p1CurrentAge').textContent = `${olderDate === d1 ? olderAgeYrs.toFixed(1) : youngerAgeYrs.toFixed(1)} yrs`;
+      document.getElementById('p2CurrentAge').textContent = `${olderDate === d2 ? olderAgeYrs.toFixed(1) : youngerAgeYrs.toFixed(1)} yrs`;
+
+      document.getElementById('p1Gen').textContent = getGeneration(d1.getFullYear());
+      document.getElementById('p2Gen').textContent = getGeneration(d2.getFullYear());
+
+      document.getElementById('p1Zodiac').textContent = getZodiac(d1);
+      document.getElementById('p2Zodiac').textContent = getZodiac(d2);
+
+      document.getElementById('p1ChineseSign').textContent = getChineseZodiac(d1.getFullYear());
+      document.getElementById('p2ChineseSign').textContent = getChineseZodiac(d2.getFullYear());
+
+      document.getElementById('thP1').textContent = `${name1}'s Age`;
+      document.getElementById('thP2').textContent = `${name2}'s Age`;
+
+      // Populate Milestone Table
+      renderMilestones(d1, d2, name1, name2);
+
+      // Target Date Projection
+      updateProjection();
+    }
+
+    // Milestones Generator
+    function renderMilestones(d1, d2, name1, name2) {
+      const milestones = [0, 18, 21, 30, 40, 50, 65];
+      const table = document.getElementById('milestoneTable');
+
+      let html = '';
+      milestones.forEach(m => {
+        // When Person 1 turns m
+        const targetYearP1 = d1.getFullYear() + m;
+        const targetDateP1 = new Date(d1);
+        targetDateP1.setFullYear(targetYearP1);
+        const p2Age = ((targetDateP1 - d2) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
+
+        html += `
+          <tr>
+            <td class="py-2 text-slate-300">${name1} turns ${m}</td>
+            <td class="py-2 text-teal-300 font-bold">${m} yrs</td>
+            <td class="py-2 ${p2Age < 0 ? 'text-slate-500' : 'text-amber-400 font-bold'}">${p2Age < 0 ? 'Not Born' : p2Age + ' yrs'}</td>
+            <td class="py-2 text-slate-400">${targetYearP1}</td>
+          </tr>
+        `;
+      });
+
+      table.innerHTML = html;
+    }
+
+    // Target Date Projection Engine
+    function updateProjection() {
+      if (!p1Dob.value || !p2Dob.value || !targetProjDate.value) return;
+
+      const projDate = new Date(targetProjDate.value);
+      const d1 = new Date(p1Dob.value);
+      const d2 = new Date(p2Dob.value);
+
+      const n1 = p1Name.value || 'Person 1';
+      const n2 = p2Name.value || 'Person 2';
+
+      const age1 = ((projDate - d1) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
+      const age2 = ((projDate - d2) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
+
+      document.getElementById('projP1Label').textContent = `${n1} in ${projDate.getFullYear()}`;
+      document.getElementById('projP2Label').textContent = `${n2} in ${projDate.getFullYear()}`;
+
+      document.getElementById('projP1Age').textContent = age1 < 0 ? 'Not Born' : `${age1} yrs`;
+      document.getElementById('projP2Age').textContent = age2 < 0 ? 'Not Born' : `${age2} yrs`;
+
+      if (age1 > 0 && age2 > 0) {
+        const projRatioVal = (Math.max(age1, age2) / Math.min(age1, age2)).toFixed(2);
+        document.getElementById('projRatio').textContent = `${projRatioVal}x`;
+      } else {
+        document.getElementById('projRatio').textContent = 'N/A';
+      }
+    }
+
+    // Timer Controls
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (liveTick.checked) {
+        timerInterval = setInterval(analyzeDifference, 1000);
+      }
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      analyzeDifference();
+      startTimer();
+      saveHistory();
+    });
+
+    liveTick.addEventListener('change', startTimer);
+    targetProjDate.addEventListener('change', updateProjection);
+
+    // Swap Profiles
+    document.getElementById('swapBtn').addEventListener('click', () => {
+      const nTmp = p1Name.value; p1Name.value = p2Name.value; p2Name.value = nTmp;
+      const dTmp = p1Dob.value; p1Dob.value = p2Dob.value; p2Dob.value = dTmp;
+      const tTmp = p1Time.value; p1Time.value = p2Time.value; p2Time.value = tTmp;
+      analyzeDifference();
+    });
+
+    // Saved History
+    function saveHistory() {
+      const n1 = p1Name.value || 'P1';
+      const n2 = p2Name.value || 'P2';
+      const gap = `${document.getElementById('gapYears').textContent}y ${document.getElementById('gapMonths').textContent}m ${document.getElementById('gapDays').textContent}d`;
+      
+      if (history.length > 0 && history[0].label === `${n1} vs ${n2}`) return;
+
+      history.unshift({ label: `${n1} vs ${n2}`, gap });
+      if (history.length > 8) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-slate-500 text-center py-6 text-xs">No saved comparisons</div>`;
+        return;
+      }
+      historyList.innerHTML = history.map((item) => `
+        <div class="bg-[#0e1c2b] p-2 rounded border border-white/5 flex justify-between items-center">
+          <span class="text-slate-300 font-semibold">${item.label}</span>
+          <span class="text-teal-300 font-bold">${item.gap}</span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('clearHistory').addEventListener('click', () => {
+      history = [];
+      renderHistory();
+    });
+
+    // Initial Execution
+    analyzeDifference();
+    startTimer();
+  </script>
+</body>
+</html>

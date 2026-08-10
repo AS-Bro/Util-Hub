@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Calculator & Life Analytics — Utility Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+    .mono { font-family:'IBM Plex Mono',monospace; }
+    .display { font-family:'Space Grotesk',sans-serif; }
+    .card { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+    .input-field { background:#0e1c2b; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
+    .input-field:focus { border-color:#6fd8cb; outline:none; }
+    .btn-action { background:#6fd8cb; color:#0e1c2b; font-weight:600; transition: all 0.15s ease; }
+    .btn-action:hover { background:#5bc4b7; transform: translateY(-1px); }
+    .btn-action:active { transform: translateY(0); }
+    
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(143,176,204,0.2); border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    
+    <div class="flex justify-between items-center mb-6">
+      <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+      <span class="mono text-xs text-slate-400 bg-white/5 px-2.5 py-1 rounded border border-white/10">v3.0 Life Analytics</span>
+    </div>
+
+    <div class="mb-6">
+      <h1 class="display text-3xl font-bold mb-1">Age Calculator & Life Analytics</h1>
+      <p class="text-sm text-slate-400">Precision chronological age tracking, biological metrics, astrological profiles, planetary age conversions, and future milestones.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <div class="lg:col-span-1 space-y-6">
+        
+        <div class="card p-5 rounded-md space-y-4">
+          <span class="mono text-xs uppercase font-bold text-teal-300 block">1. Date & Time of Birth</span>
+
+          <div>
+            <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Date</label>
+            <input type="date" id="dobInput" value="1998-06-15" class="input-field w-full rounded px-3 py-2 text-xs mono" />
+          </div>
+
+          <div>
+            <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Time (Optional)</label>
+            <input type="time" id="tobInput" value="09:30" class="input-field w-full rounded px-3 py-2 text-xs mono" />
+          </div>
+
+          <div>
+            <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Target Date (Default Today)</label>
+            <input type="date" id="targetDateInput" class="input-field w-full rounded px-3 py-2 text-xs mono" />
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <input type="checkbox" id="liveTick" class="rounded accent-teal-400 h-4 w-4" checked />
+            <label for="liveTick" class="mono text-xs text-slate-300 cursor-pointer">Live Ticking Seconds</label>
+          </div>
+
+          <button id="calcBtn" class="btn-action w-full py-2.5 rounded text-xs display uppercase tracking-wider">Calculate Analytics</button>
+        </div>
+
+        <div class="card p-5 rounded-md border-teal-500/30">
+          <span class="mono text-xs uppercase tracking-wider text-teal-300 font-bold block mb-2">Next Birthday Countdown</span>
+          <div id="nextBdayDays" class="display text-3xl font-bold text-amber-400 mb-1">0 Days</div>
+          <p id="nextBdaySub" class="mono text-xs text-slate-400">Loading remaining time...</p>
+        </div>
+
+        <div class="card p-4 rounded-md flex flex-col h-[220px]">
+          <div class="flex justify-between items-center mb-3">
+            <span class="mono text-xs uppercase font-bold text-slate-400">Calculation Log</span>
+            <button id="clearHistory" class="mono text-[10px] text-slate-500 hover:text-rose-400">Clear</button>
+          </div>
+          <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 mono text-xs">
+            <div class="text-slate-500 text-center py-6 text-xs">No saved birth dates</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="lg:col-span-2 space-y-6">
+        
+        <div class="card p-6 rounded-md relative overflow-hidden">
+          <div class="flex justify-between items-center mb-3">
+            <span class="mono text-xs uppercase tracking-wider text-teal-300 font-bold">Exact Chronological Age</span>
+            <span id="dayOfWeekBadge" class="mono text-[10px] bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">Born on Monday</span>
+          </div>
+
+          <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center mb-4">
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageYears" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Years</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageMonths" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Months</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageDays" class="display text-2xl font-bold text-teal-300 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Days</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageHours" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Hours</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageMins" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Mins</span>
+            </div>
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span id="ageSecs" class="display text-2xl font-bold text-amber-400 block">0</span>
+              <span class="mono text-[9px] uppercase text-slate-400">Secs</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-xs">
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Months</span>
+              <span id="totMonths" class="font-bold text-slate-200 text-sm">0</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Weeks</span>
+              <span id="totWeeks" class="font-bold text-slate-200 text-sm">0</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Days</span>
+              <span id="totDays" class="font-bold text-teal-300 text-sm">0</span>
+            </div>
+            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
+              <span class="text-slate-400 text-[10px] uppercase block">Total Hours</span>
+              <span id="totHours" class="font-bold text-amber-400 text-sm">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold block mb-3">Biological & Lifetime Metrics (Estimated)</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mono text-xs">
+            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5">
+              <div class="flex items-center gap-1.5 text-rose-400 font-bold mb-1">
+                <span>❤️</span> Heartbeats (~72 bpm)
+              </div>
+              <span id="bioBeats" class="display text-xl font-bold text-slate-100">0</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">lifetime contractions</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5">
+              <div class="flex items-center gap-1.5 text-teal-300 font-bold mb-1">
+                <span>🫁</span> Breaths (~16 bpm)
+              </div>
+              <span id="bioBreaths" class="display text-xl font-bold text-slate-100">0</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">respiratory cycles</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5">
+              <div class="flex items-center gap-1.5 text-indigo-400 font-bold mb-1">
+                <span>😴</span> Sleep Duration (~8 hrs/day)
+              </div>
+              <span id="bioSleep" class="display text-xl font-bold text-slate-100">0 yrs</span>
+              <span class="text-[10px] text-slate-500 block mt-0.5">spent asleep</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold block mb-3">Astrological & Demographic Identity</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mono text-xs">
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-slate-400 text-[10px] uppercase block">Western Zodiac</span>
+              <span id="astroZodiac" class="font-bold text-teal-300 text-sm block mt-0.5">-</span>
+              <span id="astroElement" class="text-[10px] text-slate-500">Element: -</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-slate-400 text-[10px] uppercase block">Chinese Zodiac</span>
+              <span id="astroChinese" class="font-bold text-amber-400 text-sm block mt-0.5">-</span>
+              <span id="astroYear" class="text-[10px] text-slate-500">Lunar Sign</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-slate-400 text-[10px] uppercase block">Birthstone</span>
+              <span id="astroStone" class="font-bold text-purple-300 text-sm block mt-0.5">-</span>
+              <span class="text-[10px] text-slate-500">Traditional</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-slate-400 text-[10px] uppercase block">Generation</span>
+              <span id="demoGen" class="font-bold text-slate-200 text-sm block mt-0.5">-</span>
+              <span id="leapYearBadge" class="text-[10px] text-teal-400">Leap Year: No</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <div class="flex justify-between items-center mb-3">
+            <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold">Interplanetary Orbital Ages</span>
+            <span class="mono text-[10px] text-slate-500">Relative Solar Orbital Periods</span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mono text-xs">
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-amber-400 font-bold block mb-1">Mercury ☿</span>
+              <span id="planetMercury" class="display text-lg font-bold text-slate-100 block">0</span>
+              <span class="text-[9px] text-slate-500 uppercase">Years (88d Orbit)</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-teal-300 font-bold block mb-1">Venus ♀</span>
+              <span id="planetVenus" class="display text-lg font-bold text-slate-100 block">0</span>
+              <span class="text-[9px] text-slate-500 uppercase">Years (225d Orbit)</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-rose-400 font-bold block mb-1">Mars ♂</span>
+              <span id="planetMars" class="display text-lg font-bold text-slate-100 block">0</span>
+              <span class="text-[9px] text-slate-500 uppercase">Years (687d Orbit)</span>
+            </div>
+
+            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
+              <span class="text-orange-400 font-bold block mb-1">Jupiter ♃</span>
+              <span id="planetJupiter" class="display text-lg font-bold text-slate-100 block">0</span>
+              <span class="text-[9px] text-slate-500 uppercase">Years (11.86y Orbit)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold block mb-3">Key Lifetime Milestones Tracker</span>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left mono text-xs">
+              <thead>
+                <tr class="border-b border-white/10 text-slate-400 text-[11px] uppercase">
+                  <th class="pb-2">Milestone</th>
+                  <th class="pb-2">Target Age</th>
+                  <th class="pb-2">Calendar Date</th>
+                  <th class="pb-2">Status / Remaining</th>
+                </tr>
+              </thead>
+              <tbody id="milestoneTable" class="divide-y divide-white/5 text-slate-300">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // State Elements
+    const dobInput = document.getElementById('dobInput');
+    const tobInput = document.getElementById('tobInput');
+    const targetDateInput = document.getElementById('targetDateInput');
+    const liveTick = document.getElementById('liveTick');
+
+    let timerInterval = null;
+    let history = [];
+
+    // Default Target Date to Today
+    targetDateInput.value = new Date().toISOString().split('T')[0];
+
+    // Helper: Days in Month
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    // Birthstone Database
+    const birthstones = [
+      'Garnet 🔴', 'Amethyst 🟣', 'Aquamarine 🩵', 'Diamond 💎',
+      'Emerald 🟢', 'Pearl ⚪', 'Ruby 🔴', 'Peridot 🟢',
+      'Sapphire 🔵', 'Opal 🌈', 'Topaz 🟡', 'Turquoise 🩵'
+    ];
+
+    // Western Zodiac with Elements
+    function getWesternZodiac(month, day) {
+      const z = [
+        { name: 'Capricorn ♑', elem: 'Earth', end: 19 },
+        { name: 'Aquarius ♒', elem: 'Air', end: 18 },
+        { name: 'Pisces ♓', elem: 'Water', end: 20 },
+        { name: 'Aries ♈', elem: 'Fire', end: 19 },
+        { name: 'Taurus ♉', elem: 'Earth', end: 20 },
+        { name: 'Gemini ♊', elem: 'Air', end: 20 },
+        { name: 'Cancer ♋', elem: 'Water', end: 22 },
+        { name: 'Leo ♌', elem: 'Fire', end: 22 },
+        { name: 'Virgo ♍', elem: 'Earth', end: 22 },
+        { name: 'Libra ♎', elem: 'Air', end: 23 },
+        { name: 'Scorpio ♏', elem: 'Water', end: 21 },
+        { name: 'Sagittarius ♐', elem: 'Fire', end: 21 },
+        { name: 'Capricorn ♑', elem: 'Earth', end: 31 }
+      ];
+      const match = day <= z[month - 1].end ? z[month - 1] : z[month];
+      return match;
+    }
+
+    // Chinese Zodiac
+    function getChineseZodiac(year) {
+      const animals = ['Rat 🐀', 'Ox 🐂', 'Tiger 🐅', 'Rabbit 🐇', 'Dragon 🐉', 'Snake 🐍', 'Horse 🐎', 'Goat 🐐', 'Monkey 🐒', 'Rooster 🐓', 'Dog 🐕', 'Pig 🐖'];
+      return animals[(year - 4) % 12];
+    }
+
+    // Generation Identifier
+    function getGeneration(year) {
+      if (year >= 2013) return 'Gen Alpha';
+      if (year >= 1997) return 'Gen Z (Zoomer)';
+      if (year >= 1981) return 'Millennial (Gen Y)';
+      if (year >= 1965) return 'Gen X';
+      if (year >= 1946) return 'Baby Boomer';
+      if (year >= 1928) return 'Silent Generation';
+      return 'Greatest Generation';
+    }
+
+    // Main Calculations
+    function computeAge() {
+      if (!dobInput.value) return;
+
+      const timeArr = tobInput.value.split(':');
+      const birthDate = new Date(dobInput.value);
+      birthDate.setHours(parseInt(timeArr[0] || 0), parseInt(timeArr[1] || 0), 0);
+
+      const isLiveToday = targetDateInput.value === new Date().toISOString().split('T')[0];
+      const targetDate = isLiveToday ? new Date() : new Date(targetDateInput.value + 'T23:59:59');
+
+      if (birthDate > targetDate) {
+        document.getElementById('ageYears').textContent = '0';
+        document.getElementById('ageMonths').textContent = '0';
+        document.getElementById('ageDays').textContent = '0';
+        return;
+      }
+
+      // Chronological Age Calculation
+      let y1 = birthDate.getFullYear(), m1 = birthDate.getMonth(), d1 = birthDate.getDate();
+      let y2 = targetDate.getFullYear(), m2 = targetDate.getMonth(), d2 = targetDate.getDate();
+
+      let years = y2 - y1;
+      let months = m2 - m1;
+      let days = d2 - d1;
+
+      if (days < 0) {
+        months--;
+        days += getDaysInMonth(y2, m2 - 1);
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const diffMs = Math.abs(targetDate - birthDate);
+      const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diffMs / (1000 * 60)) % 60);
+      const secs = Math.floor((diffMs / 1000) % 60);
+
+      document.getElementById('ageYears').textContent = years;
+      document.getElementById('ageMonths').textContent = months;
+      document.getElementById('ageDays').textContent = days;
+      document.getElementById('ageHours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('ageMins').textContent = String(mins).padStart(2, '0');
+      document.getElementById('ageSecs').textContent = String(secs).padStart(2, '0');
+
+      // Cumulative Totals
+      const totalDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      const totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const totalWeeks = Math.floor(totalDays / 7);
+      const totalMonths = (years * 12) + months;
+
+      document.getElementById('totMonths').textContent = totalMonths.toLocaleString();
+      document.getElementById('totWeeks').textContent = totalWeeks.toLocaleString();
+      document.getElementById('totDays').textContent = totalDays.toLocaleString();
+      document.getElementById('totHours').textContent = totalHours.toLocaleString();
+
+      // Day of Week
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      document.getElementById('dayOfWeekBadge').textContent = `Born on ${daysOfWeek[birthDate.getDay()]}`;
+
+      // Biological Metrics
+      const totalMinutes = Math.floor(diffMs / (1000 * 60));
+      const beats = totalMinutes * 72;
+      const breaths = totalMinutes * 16;
+      const sleepYears = (totalDays * 8 / 24 / 365.25).toFixed(1);
+
+      document.getElementById('bioBeats').textContent = beats.toLocaleString();
+      document.getElementById('bioBreaths').textContent = breaths.toLocaleString();
+      document.getElementById('bioSleep').textContent = `${sleepYears} yrs`;
+
+      // Astrological & Demographic
+      const zodiac = getWesternZodiac(birthDate.getMonth() + 1, birthDate.getDate());
+      document.getElementById('astroZodiac').textContent = zodiac.name;
+      document.getElementById('astroElement').textContent = `Element: ${zodiac.elem}`;
+
+      document.getElementById('astroChinese').textContent = getChineseZodiac(birthDate.getFullYear());
+      document.getElementById('astroStone').textContent = birthstones[birthDate.getMonth()];
+      
+      document.getElementById('demoGen').textContent = getGeneration(birthDate.getFullYear());
+      const isLeap = (birthDate.getFullYear() % 4 === 0 && birthDate.getFullYear() % 100 !== 0) || (birthDate.getFullYear() % 400 === 0);
+      document.getElementById('leapYearBadge').textContent = `Leap Year: ${isLeap ? 'Yes 🟢' : 'No'}`;
+
+      // Interplanetary Ages
+      const totalEarthYears = totalDays / 365.25;
+      document.getElementById('planetMercury').textContent = (totalEarthYears / (87.97 / 365.25)).toFixed(1);
+      document.getElementById('planetVenus').textContent = (totalEarthYears / (224.7 / 365.25)).toFixed(1);
+      document.getElementById('planetMars').textContent = (totalEarthYears / (686.98 / 365.25)).toFixed(1);
+      document.getElementById('planetJupiter').textContent = (totalEarthYears / 11.86).toFixed(2);
+
+      // Next Birthday Countdown
+      const now = new Date();
+      let nextBday = new Date(now.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+      if (now > nextBday) {
+        nextBday.setFullYear(now.getFullYear() + 1);
+      }
+      const bdayDiffMs = nextBday - now;
+      const bdayDays = Math.floor(bdayDiffMs / (1000 * 60 * 60 * 24));
+      const bdayHours = Math.floor((bdayDiffMs / (1000 * 60 * 60)) % 24);
+
+      document.getElementById('nextBdayDays').textContent = `${bdayDays} Days`;
+      document.getElementById('nextBdaySub').textContent = `Turns ${years + 1} in ${bdayDays}d ${bdayHours}h (${nextBday.toISOString().split('T')[0]})`;
+
+      // Life Milestones
+      renderMilestones(birthDate, targetDate);
+    }
+
+    // Milestones Renderer
+    function renderMilestones(birthDate, targetDate) {
+      const milestones = [
+        { name: 'Adulthood (18 yrs)', age: 18 },
+        { name: 'Major Majority (21 yrs)', age: 21 },
+        { name: '3 Decades (30 yrs)', age: 30 },
+        { name: 'Mid-Life / 40s', age: 40 },
+        { name: 'Half Century (50 yrs)', age: 50 },
+        { name: 'Retirement Horizon (65 yrs)', age: 65 },
+        { name: '10,000 Days Alive', age: '10k' }
+      ];
+
+      const tbody = document.getElementById('milestoneTable');
+      let html = '';
+
+      milestones.forEach(m => {
+        let mDate, isPassed, remText;
+
+        if (m.age === '10k') {
+          mDate = new Date(birthDate.getTime() + (10000 * 24 * 60 * 60 * 1000));
+          isPassed = targetDate >= mDate;
+          remText = isPassed ? 'Reached ✓' : `${Math.ceil((mDate - targetDate) / (1000 * 60 * 60 * 24))} days left`;
+        } else {
+          mDate = new Date(birthDate);
+          mDate.setFullYear(birthDate.getFullYear() + m.age);
+          isPassed = targetDate >= mDate;
+          remText = isPassed ? 'Reached ✓' : `In ${mDate.getFullYear() - targetDate.getFullYear()} yrs`;
+        }
+
+        html += `
+          <tr>
+            <td class="py-2 text-slate-300">${m.name}</td>
+            <td class="py-2 font-bold text-teal-300">${m.age}</td>
+            <td class="py-2 text-slate-400">${mDate.toISOString().split('T')[0]}</td>
+            <td class="py-2 ${isPassed ? 'text-teal-400 font-bold' : 'text-amber-400'}">${remText}</td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    // Timer Controls
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (liveTick.checked) {
+        timerInterval = setInterval(computeAge, 1000);
+      }
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', () => {
+      computeAge();
+      startTimer();
+      saveHistory();
+    });
+
+    liveTick.addEventListener('change', startTimer);
+    targetDateInput.addEventListener('change', computeAge);
+
+    // History Log Drawer
+    function saveHistory() {
+      const dob = dobInput.value;
+      if (!dob) return;
+
+      const ageYrs = document.getElementById('ageYears').textContent;
+      const entry = `${dob} (${ageYrs} yrs)`;
+
+      if (history.includes(entry)) return;
+
+      history.unshift(entry);
+      if (history.length > 8) history.pop();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById('historyList');
+      if (history.length === 0) {
+        historyList.innerHTML = `<div class="text-slate-500 text-center py-6 text-xs">No saved birth dates</div>`;
+        return;
+      }
+      historyList.innerHTML = history.map((item) => `
+        <div class="bg-[#0e1c2b] p-2 rounded border border-white/5 flex justify-between items-center">
+          <span class="text-slate-300 font-semibold">${item}</span>
+          <span class="text-teal-300 text-[10px] uppercase font-bold">Saved</span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('clearHistory').addEventListener('click', () => {
+      history = [];
+      renderHistory();
+    });
+
+    // Initial Trigger
+    computeAge();
+    startTimer();
+  </script>
+</body>
+</html>

@@ -41,6 +41,22 @@ const CONFIG = {
 
 const toolsData = [
   {
+    id: 'age-calculator',
+    title: 'Age Calculator',
+    description: 'Calculate your age in years, months, and days.',
+    category: 'Utility',
+    url: 'tools/age-calculator.html',
+    icon: 'calendar',
+  },
+  {
+    id: 'age-difference',
+    title: 'Age Difference',
+    description: 'Calculate the difference in age between two people.',
+    category: 'Utility',
+    url: 'tools/age-difference.html',
+    icon: 'calendar',
+  },
+  {
     id: 'word-counter',
     title: 'Word Counter',
     description: 'Count words, characters, sentences, and estimated reading time as you type.',
