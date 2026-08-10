@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Page Numbers — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .pos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .pos-btn { aspect-ratio:1.4; background:var(--panel); border:1px solid var(--border-softer); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-dimmer); font-size:10px; }
+  .pos-btn.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Add Page Numbers</h1>
+    <p class="page-sub">Stamp page numbers onto your document with full control over format, position and styling.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🔢</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Live Preview (Last Page)</span>
+            <div class="canvas-stage"><canvas id="previewCanvas"></canvas></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Number Format</span>
+            <div class="field">
+              <label class="field-label">Format</label>
+              <select id="fmtSelect">
+                <option value="{n}">1, 2, 3…</option>
+                <option value="Page {n}">Page 1, Page 2…</option>
+                <option value="Page {n} of {total}">Page 1 of {total}</option>
+                <option value="- {n} -">- 1 -</option>
+                <option value="{n}/{total}">1/{total}</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Start Number</label>
+                <input type="number" id="startNum" value="1" />
+              </div>
+              <div class="field">
+                <label class="field-label">Font Size</label>
+                <input type="number" id="fontSize" value="11" min="6" max="48" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Color</label>
+                <input type="color" id="colorInput" value="#333333" />
+              </div>
+              <div class="field">
+                <label class="field-label">Margin (pt)</label>
+                <input type="number" id="marginInput" value="28" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Position</label>
+              <div class="pos-grid">
+                <div class="pos-btn" data-pos="top-left">↖</div>
+                <div class="pos-btn" data-pos="top-center">↑</div>
+                <div class="pos-btn" data-pos="top-right">↗</div>
+                <div class="pos-btn" data-pos="bottom-left">↙</div>
+                <div class="pos-btn active" data-pos="bottom-center">↓</div>
+                <div class="pos-btn" data-pos="bottom-right">↘</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Apply to Pages</label>
+              <select id="pagesMode">
+                <option value="all">All Pages</option>
+                <option value="range">Page Range</option>
+              </select>
+            </div>
+            <div class="field hidden" id="rangeField">
+              <input type="text" id="rangeInput" placeholder="e.g. 2-10" />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="numbered" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">🔢 Add Page Numbers</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Applying...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages numbered</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0;
+    let position = 'bottom-center', outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_numbered';
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await updatePreview();
+    }
+
+    document.querySelectorAll('.pos-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        position = btn.dataset.pos;
+        updatePreview();
+      });
+    });
+    document.getElementById('pagesMode').addEventListener('change', (e) => document.getElementById('rangeField').classList.toggle('hidden', e.target.value !== 'range'));
+    ['fmtSelect', 'startNum', 'fontSize', 'colorInput', 'marginInput'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+
+    function formatLabel(n, total) {
+      return document.getElementById('fmtSelect').value.replace('{n}', n).replace('{total}', total);
+    }
+
+    function anchorFor(posKey, w, h, tw, th, margin) {
+      let x, y;
+      if (posKey.includes('left')) x = margin;
+      else if (posKey.includes('right')) x = w - tw - margin;
+      else x = (w - tw) / 2;
+      if (posKey.includes('top')) y = h - margin - th;
+      else y = margin;
+      return { x, y };
+    }
+
+    async function updatePreview() {
+      if (!pdfjsDoc) return;
+      const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, pageCount, 1.0);
+      const ctx = canvas.getContext('2d');
+      const fontSize = parseFloat(document.getElementById('fontSize').value) || 11;
+      const margin = parseFloat(document.getElementById('marginInput').value) || 20;
+      const label = formatLabel(parseInt(document.getElementById('startNum').value, 10) + pageCount - 1, pageCount);
+      ctx.font = `${fontSize}px Inter, sans-serif`;
+      ctx.fillStyle = document.getElementById('colorInput').value;
+      const tw = ctx.measureText(label).width;
+      const anchor = anchorFor(position, canvas.width, canvas.height, tw, fontSize, margin);
+      ctx.fillText(label, anchor.x, canvas.height - anchor.y - fontSize / 3);
+
+      const target = document.getElementById('previewCanvas');
+      target.width = canvas.width; target.height = canvas.height;
+      target.getContext('2d').drawImage(canvas, 0, 0);
+    }
+
+    function parsePages(text, max) {
+      const set = new Set();
+      text.split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
+        const m = part.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (m) { let [a, b] = [+m[1], +m[2]]; if (a > b) [a, b] = [b, a]; for (let i = a; i <= b; i++) if (i >= 1 && i <= max) set.add(i); }
+        else if (/^\d+$/.test(part)) { const p = +part; if (p >= 1 && p <= max) set.add(p); }
+      });
+      return Array.from(set).sort((a, b) => a - b);
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      let targetPages;
+      if (document.getElementById('pagesMode').value === 'range') {
+        targetPages = parsePages(document.getElementById('rangeInput').value, pageCount);
+        if (!targetPages.length) { alert('Enter a valid page range.'); return; }
+      } else {
+        targetPages = Array.from({ length: pageCount }, (_, i) => i + 1);
+      }
+
+      hud.show('Adding page numbers...');
+      try {
+        const outDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const pages = outDoc.getPages();
+        const font = await outDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const fontSize = parseFloat(document.getElementById('fontSize').value) || 11;
+        const margin = parseFloat(document.getElementById('marginInput').value) || 20;
+        const startNum = parseInt(document.getElementById('startNum').value, 10) || 1;
+        const color = hexToRgb(document.getElementById('colorInput').value);
+
+        targetPages.forEach((pnum, i) => {
+          const page = pages[pnum - 1];
+          const { width: pw, height: ph } = page.getSize();
+          const label = formatLabel(startNum + i, targetPages.length);
+          const tw = font.widthOfTextAtSize(label, fontSize);
+          const anchor = anchorFor(position, pw, ph, tw, fontSize, margin);
+          page.drawText(label, { x: anchor.x, y: anchor.y, size: fontSize, font, color: PDFLib.rgb(color.r, color.g, color.b) });
+        });
+
+        hud.set('Saving PDF...', 90);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = targetPages.length;
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Page numbers added!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function hexToRgb(hex) {
+      return { r: parseInt(hex.slice(1, 3), 16) / 255, g: parseInt(hex.slice(3, 5), 16) / 255, b: parseInt(hex.slice(5, 7), 16) / 255 };
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'numbered';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

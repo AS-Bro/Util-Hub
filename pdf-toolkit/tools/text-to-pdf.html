@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Text to PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Text to PDF</h1>
+    <p class="page-sub">Turn plain text into a clean, paginated PDF document.</p>
+
+    <div class="grid">
+      <div class="col-7">
+        <div class="card">
+          <span class="card-title">Your Text</span>
+          <textarea id="textInput" rows="22" placeholder="Type or paste your text here..." style="font-size:13px;"></textarea>
+          <div class="btn-row" style="margin-top:8px;">
+            <input type="file" id="txtFileInput" accept=".txt" class="hidden" />
+            <button class="secondary" id="loadTxtBtn" style="flex:1;">📂 Load .txt File</button>
+            <button class="secondary" id="clearTxtBtn" style="flex:1;">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-5">
+        <div class="card">
+          <span class="card-title">Document Settings</span>
+          <div class="field">
+            <label class="field-label">Document Title</label>
+            <input type="text" id="docTitle" placeholder="My Document" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Font</label>
+              <select id="fontSelect">
+                <option value="Helvetica">Helvetica</option>
+                <option value="TimesRoman">Times Roman</option>
+                <option value="Courier">Courier</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Font Size</label>
+              <input type="number" id="fontSize" min="6" max="72" value="12" />
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label">Page Size</label>
+              <select id="pageSize">
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+                <option value="Legal">Legal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Line Spacing</label>
+              <select id="lineSpacing">
+                <option value="1.15">1.15×</option>
+                <option value="1.5" selected>1.5×</option>
+                <option value="2">2×</option>
+                <option value="1">1×</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Margins (pt)</label>
+            <input type="number" id="marginInput" min="0" value="56" />
+          </div>
+          <label class="checkbox-row"><input type="checkbox" id="pageNumChk" checked /> Add page numbers</label>
+          <div class="field">
+            <label class="field-label">Output File Name</label>
+            <input type="text" id="outputName" placeholder="document" />
+          </div>
+          <div class="divider"></div>
+          <button class="primary btn-full" id="generateBtn">📝 Generate PDF</button>
+        </div>
+
+        <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+          <div class="status-text" id="statusText">Generating...</div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+          <div class="result-row"><span>Pages generated</span><strong id="rPages">—</strong></div>
+          <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+          <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+    let outputBlob = null;
+
+    document.getElementById('loadTxtBtn').addEventListener('click', () => document.getElementById('txtFileInput').click());
+    document.getElementById('txtFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      document.getElementById('textInput').value = text;
+      document.getElementById('docTitle').value = Toolkit.baseName(file.name);
+    });
+    document.getElementById('clearTxtBtn').addEventListener('click', () => document.getElementById('textInput').value = '');
+
+    function wrapText(text, font, fontSize, maxWidth) {
+      const lines = [];
+      const paragraphs = text.split('\n');
+      paragraphs.forEach(paragraph => {
+        if (paragraph.trim() === '') { lines.push(''); return; }
+        const words = paragraph.split(' ');
+        let current = '';
+        words.forEach(word => {
+          const test = current ? current + ' ' + word : word;
+          const width = font.widthOfTextAtSize(test, fontSize);
+          if (width > maxWidth && current) {
+            lines.push(current);
+            current = word;
+          } else {
+            current = test;
+          }
+        });
+        lines.push(current);
+      });
+      return lines;
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const text = document.getElementById('textInput').value;
+      if (!text.trim()) { alert('Enter some text first.'); return; }
+
+      hud.show('Laying out document...');
+      try {
+        const outDoc = await PDFLib.PDFDocument.create();
+        const fontName = document.getElementById('fontSelect').value;
+        const font = await outDoc.embedFont(PDFLib.StandardFonts[fontName]);
+        const fontSize = parseFloat(document.getElementById('fontSize').value) || 12;
+        const [pw, ph] = PDFUtils.PAGE_SIZES_PT[document.getElementById('pageSize').value];
+        const margin = parseFloat(document.getElementById('marginInput').value) || 0;
+        const lineHeight = fontSize * parseFloat(document.getElementById('lineSpacing').value);
+        const withPageNum = document.getElementById('pageNumChk').checked;
+        const title = document.getElementById('docTitle').value.trim();
+
+        outDoc.setTitle(title || 'Document');
+
+        const maxWidth = pw - margin * 2;
+        const lines = wrapText(text, font, fontSize, maxWidth);
+        const linesPerPage = Math.max(1, Math.floor((ph - margin * 2) / lineHeight));
+
+        const pageChunks = [];
+        for (let i = 0; i < lines.length; i += linesPerPage) pageChunks.push(lines.slice(i, i + linesPerPage));
+        if (!pageChunks.length) pageChunks.push([]);
+
+        pageChunks.forEach((chunk, pageIdx) => {
+          const page = outDoc.addPage([pw, ph]);
+          let y = ph - margin - fontSize;
+          chunk.forEach(line => {
+            if (line) page.drawText(line, { x: margin, y, size: fontSize, font, color: PDFLib.rgb(0.1, 0.1, 0.1) });
+            y -= lineHeight;
+          });
+          if (withPageNum) {
+            const label = `${pageIdx + 1} / ${pageChunks.length}`;
+            const labelWidth = font.widthOfTextAtSize(label, 9);
+            page.drawText(label, { x: pw - margin - labelWidth, y: margin / 2, size: 9, font, color: PDFLib.rgb(0.5, 0.5, 0.5) });
+          }
+        });
+
+        hud.set('Saving PDF...', 90);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('PDF generated!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'document';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

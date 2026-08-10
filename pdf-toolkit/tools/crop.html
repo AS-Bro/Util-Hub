@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Crop PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .stage-wrap { position: relative; display:inline-block; }
+  .crop-box { position:absolute; border:2px solid var(--teal); background:rgba(111,216,203,.12); cursor:move; box-sizing:border-box; }
+  .crop-shade { position:absolute; background:rgba(0,0,0,.55); pointer-events:none; }
+  .crop-handle { position:absolute; width:12px; height:12px; background:var(--teal); border:1.5px solid #0e1c2b; border-radius:2px; }
+  .crop-handle.nw { top:-6px; left:-6px; cursor:nwse-resize; }
+  .crop-handle.ne { top:-6px; right:-6px; cursor:nesw-resize; }
+  .crop-handle.sw { bottom:-6px; left:-6px; cursor:nesw-resize; }
+  .crop-handle.se { bottom:-6px; right:-6px; cursor:nwse-resize; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Crop PDF</h1>
+    <p class="page-sub">Drag the crop box (or set exact margins) to trim visible page margins — non-destructive, uses the PDF's native crop box.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🖼️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Page <span id="curPageLabel">1</span> of <span id="pageCountLabel">1</span> — drag box or handles to crop</span>
+            <div class="canvas-stage"><div class="stage-wrap" id="stageWrap"><canvas id="stageCanvas"></canvas></div></div>
+            <div class="page-nav">
+              <button class="icon-btn" id="prevPageBtn">‹</button>
+              <span id="pageNavLabel">1 / 1</span>
+              <button class="icon-btn" id="nextPageBtn">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Crop Margins (pt)</span>
+            <div class="field-row">
+              <div class="field"><label class="field-label">Top</label><input type="number" id="mTop" value="0" min="0" /></div>
+              <div class="field"><label class="field-label">Bottom</label><input type="number" id="mBottom" value="0" min="0" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">Left</label><input type="number" id="mLeft" value="0" min="0" /></div>
+              <div class="field"><label class="field-label">Right</label><input type="number" id="mRight" value="0" min="0" /></div>
+            </div>
+            <button class="secondary btn-full" id="resetCropBtn">Reset Crop Box</button>
+            <div class="divider"></div>
+            <div class="field">
+              <label class="field-label">Apply To</label>
+              <select id="applyScope">
+                <option value="all">All Pages (same margins)</option>
+                <option value="current">This Page Only</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="cropped" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">🖼️ Apply Crop</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Cropping...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages cropped</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const stageWrap = document.getElementById('stageWrap');
+    const stageCanvas = document.getElementById('stageCanvas');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0, curPage = 1;
+    let renderScale = 1, naturalW = 0, naturalH = 0;
+    let box = { x: 0, y: 0, w: 0, h: 0 }; // px, top-left origin
+    let outputBlob = null;
+    let shadeEls = [], boxEl, handles = {};
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_cropped';
+      curPage = 1;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderStage(true);
+    }
+
+    async function renderStage(resetBox) {
+      document.getElementById('curPageLabel').textContent = curPage;
+      document.getElementById('pageNavLabel').textContent = `${curPage} / ${pageCount}`;
+      const page = await pdfjsDoc.getPage(curPage);
+      const natural = page.getViewport({ scale: 1 });
+      naturalW = natural.width; naturalH = natural.height;
+      renderScale = Math.min(760 / natural.width, 1.6);
+      const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, curPage, renderScale);
+      stageCanvas.width = canvas.width; stageCanvas.height = canvas.height;
+      stageCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      stageWrap.style.width = canvas.width + 'px';
+      stageWrap.style.height = canvas.height + 'px';
+
+      if (resetBox) {
+        const inset = 0.08;
+        box = { x: canvas.width * inset, y: canvas.height * inset, w: canvas.width * (1 - inset * 2), h: canvas.height * (1 - inset * 2) };
+      }
+      buildCropUI();
+      syncMarginInputsFromBox();
+    }
+
+    function buildCropUI() {
+      stageWrap.querySelectorAll('.crop-box,.crop-shade').forEach(n => n.remove());
+      shadeEls = [];
+      for (let i = 0; i < 4; i++) { const s = document.createElement('div'); s.className = 'crop-shade'; stageWrap.appendChild(s); shadeEls.push(s); }
+      boxEl = document.createElement('div');
+      boxEl.className = 'crop-box';
+      ['nw', 'ne', 'sw', 'se'].forEach(pos => {
+        const h = document.createElement('div'); h.className = 'crop-handle ' + pos; boxEl.appendChild(h); handles[pos] = h;
+      });
+      stageWrap.appendChild(boxEl);
+      updateBoxVisual();
+
+      boxEl.addEventListener('mousedown', (e) => {
+        if (e.target !== boxEl) return;
+        const startX = e.clientX, startY = e.clientY, orig = { ...box };
+        function move(ev) {
+          const dx = ev.clientX - startX, dy = ev.clientY - startY;
+          box.x = Math.max(0, Math.min(stageCanvas.width - box.w, orig.x + dx));
+          box.y = Math.max(0, Math.min(stageCanvas.height - box.h, orig.y + dy));
+          updateBoxVisual(); syncMarginInputsFromBox();
+        }
+        function up() { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); }
+        window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+        e.preventDefault();
+      });
+
+      Object.entries(handles).forEach(([pos, handle]) => {
+        handle.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          const startX = e.clientX, startY = e.clientY, orig = { ...box };
+          function move(ev) {
+            const dx = ev.clientX - startX, dy = ev.clientY - startY;
+            let { x, y, w, h } = orig;
+            if (pos.includes('n')) { y = orig.y + dy; h = orig.h - dy; }
+            if (pos.includes('s')) { h = orig.h + dy; }
+            if (pos.includes('w')) { x = orig.x + dx; w = orig.w - dx; }
+            if (pos.includes('e')) { w = orig.w + dx; }
+            if (w > 20 && h > 20 && x >= 0 && y >= 0 && x + w <= stageCanvas.width && y + h <= stageCanvas.height) {
+              box = { x, y, w, h };
+              updateBoxVisual(); syncMarginInputsFromBox();
+            }
+          }
+          function up() { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); }
+          window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+          e.preventDefault();
+        });
+      });
+    }
+
+    function updateBoxVisual() {
+      boxEl.style.left = box.x + 'px'; boxEl.style.top = box.y + 'px';
+      boxEl.style.width = box.w + 'px'; boxEl.style.height = box.h + 'px';
+      const W = stageCanvas.width, H = stageCanvas.height;
+      // top, bottom, left, right shade rectangles
+      shadeEls[0].style.cssText += `left:0;top:0;width:${W}px;height:${box.y}px;`;
+      shadeEls[1].style.cssText += `left:0;top:${box.y + box.h}px;width:${W}px;height:${H - box.y - box.h}px;`;
+      shadeEls[2].style.cssText += `left:0;top:${box.y}px;width:${box.x}px;height:${box.h}px;`;
+      shadeEls[3].style.cssText += `left:${box.x + box.w}px;top:${box.y}px;width:${W - box.x - box.w}px;height:${box.h}px;`;
+    }
+
+    function syncMarginInputsFromBox() {
+      document.getElementById('mTop').value = (box.y / renderScale).toFixed(1);
+      document.getElementById('mLeft').value = (box.x / renderScale).toFixed(1);
+      document.getElementById('mRight').value = ((stageCanvas.width - box.x - box.w) / renderScale).toFixed(1);
+      document.getElementById('mBottom').value = ((stageCanvas.height - box.y - box.h) / renderScale).toFixed(1);
+    }
+
+    function syncBoxFromMarginInputs() {
+      const top = parseFloat(document.getElementById('mTop').value) || 0;
+      const bottom = parseFloat(document.getElementById('mBottom').value) || 0;
+      const left = parseFloat(document.getElementById('mLeft').value) || 0;
+      const right = parseFloat(document.getElementById('mRight').value) || 0;
+      const x = left * renderScale, y = top * renderScale;
+      const w = stageCanvas.width - (left + right) * renderScale;
+      const h = stageCanvas.height - (top + bottom) * renderScale;
+      if (w > 20 && h > 20) { box = { x, y, w, h }; updateBoxVisual(); }
+    }
+    ['mTop', 'mBottom', 'mLeft', 'mRight'].forEach(id => document.getElementById(id).addEventListener('change', syncBoxFromMarginInputs));
+
+    document.getElementById('resetCropBtn').addEventListener('click', () => renderStage(true));
+    document.getElementById('prevPageBtn').addEventListener('click', async () => { if (curPage > 1) { curPage--; await renderStage(true); } });
+    document.getElementById('nextPageBtn').addEventListener('click', async () => { if (curPage < pageCount) { curPage++; await renderStage(true); } });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const top = parseFloat(document.getElementById('mTop').value) || 0;
+      const bottom = parseFloat(document.getElementById('mBottom').value) || 0;
+      const left = parseFloat(document.getElementById('mLeft').value) || 0;
+      const right = parseFloat(document.getElementById('mRight').value) || 0;
+      const scope = document.getElementById('applyScope').value;
+
+      hud.show('Applying crop...');
+      try {
+        const outDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const pages = outDoc.getPages();
+        const targetIndices = scope === 'all' ? pages.map((_, i) => i) : [curPage - 1];
+
+        targetIndices.forEach(idx => {
+          const page = pages[idx];
+          const { width: pw, height: ph } = page.getSize();
+          const newX = left, newY = bottom;
+          const newW = Math.max(10, pw - left - right);
+          const newH = Math.max(10, ph - top - bottom);
+          page.setCropBox(newX, newY, newW, newH);
+        });
+
+        hud.set('Saving PDF...', 85);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = targetIndices.length;
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Crop applied!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'cropped';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Split PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
+  .mode-tab { flex:1; text-align:center; padding:9px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
+  .mode-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  .split-marker { position:absolute; top:0; right:-9px; bottom:0; width:18px; display:flex; align-items:center; justify-content:center; z-index:2; }
+  .split-marker button { width:18px; height:18px; border-radius:50%; background:var(--panel); border:1.5px solid var(--border); color:var(--text-dim); font-size:11px; cursor:pointer; }
+  .split-marker button.active { background:var(--teal); border-color:var(--teal); color:var(--bg); }
+  .thumb-card { position:relative; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Split PDF</h1>
+    <p class="page-sub">Break one PDF into several — by page ranges, fixed chunk size, or one file per page.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">✂️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Pages (<span id="pageCountLabel">0</span>)</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Split Method</span>
+            <div class="mode-tabs">
+              <div class="mode-tab active" data-mode="ranges">By Range</div>
+              <div class="mode-tab" data-mode="fixed">Every N Pages</div>
+              <div class="mode-tab" data-mode="individual">Every Page</div>
+              <div class="mode-tab" data-mode="markers">At Markers</div>
+            </div>
+
+            <div id="modeRanges" class="field">
+              <label class="field-label">Page ranges (comma separated)</label>
+              <input type="text" id="rangesInput" placeholder="e.g. 1-3, 4-6, 10-12" />
+              <div class="hint">Each range becomes its own output PDF.</div>
+            </div>
+
+            <div id="modeFixed" class="field hidden">
+              <label class="field-label">Pages per file</label>
+              <input type="number" id="fixedN" min="1" value="1" />
+              <div class="hint">Document will be split every N pages.</div>
+            </div>
+
+            <div id="modeIndividual" class="field hidden">
+              <div class="hint">Every single page becomes its own one-page PDF.</div>
+            </div>
+
+            <div id="modeMarkers" class="field hidden">
+              <div class="hint">Click the ⊕ handles between page thumbnails to mark split points, then split.</div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Output Base Name</label>
+              <input type="text" id="outputName" placeholder="split" />
+            </div>
+
+            <div class="divider"></div>
+            <button class="primary btn-full" id="splitBtn">✂️ Split PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Splitting...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Output files</span><strong id="rCount">—</strong></div>
+            <div id="fileResults" style="margin:10px 0;max-height:220px;overflow-y:auto;"></div>
+            <button class="primary btn-full" id="downloadZipBtn">💾 Download All as ZIP</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0;
+    let mode = 'ranges';
+    let markers = new Set(); // split before page index (1-based), meaning boundary between page (idx-1) and idx
+    let outputs = []; // {name, blob}
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName);
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderThumbs();
+    }
+
+    async function renderThumbs() {
+      thumbGrid.innerHTML = '';
+      for (let i = 1; i <= pageCount; i++) {
+        const card = document.createElement('div');
+        card.className = 'thumb-card';
+        card.innerHTML = `<div class="page-num">Page ${i}</div>`;
+        thumbGrid.appendChild(card);
+        if (i < pageCount) {
+          const marker = document.createElement('div');
+          marker.className = 'split-marker hidden';
+          marker.innerHTML = `<button data-after="${i}">⊕</button>`;
+          card.appendChild(marker);
+        }
+        PDFUtils.renderThumbnail(pdfjsDoc, i, 140).then(canvas => card.insertBefore(canvas, card.firstChild));
+      }
+      thumbGrid.querySelectorAll('[data-after]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const n = parseInt(btn.dataset.after, 10);
+          if (markers.has(n)) markers.delete(n); else markers.add(n);
+          btn.classList.toggle('active', markers.has(n));
+        });
+      });
+    }
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        mode = tab.dataset.mode;
+        ['Ranges', 'Fixed', 'Individual', 'Markers'].forEach(m => {
+          document.getElementById('mode' + m).classList.toggle('hidden', m.toLowerCase() !== mode);
+        });
+        thumbGrid.querySelectorAll('.split-marker').forEach(m => m.classList.toggle('hidden', mode !== 'markers'));
+      });
+    });
+
+    function parseRanges(text, max) {
+      const parts = text.split(',').map(s => s.trim()).filter(Boolean);
+      const ranges = [];
+      for (const part of parts) {
+        const m = part.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (m) {
+          let a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+          if (a > b) [a, b] = [b, a];
+          ranges.push([Math.max(1, a), Math.min(max, b)]);
+        } else if (/^\d+$/.test(part)) {
+          const p = parseInt(part, 10);
+          ranges.push([p, p]);
+        }
+      }
+      return ranges;
+    }
+
+    function computeSegments() {
+      if (mode === 'ranges') {
+        const ranges = parseRanges(document.getElementById('rangesInput').value, pageCount);
+        if (!ranges.length) throw new Error('Enter at least one valid range, e.g. 1-3, 5-7.');
+        return ranges;
+      }
+      if (mode === 'fixed') {
+        const n = Math.max(1, parseInt(document.getElementById('fixedN').value, 10) || 1);
+        const segs = [];
+        for (let start = 1; start <= pageCount; start += n) segs.push([start, Math.min(pageCount, start + n - 1)]);
+        return segs;
+      }
+      if (mode === 'individual') {
+        const segs = [];
+        for (let i = 1; i <= pageCount; i++) segs.push([i, i]);
+        return segs;
+      }
+      if (mode === 'markers') {
+        const points = Array.from(markers).sort((a, b) => a - b);
+        const segs = [];
+        let start = 1;
+        for (const p of points) { segs.push([start, p]); start = p + 1; }
+        segs.push([start, pageCount]);
+        return segs;
+      }
+      return [];
+    }
+
+    document.getElementById('splitBtn').addEventListener('click', async () => {
+      let segments;
+      try { segments = computeSegments(); }
+      catch (e) { alert(e.message); return; }
+
+      hud.show('Splitting document...');
+      outputs = [];
+      const baseName = Toolkit.sanitizeFilename(document.getElementById('outputName').value.trim() || 'split');
+      try {
+        for (let i = 0; i < segments.length; i++) {
+          const [start, end] = segments[i];
+          hud.set(`Building file ${i + 1} of ${segments.length} (pages ${start}-${end})...`, ((i + 1) / segments.length) * 90);
+          const srcDoc = await PDFUtils.loadPdfLib(srcBuffer);
+          const outDoc = await PDFLib.PDFDocument.create();
+          const indices = [];
+          for (let p = start; p <= end; p++) indices.push(p - 1);
+          const copied = await outDoc.copyPages(srcDoc, indices);
+          copied.forEach(pg => outDoc.addPage(pg));
+          const bytes = await outDoc.save();
+          const label = start === end ? `p${start}` : `p${start}-${end}`;
+          outputs.push({ name: `${baseName}_${label}.pdf`, blob: PDFUtils.bytesToBlob(bytes) });
+        }
+        renderResults();
+        hud.done('Split complete!');
+      } catch (e) {
+        hud.error('Split failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function renderResults() {
+      document.getElementById('resultBox').classList.remove('hidden');
+      document.getElementById('rCount').textContent = outputs.length;
+      const list = document.getElementById('fileResults');
+      list.innerHTML = outputs.map((o, i) =>
+        `<div class="file-chip"><span class="name">${Toolkit.escapeHtml(o.name)}</span><span class="meta">${Toolkit.formatBytes(o.blob.size)}</span></div>`
+      ).join('');
+    }
+
+    document.getElementById('downloadZipBtn').addEventListener('click', async () => {
+      if (!outputs.length) return;
+      if (outputs.length === 1) { Toolkit.downloadBlob(outputs[0].blob, outputs[0].name); return; }
+      const zipBlob = await PDFUtils.zipFiles(outputs.map(o => ({ name: o.name, data: o.blob })));
+      Toolkit.downloadBlob(zipBlob, Toolkit.baseName(document.getElementById('outputName').value || 'split') + '_split.zip');
+    });
+  </script>
+</body>
+</html>

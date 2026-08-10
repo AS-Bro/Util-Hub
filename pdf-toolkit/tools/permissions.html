@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF Permissions — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">PDF Permissions</h1>
+    <p class="page-sub">Restrict what readers can do — printing, copying, editing — without necessarily requiring a password to open the file. Enforced via a real owner-password security handler.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🛡️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="alreadyEncWarn" class="warn-box hidden" style="max-width:600px;">This PDF already appears to be encrypted. Please use the <a href="unlock.html" style="color:var(--teal);text-decoration:underline;">Unlock PDF</a> tool first.</div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Source File</span>
+            <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+
+            <div class="divider"></div>
+            <span class="section-label">Restrictions</span>
+            <div class="field">
+              <label class="field-label">Printing</label>
+              <select id="permPrinting">
+                <option value="highResolution">Allowed (High Resolution)</option>
+                <option value="lowResolution">Low Resolution Only</option>
+                <option value="none" selected>Not Allowed</option>
+              </select>
+            </div>
+            <label class="checkbox-row"><input type="checkbox" id="permCopying" /> Allow copying text &amp; images</label>
+            <label class="checkbox-row"><input type="checkbox" id="permModifying" /> Allow modifying the document</label>
+            <label class="checkbox-row"><input type="checkbox" id="permAnnotating" checked /> Allow annotations &amp; comments</label>
+            <label class="checkbox-row"><input type="checkbox" id="permForms" checked /> Allow filling in forms</label>
+            <label class="checkbox-row"><input type="checkbox" id="permAccessibility" checked /> Allow accessibility extraction</label>
+            <label class="checkbox-row"><input type="checkbox" id="permAssembly" /> Allow document assembly (insert/delete/rotate pages)</label>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Owner Password</span>
+            <div class="field">
+              <label class="field-label">Permissions Password (required)</label>
+              <input type="text" id="ownerPassword" placeholder="Needed to change these permissions later" />
+              <div class="hint">Anyone can still open and read the document freely — this password only protects the permission settings themselves, per the PDF standard security model.</div>
+            </div>
+            <label class="checkbox-row"><input type="checkbox" id="alsoRequireOpen" /> Also require this password just to open the file</label>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">🛡️ Apply Permissions</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Applying...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let srcBuffer = null, srcName = '';
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      document.getElementById('alreadyEncWarn').classList.add('hidden');
+      workspace.classList.add('hidden');
+      try {
+        await PDFUtils.loadPdfJs(srcBuffer);
+      } catch (e) {
+        if (e && e.name === 'PasswordException') {
+          document.getElementById('alreadyEncWarn').classList.remove('hidden');
+          return;
+        }
+      }
+      document.getElementById('srcName').textContent = srcName;
+      document.getElementById('srcMeta').textContent = Toolkit.formatBytes(srcBuffer.byteLength);
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const ownerPassword = document.getElementById('ownerPassword').value;
+      if (!ownerPassword) { alert('Enter a permissions/owner password.'); return; }
+      const alsoRequireOpen = document.getElementById('alsoRequireOpen').checked;
+
+      const permissions = {
+        printing: document.getElementById('permPrinting').value === 'none' ? false : document.getElementById('permPrinting').value,
+        copying: document.getElementById('permCopying').checked,
+        modifying: document.getElementById('permModifying').checked,
+        annotating: document.getElementById('permAnnotating').checked,
+        fillingForms: document.getElementById('permForms').checked,
+        contentAccessibility: document.getElementById('permAccessibility').checked,
+        documentAssembly: document.getElementById('permAssembly').checked
+      };
+
+      hud.show('Applying permission restrictions...');
+      try {
+        const doc = await PDFLib.PDFDocument.load(srcBuffer);
+        const saveOpts = { ownerPassword, permissions };
+        if (alsoRequireOpen) saveOpts.userPassword = ownerPassword;
+        hud.set('Encrypting with restrictions...', 55);
+        const bytes = await doc.save(saveOpts);
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Permissions applied!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_restricted.pdf');
+    });
+  </script>
+</body>
+</html>

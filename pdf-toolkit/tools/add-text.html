@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Text — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .stage-wrap { position: relative; display:inline-block; }
+  .text-el { position:absolute; cursor:move; border:1px dashed rgba(111,216,203,.7); padding:2px 4px; white-space:nowrap; user-select:none; background:rgba(111,216,203,.06); }
+  .text-el .del-x { position:absolute; top:-9px; right:-9px; width:16px; height:16px; background:#e88a8a; color:#fff; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .el-list-item { display:flex; justify-content:space-between; align-items:center; background:var(--panel); border-radius:6px; padding:6px 8px; margin-bottom:6px; font-size:11.5px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Add Text</h1>
+    <p class="page-sub">Click anywhere on the page to stamp a text box. Drag to reposition, click a page number to switch pages.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🔤</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Page <span id="curPageLabel">1</span> of <span id="pageCountLabel">1</span> — click to place text</span>
+            <div class="canvas-stage"><div class="stage-wrap" id="stageWrap"><canvas id="stageCanvas"></canvas></div></div>
+            <div class="page-nav">
+              <button class="icon-btn" id="prevPageBtn">‹</button>
+              <span id="pageNavLabel">1 / 1</span>
+              <button class="icon-btn" id="nextPageBtn">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Text Style</span>
+            <div class="field">
+              <label class="field-label">Text to Place</label>
+              <input type="text" id="textValue" placeholder="Type text, then click the page" value="Sample text" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Font</label>
+                <select id="fontSelect">
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="HelveticaBold">Helvetica Bold</option>
+                  <option value="TimesRoman">Times Roman</option>
+                  <option value="Courier">Courier</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field-label">Size</label>
+                <input type="number" id="fontSize" value="16" min="4" max="120" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label">Color</label>
+                <input type="color" id="colorInput" value="#111111" />
+              </div>
+              <div class="field">
+                <label class="field-label">Alignment</label>
+                <select id="alignSelect">
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+            </div>
+            <div class="hint">Click the preview to drop this text. Add as many as you like, on any page.</div>
+
+            <div class="divider"></div>
+            <span class="section-label">Placed Elements (<span id="elCount">0</span>)</span>
+            <div id="elList" style="max-height:200px;overflow-y:auto;"></div>
+
+            <div class="field" style="margin-top:12px;">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="edited" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">🔤 Apply &amp; Save PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Applying...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Text elements added</span><strong id="rCount">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const stageWrap = document.getElementById('stageWrap');
+    const stageCanvas = document.getElementById('stageCanvas');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0, curPage = 1;
+    let renderScale = 1, pagePtSize = { w: 0, h: 0 };
+    let elements = []; // {id, page, xPx, yPx, text, font, size, color, align}
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_edited';
+      elements = [];
+      curPage = 1;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderStage();
+    }
+
+    async function renderStage() {
+      document.getElementById('curPageLabel').textContent = curPage;
+      document.getElementById('pageNavLabel').textContent = `${curPage} / ${pageCount}`;
+      const page = await pdfjsDoc.getPage(curPage);
+      const natural = page.getViewport({ scale: 1 });
+      pagePtSize = { w: natural.width, h: natural.height };
+      renderScale = Math.min(760 / natural.width, 1.6);
+      const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, curPage, renderScale);
+      stageCanvas.width = canvas.width; stageCanvas.height = canvas.height;
+      stageCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      stageWrap.style.width = canvas.width + 'px';
+      stageWrap.style.height = canvas.height + 'px';
+      renderOverlays();
+    }
+
+    stageWrap.addEventListener('click', (e) => {
+      if (e.target !== stageCanvas) return;
+      const rect = stageCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      addElement(x, y);
+    });
+
+    function addElement(xPx, yPx) {
+      const text = document.getElementById('textValue').value || 'Text';
+      const el = {
+        id: Toolkit.uid(), page: curPage, xPx, yPx, text,
+        font: document.getElementById('fontSelect').value,
+        size: parseFloat(document.getElementById('fontSize').value) || 16,
+        color: document.getElementById('colorInput').value,
+        align: document.getElementById('alignSelect').value
+      };
+      elements.push(el);
+      renderOverlays();
+      renderElList();
+    }
+
+    function renderOverlays() {
+      stageWrap.querySelectorAll('.text-el').forEach(n => n.remove());
+      elements.filter(el => el.page === curPage).forEach(el => {
+        const div = document.createElement('div');
+        div.className = 'text-el';
+        div.style.left = el.xPx + 'px';
+        div.style.top = (el.yPx - el.size * renderScale) + 'px';
+        div.style.fontSize = (el.size * renderScale) + 'px';
+        div.style.color = el.color;
+        div.style.fontFamily = el.font.includes('Courier') ? 'monospace' : el.font.includes('Times') ? 'serif' : 'sans-serif';
+        div.style.fontWeight = el.font.includes('Bold') ? '700' : '400';
+        div.textContent = el.text;
+        const delX = document.createElement('div');
+        delX.className = 'del-x'; delX.textContent = '✕';
+        delX.addEventListener('click', (e) => { e.stopPropagation(); elements = elements.filter(x => x.id !== el.id); renderOverlays(); renderElList(); });
+        div.appendChild(delX);
+        makeDraggable(div, el);
+        stageWrap.appendChild(div);
+      });
+    }
+
+    function makeDraggable(div, el) {
+      let dragging = false, offX = 0, offY = 0;
+      div.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('del-x')) return;
+        dragging = true;
+        offX = e.clientX - div.getBoundingClientRect().left;
+        offY = e.clientY - div.getBoundingClientRect().top;
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const rect = stageWrap.getBoundingClientRect();
+        el.xPx = Math.max(0, Math.min(stageCanvas.width, e.clientX - rect.left - offX));
+        el.yPx = Math.max(el.size * renderScale, Math.min(stageCanvas.height, e.clientY - rect.top - offY + el.size * renderScale));
+        div.style.left = el.xPx + 'px';
+        div.style.top = (el.yPx - el.size * renderScale) + 'px';
+      });
+      window.addEventListener('mouseup', () => { dragging = false; });
+    }
+
+    function renderElList() {
+      document.getElementById('elCount').textContent = elements.length;
+      const list = document.getElementById('elList');
+      list.innerHTML = elements.map(el =>
+        `<div class="el-list-item"><span>p.${el.page} — "${Toolkit.escapeHtml(el.text.slice(0, 18))}${el.text.length > 18 ? '…' : ''}"</span><button class="icon-btn" data-del="${el.id}" style="width:22px;height:22px;">✕</button></div>`
+      ).join('') || '<div class="hint">No text placed yet.</div>';
+      list.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => {
+        elements = elements.filter(x => x.id !== btn.dataset.del);
+        renderOverlays(); renderElList();
+      }));
+    }
+
+    document.getElementById('prevPageBtn').addEventListener('click', async () => { if (curPage > 1) { curPage--; await renderStage(); } });
+    document.getElementById('nextPageBtn').addEventListener('click', async () => { if (curPage < pageCount) { curPage++; await renderStage(); } });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      if (!elements.length) { alert('Place at least one text element first.'); return; }
+      hud.show('Applying text elements...');
+      try {
+        const outDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const pages = outDoc.getPages();
+        const fontCache = {};
+        for (const el of elements) {
+          if (!fontCache[el.font]) fontCache[el.font] = await outDoc.embedFont(PDFLib.StandardFonts[el.font]);
+        }
+
+        // Need per-page scale (matches renderStage's scale calc) to convert overlay px -> PDF pt
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          hud.set(`Placing text ${i + 1} of ${elements.length}...`, ((i + 1) / elements.length) * 85);
+          const page = pages[el.page - 1];
+          const { width: pw } = page.getSize();
+          const page0 = await pdfjsDoc.getPage(el.page);
+          const natural = page0.getViewport({ scale: 1 });
+          const scale = Math.min(760 / natural.width, 1.6);
+          const font = fontCache[el.font];
+          const color = hexToRgb(el.color);
+
+          const pdfX = el.xPx / scale;
+          const pdfY = natural.height - (el.yPx / scale);
+          const textWidth = font.widthOfTextAtSize(el.text, el.size);
+          let x = pdfX;
+          if (el.align === 'center') x = pdfX - textWidth / 2;
+          else if (el.align === 'right') x = pdfX - textWidth;
+
+          page.drawText(el.text, { x, y: pdfY - el.size, size: el.size, font, color: PDFLib.rgb(color.r, color.g, color.b) });
+        }
+
+        hud.set('Saving PDF...', 95);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rCount').textContent = elements.length;
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Text applied!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function hexToRgb(hex) {
+      return { r: parseInt(hex.slice(1, 3), 16) / 255, g: parseInt(hex.slice(3, 5), 16) / 255, b: parseInt(hex.slice(5, 7), 16) / 255 };
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'edited';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

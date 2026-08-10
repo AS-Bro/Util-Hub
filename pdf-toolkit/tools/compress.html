@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compress PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .level-tabs { display:flex; gap:8px; margin-bottom:14px; }
+  .level-tab { flex:1; text-align:center; padding:10px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
+  .level-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Compress PDF</h1>
+    <p class="page-sub">Shrink file size by re-encoding embedded images at lower quality/resolution. Works best on image-heavy or scanned PDFs.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🗜️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Source File</span>
+            <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+            <div class="hint">Compression re-renders each page's raster content at the chosen resolution and re-encodes it as JPEG at the chosen quality. Text-only / vector-only PDFs may not shrink much since there's no image data to recompress — try Flatten or leave as-is for those.</div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Compression Level</span>
+            <div class="level-tabs">
+              <div class="level-tab" data-level="low">Low</div>
+              <div class="level-tab active" data-level="medium">Medium</div>
+              <div class="level-tab" data-level="high">High</div>
+              <div class="level-tab" data-level="extreme">Extreme</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Image Quality (<span id="qualityVal">70</span>%)</label>
+              <input type="range" id="qualityInput" min="10" max="95" value="70" />
+            </div>
+            <div class="field">
+              <label class="field-label">Resolution Scale (<span id="scaleVal">1.5</span>x)</label>
+              <input type="range" id="scaleInput" min="0.5" max="3" step="0.1" value="1.5" />
+              <div class="hint">Renders pages at this multiple of their native size before compressing. Lower = smaller file, less crisp.</div>
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="compressBtn">🗜️ Compress PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Compressing...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="stat-grid">
+              <div class="stat-box"><div class="label">Original Size</div><div class="value" id="rOrig">—</div></div>
+              <div class="stat-box"><div class="label">Compressed Size</div><div class="value good" id="rNew">—</div></div>
+            </div>
+            <div class="result-row" style="margin-top:10px;"><span>Reduction</span><strong id="rReduction" class="good" style="color:var(--teal);">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download Compressed PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0;
+    let outputBlob = null;
+
+    const LEVELS = {
+      low: { quality: 85, scale: 2.2 },
+      medium: { quality: 70, scale: 1.5 },
+      high: { quality: 50, scale: 1.1 },
+      extreme: { quality: 32, scale: 0.8 }
+    };
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('srcName').textContent = srcName;
+      document.getElementById('srcMeta').textContent = `${Toolkit.formatBytes(srcBuffer.byteLength)} · ${pageCount} pages`;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+    }
+
+    document.querySelectorAll('.level-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const preset = LEVELS[tab.dataset.level];
+        document.getElementById('qualityInput').value = preset.quality;
+        document.getElementById('scaleInput').value = preset.scale;
+        document.getElementById('qualityVal').textContent = preset.quality;
+        document.getElementById('scaleVal').textContent = preset.scale;
+      });
+    });
+    document.getElementById('qualityInput').addEventListener('input', (e) => document.getElementById('qualityVal').textContent = e.target.value);
+    document.getElementById('scaleInput').addEventListener('input', (e) => document.getElementById('scaleVal').textContent = e.target.value);
+
+    document.getElementById('compressBtn').addEventListener('click', async () => {
+      const quality = parseInt(document.getElementById('qualityInput').value, 10) / 100;
+      const scale = parseFloat(document.getElementById('scaleInput').value);
+
+      hud.show('Rendering pages at target resolution...');
+      try {
+        const outDoc = await PDFLib.PDFDocument.create();
+        for (let i = 1; i <= pageCount; i++) {
+          hud.set(`Compressing page ${i} of ${pageCount}...`, (i / pageCount) * 90);
+          const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, i, scale);
+          const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
+          const jpegBytes = dataUrlToBytes(jpegDataUrl);
+          const embedded = await outDoc.embedJpg(jpegBytes);
+
+          // Keep the original page's point-size dimensions for correct physical size
+          const page = await pdfjsDoc.getPage(i);
+          const vp = page.getViewport({ scale: 1 });
+          const outPage = outDoc.addPage([vp.width, vp.height]);
+          outPage.drawImage(embedded, { x: 0, y: 0, width: vp.width, height: vp.height });
+        }
+        hud.set('Saving compressed PDF...', 95);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+
+        const origSize = srcBuffer.byteLength;
+        const newSize = outputBlob.size;
+        const reduction = origSize > 0 ? (100 * (1 - newSize / origSize)) : 0;
+
+        document.getElementById('rOrig').textContent = Toolkit.formatBytes(origSize);
+        document.getElementById('rNew').textContent = Toolkit.formatBytes(newSize);
+        document.getElementById('rReduction').textContent = (reduction >= 0 ? '−' : '+') + Math.abs(reduction).toFixed(1) + '%';
+        document.getElementById('resultBox').classList.remove('hidden');
+
+        if (reduction < 0) {
+          Toolkit.showError(document.getElementById('resultBox'), 'This file actually grew — try a lower quality/scale, or this PDF may already be efficiently encoded (e.g. mostly text/vector).');
+        } else {
+          Toolkit.clearError(document.getElementById('resultBox'));
+        }
+
+        hud.done('Compression complete!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_compressed.pdf');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reorder Pages — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Reorder Pages</h1>
+    <p class="page-sub">Drag thumbnails to rearrange your document. Select pages to rotate, duplicate or delete in bulk.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🔀</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Pages (<span id="pageCountLabel">0</span>) — drag to reorder, click to select</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Selection Actions (<span id="selCount">0</span> selected)</span>
+            <div class="btn-row" style="margin-bottom:8px;">
+              <button class="secondary" id="rotLeftBtn" style="flex:1;">⟲ Rotate</button>
+              <button class="secondary" id="rotRightBtn" style="flex:1;">⟳ Rotate</button>
+            </div>
+            <div class="btn-row" style="margin-bottom:8px;">
+              <button class="secondary" id="dupBtn" style="flex:1;">📑 Duplicate</button>
+              <button class="danger-btn" id="delBtn" style="flex:1;">🗑️ Delete</button>
+            </div>
+            <button class="secondary btn-full" id="clearSelBtn">Clear Selection</button>
+            <div class="divider"></div>
+            <button class="secondary btn-full" id="resetOrderBtn">Reset to Original Order</button>
+
+            <div class="field" style="margin-top:14px;">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="reordered" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">💾 Save Reordered PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Processing...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Total pages</span><strong id="rCount">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', originalPageCount = 0;
+    let items = []; // { id, srcIdx (0-based), rotation, selected, canvasDataUrl }
+    let outputBlob = null;
+    let dragSrcId = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      originalPageCount = pdfjsDoc.numPages;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_reordered';
+      items = [];
+      for (let i = 0; i < originalPageCount; i++) items.push({ id: Toolkit.uid(), srcIdx: i, rotation: 0, selected: false });
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderAll();
+    }
+
+    async function renderAll() {
+      document.getElementById('pageCountLabel').textContent = items.length;
+      thumbGrid.innerHTML = '';
+      for (const it of items) {
+        const card = buildCard(it);
+        thumbGrid.appendChild(card);
+        if (!it.canvasDataUrl) {
+          const canvas = await PDFUtils.renderThumbnail(pdfjsDoc, it.srcIdx + 1, 150);
+          it.canvasDataUrl = canvas.toDataURL('image/png');
+        }
+        const img = document.createElement('img');
+        img.src = it.canvasDataUrl;
+        img.style.transform = `rotate(${it.rotation}deg)`;
+        card.insertBefore(img, card.firstChild);
+      }
+      updateSelCount();
+    }
+
+    function buildCard(it) {
+      const card = document.createElement('div');
+      card.className = 'thumb-card' + (it.selected ? ' selected' : '');
+      card.draggable = true;
+      card.dataset.id = it.id;
+      card.innerHTML = `
+        <div class="select-dot"></div>
+        <div class="thumb-actions">
+          <div class="mini-btn" data-act="dup" title="Duplicate">📑</div>
+          <div class="mini-btn" data-act="del" title="Delete">🗑️</div>
+        </div>
+        <div class="page-num">Original p.${it.srcIdx + 1}</div>`;
+      if (it.rotation) {
+        const badge = document.createElement('span');
+        badge.className = 'rot-indicator';
+        badge.textContent = it.rotation + '°';
+        card.appendChild(badge);
+      }
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-act]')) return;
+        it.selected = !it.selected;
+        card.classList.toggle('selected', it.selected);
+        updateSelCount();
+      });
+      card.querySelector('[data-act="dup"]').addEventListener('click', (e) => { e.stopPropagation(); duplicateItem(it); });
+      card.querySelector('[data-act="del"]').addEventListener('click', (e) => { e.stopPropagation(); deleteItems([it]); });
+
+      card.addEventListener('dragstart', () => { dragSrcId = it.id; card.classList.add('dragging'); });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+      card.addEventListener('dragover', (e) => e.preventDefault());
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (!dragSrcId || dragSrcId === it.id) return;
+        const from = items.findIndex(x => x.id === dragSrcId);
+        const to = items.findIndex(x => x.id === it.id);
+        const [moved] = items.splice(from, 1);
+        items.splice(to, 0, moved);
+        renderAll();
+      });
+      return card;
+    }
+
+    function duplicateItem(it) {
+      const copy = { id: Toolkit.uid(), srcIdx: it.srcIdx, rotation: it.rotation, selected: false, canvasDataUrl: it.canvasDataUrl };
+      const idx = items.findIndex(x => x.id === it.id);
+      items.splice(idx + 1, 0, copy);
+      renderAll();
+    }
+
+    function deleteItems(list) {
+      const ids = new Set(list.map(x => x.id));
+      if (items.length - ids.size < 1) { alert('At least one page must remain.'); return; }
+      items = items.filter(x => !ids.has(x.id));
+      renderAll();
+    }
+
+    function updateSelCount() {
+      document.getElementById('selCount').textContent = items.filter(i => i.selected).length;
+    }
+
+    document.getElementById('rotLeftBtn').addEventListener('click', () => {
+      items.filter(i => i.selected).forEach(i => i.rotation = ((i.rotation - 90) % 360 + 360) % 360);
+      renderAll();
+    });
+    document.getElementById('rotRightBtn').addEventListener('click', () => {
+      items.filter(i => i.selected).forEach(i => i.rotation = (i.rotation + 90) % 360);
+      renderAll();
+    });
+    document.getElementById('dupBtn').addEventListener('click', () => {
+      const sel = items.filter(i => i.selected);
+      sel.forEach(it => duplicateItem(it));
+    });
+    document.getElementById('delBtn').addEventListener('click', () => {
+      const sel = items.filter(i => i.selected);
+      if (sel.length) deleteItems(sel);
+    });
+    document.getElementById('clearSelBtn').addEventListener('click', () => {
+      items.forEach(i => i.selected = false);
+      renderAll();
+    });
+    document.getElementById('resetOrderBtn').addEventListener('click', () => {
+      items = [];
+      for (let i = 0; i < originalPageCount; i++) items.push({ id: Toolkit.uid(), srcIdx: i, rotation: 0, selected: false });
+      renderAll();
+    });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      if (!items.length) return;
+      hud.show('Building reordered PDF...');
+      try {
+        const srcDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const outDoc = await PDFLib.PDFDocument.create();
+        const indices = items.map(i => i.srcIdx);
+        hud.set('Copying pages...', 40);
+        const copied = await outDoc.copyPages(srcDoc, indices);
+        copied.forEach((pg, i) => {
+          const rot = items[i].rotation;
+          if (rot) { const cur = pg.getRotation().angle || 0; pg.setRotation(PDFLib.degrees((cur + rot) % 360)); }
+          outDoc.addPage(pg);
+        });
+        hud.set('Saving PDF...', 85);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rCount').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Saved!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'reordered';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

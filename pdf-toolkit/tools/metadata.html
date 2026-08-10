@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Edit Metadata — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Edit Metadata</h1>
+    <p class="page-sub">View, edit, clear or export the document properties embedded in a PDF.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🏷️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Document Properties</span>
+            <div class="field"><label class="field-label">Title</label><input type="text" id="mTitle" /></div>
+            <div class="field"><label class="field-label">Author</label><input type="text" id="mAuthor" /></div>
+            <div class="field"><label class="field-label">Subject</label><input type="text" id="mSubject" /></div>
+            <div class="field"><label class="field-label">Keywords (comma separated)</label><input type="text" id="mKeywords" /></div>
+            <div class="field"><label class="field-label">Creator (application that authored the content)</label><input type="text" id="mCreator" /></div>
+            <div class="field"><label class="field-label">Producer (application that produced the PDF)</label><input type="text" id="mProducer" /></div>
+            <div class="field-row">
+              <div class="field"><label class="field-label">Creation Date</label><input type="datetime-local" id="mCreated" /></div>
+              <div class="field"><label class="field-label">Modification Date</label><input type="datetime-local" id="mModified" /></div>
+            </div>
+            <div class="btn-row">
+              <button class="secondary" id="clearBtn" style="flex:1;">🧹 Clear All Fields</button>
+              <button class="secondary" id="exportBtn" style="flex:1;">💾 Export as JSON</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Source File</span>
+            <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+            <div class="hint" style="margin-top:8px;">Edits are only applied to your downloaded copy — the original file on your device is untouched.</div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">🏷️ Save Metadata to PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Saving...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let srcBuffer = null, srcName = '';
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    function toLocalInputValue(d) {
+      if (!(d instanceof Date) || isNaN(d)) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      document.getElementById('srcName').textContent = srcName;
+      document.getElementById('srcMeta').textContent = Toolkit.formatBytes(srcBuffer.byteLength);
+
+      try {
+        const doc = await PDFUtils.loadPdfLib(srcBuffer);
+        document.getElementById('mTitle').value = doc.getTitle() || '';
+        document.getElementById('mAuthor').value = doc.getAuthor() || '';
+        document.getElementById('mSubject').value = doc.getSubject() || '';
+        document.getElementById('mKeywords').value = (doc.getKeywords() || '');
+        document.getElementById('mCreator').value = doc.getCreator() || '';
+        document.getElementById('mProducer').value = doc.getProducer() || '';
+        document.getElementById('mCreated').value = toLocalInputValue(doc.getCreationDate());
+        document.getElementById('mModified').value = toLocalInputValue(doc.getModificationDate());
+      } catch (e) {
+        alert('Could not read metadata: ' + e.message);
+      }
+
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      ['mTitle', 'mAuthor', 'mSubject', 'mKeywords', 'mCreator', 'mProducer', 'mCreated', 'mModified'].forEach(id => document.getElementById(id).value = '');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const data = {
+        title: document.getElementById('mTitle').value, author: document.getElementById('mAuthor').value,
+        subject: document.getElementById('mSubject').value, keywords: document.getElementById('mKeywords').value,
+        creator: document.getElementById('mCreator').value, producer: document.getElementById('mProducer').value,
+        creationDate: document.getElementById('mCreated').value, modificationDate: document.getElementById('mModified').value
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      Toolkit.downloadBlob(blob, Toolkit.baseName(srcName) + '_metadata.json');
+    });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      hud.show('Applying metadata...');
+      try {
+        const doc = await PDFUtils.loadPdfLib(srcBuffer);
+        doc.setTitle(document.getElementById('mTitle').value || '');
+        doc.setAuthor(document.getElementById('mAuthor').value || '');
+        doc.setSubject(document.getElementById('mSubject').value || '');
+        const kw = document.getElementById('mKeywords').value;
+        doc.setKeywords(kw ? kw.split(',').map(s => s.trim()).filter(Boolean) : []);
+        doc.setCreator(document.getElementById('mCreator').value || '');
+        doc.setProducer(document.getElementById('mProducer').value || '');
+        const created = document.getElementById('mCreated').value;
+        const modified = document.getElementById('mModified').value;
+        if (created) doc.setCreationDate(new Date(created));
+        if (modified) doc.setModificationDate(new Date(modified));
+
+        hud.set('Saving PDF...', 70);
+        const bytes = await doc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Metadata saved!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_edited.pdf');
+    });
+  </script>
+</body>
+</html>

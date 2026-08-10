@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Add Signature — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .stage-wrap { position: relative; display:inline-block; }
+  .img-el { position:absolute; cursor:move; border:1px dashed transparent; }
+  .img-el.selected { border-color: var(--teal); }
+  .img-el img { width:100%; height:100%; display:block; pointer-events:none; }
+  .img-el .del-x { position:absolute; top:-9px; right:-9px; width:16px; height:16px; background:#e88a8a; color:#fff; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; }
+  .sig-tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .sig-tab { flex:1; text-align:center; padding:8px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
+  .sig-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  #sigPad { background:#fff; border-radius:6px; width:100%; touch-action:none; cursor:crosshair; }
+  .el-list-item { display:flex; justify-content:space-between; align-items:center; background:var(--panel); border-radius:6px; padding:6px 8px; margin-bottom:6px; font-size:11.5px; cursor:pointer; }
+  .el-list-item.selected { border:1px solid var(--teal); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Add Signature</h1>
+    <p class="page-sub">Draw or upload a signature and place it anywhere on the document. This creates a <strong>visual</strong> signature stamp — not a legally certified digital signature.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">✍️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Page <span id="curPageLabel">1</span> of <span id="pageCountLabel">1</span> — click to place signature</span>
+            <div class="canvas-stage"><div class="stage-wrap" id="stageWrap"><canvas id="stageCanvas"></canvas></div></div>
+            <div class="page-nav">
+              <button class="icon-btn" id="prevPageBtn">‹</button>
+              <span id="pageNavLabel">1 / 1</span>
+              <button class="icon-btn" id="nextPageBtn">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Your Signature</span>
+            <div class="sig-tabs">
+              <div class="sig-tab active" data-tab="draw">Draw</div>
+              <div class="sig-tab" data-tab="upload">Upload</div>
+            </div>
+            <div id="drawTab">
+              <canvas id="sigPad" width="500" height="160"></canvas>
+              <div class="btn-row" style="margin-top:8px;">
+                <button class="secondary" id="clearSigBtn" style="flex:1;">Clear</button>
+                <button class="primary" id="useSigBtn" style="flex:1;">✓ Use This Signature</button>
+              </div>
+              <div class="field" style="margin-top:8px;">
+                <label class="field-label">Pen Color</label>
+                <input type="color" id="penColor" value="#12233b" />
+              </div>
+            </div>
+            <div id="uploadTab" class="hidden">
+              <input type="file" id="sigFileInput" accept="image/*" />
+              <div class="hint">Upload a photo/scan of your signature — ideally on a plain background.</div>
+            </div>
+            <div id="sigPreviewWrap" class="hidden" style="margin-top:10px;text-align:center;background:#fff;border-radius:6px;padding:8px;">
+              <img id="sigPreview" style="max-width:100%;max-height:80px;" />
+            </div>
+
+            <div class="divider"></div>
+            <span class="section-label">Selected Signature</span>
+            <div id="noSelHint" class="hint">Click "Use This Signature", then click the page to place it.</div>
+            <div id="selControls" class="hidden">
+              <div class="field">
+                <label class="field-label">Width (% of page)</label>
+                <input type="range" id="widthPct" min="5" max="80" value="25" />
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">Rotation (°)</label>
+                  <input type="number" id="rotInput" value="0" min="-180" max="180" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Opacity (%)</label>
+                  <input type="number" id="opInput" value="100" min="0" max="100" />
+                </div>
+              </div>
+              <button class="danger-btn btn-full" id="deleteSelBtn">🗑️ Delete This Signature</button>
+            </div>
+
+            <div class="divider"></div>
+            <span class="section-label">Placed Signatures (<span id="elCount">0</span>)</span>
+            <div id="elList" style="max-height:130px;overflow-y:auto;"></div>
+
+            <div class="field" style="margin-top:12px;">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="signed" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">✍️ Apply &amp; Save PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Applying...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Signatures added</span><strong id="rCount">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download Signed PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const stageWrap = document.getElementById('stageWrap');
+    const stageCanvas = document.getElementById('stageCanvas');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0, curPage = 1;
+    let currentSigDataUrl = null, currentSigRatio = 0.35;
+    let elements = [];
+    let selectedId = null;
+    let outputBlob = null;
+    let renderScale = 1;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    // --- Signature pad drawing ---
+    const sigPad = document.getElementById('sigPad');
+    const sigCtx = sigPad.getContext('2d');
+    let drawing = false, lastX = 0, lastY = 0;
+    function getPos(e) {
+      const rect = sigPad.getBoundingClientRect();
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return { x: cx * (sigPad.width / rect.width), y: cy * (sigPad.height / rect.height) };
+    }
+    function startDraw(e) { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }
+    function moveDraw(e) {
+      if (!drawing) return;
+      const p = getPos(e);
+      sigCtx.strokeStyle = document.getElementById('penColor').value;
+      sigCtx.lineWidth = 2.5; sigCtx.lineCap = 'round';
+      sigCtx.beginPath(); sigCtx.moveTo(lastX, lastY); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+      lastX = p.x; lastY = p.y; e.preventDefault();
+    }
+    function endDraw() { drawing = false; }
+    sigPad.addEventListener('mousedown', startDraw); sigPad.addEventListener('mousemove', moveDraw);
+    window.addEventListener('mouseup', endDraw);
+    sigPad.addEventListener('touchstart', startDraw); sigPad.addEventListener('touchmove', moveDraw); sigPad.addEventListener('touchend', endDraw);
+
+    document.getElementById('clearSigBtn').addEventListener('click', () => sigCtx.clearRect(0, 0, sigPad.width, sigPad.height));
+    document.getElementById('useSigBtn').addEventListener('click', () => {
+      currentSigDataUrl = sigPad.toDataURL('image/png');
+      currentSigRatio = sigPad.height / sigPad.width;
+      document.getElementById('sigPreview').src = currentSigDataUrl;
+      document.getElementById('sigPreviewWrap').classList.remove('hidden');
+    });
+
+    document.querySelectorAll('.sig-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.sig-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('drawTab').classList.toggle('hidden', tab.dataset.tab !== 'draw');
+        document.getElementById('uploadTab').classList.toggle('hidden', tab.dataset.tab !== 'upload');
+      });
+    });
+    document.getElementById('sigFileInput').addEventListener('change', async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      currentSigDataUrl = await Toolkit.readAsDataURL(f);
+      const img = await loadImgEl(currentSigDataUrl);
+      currentSigRatio = img.naturalHeight / img.naturalWidth;
+      document.getElementById('sigPreview').src = currentSigDataUrl;
+      document.getElementById('sigPreviewWrap').classList.remove('hidden');
+    });
+    function loadImgEl(src) { return new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = src; }); }
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_signed';
+      elements = []; curPage = 1;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderStage();
+    }
+
+    async function renderStage() {
+      document.getElementById('curPageLabel').textContent = curPage;
+      document.getElementById('pageNavLabel').textContent = `${curPage} / ${pageCount}`;
+      const page = await pdfjsDoc.getPage(curPage);
+      const natural = page.getViewport({ scale: 1 });
+      renderScale = Math.min(760 / natural.width, 1.6);
+      const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, curPage, renderScale);
+      stageCanvas.width = canvas.width; stageCanvas.height = canvas.height;
+      stageCanvas.getContext('2d').drawImage(canvas, 0, 0);
+      stageWrap.style.width = canvas.width + 'px';
+      stageWrap.style.height = canvas.height + 'px';
+      renderOverlays();
+    }
+
+    stageWrap.addEventListener('click', (e) => {
+      if (e.target !== stageCanvas) return;
+      if (!currentSigDataUrl) { alert('Draw or upload a signature first, then click "Use This Signature".'); return; }
+      const rect = stageCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      const wPx = stageCanvas.width * 0.25;
+      const hPx = wPx * currentSigRatio;
+      const el = { id: Toolkit.uid(), page: curPage, xPx: x - wPx / 2, yPx: y - hPx / 2, wPx, hPx, rotation: 0, opacity: 100, dataUrl: currentSigDataUrl, ratio: currentSigRatio };
+      elements.push(el);
+      selectedId = el.id;
+      renderOverlays(); renderElList(); syncSelControls();
+    });
+
+    function renderOverlays() {
+      stageWrap.querySelectorAll('.img-el').forEach(n => n.remove());
+      elements.filter(el => el.page === curPage).forEach(el => {
+        const div = document.createElement('div');
+        div.className = 'img-el' + (el.id === selectedId ? ' selected' : '');
+        div.style.left = el.xPx + 'px'; div.style.top = el.yPx + 'px';
+        div.style.width = el.wPx + 'px'; div.style.height = el.hPx + 'px';
+        div.style.opacity = el.opacity / 100;
+        div.style.transform = `rotate(${el.rotation}deg)`;
+        div.innerHTML = `<img src="${el.dataUrl}" />`;
+        const delX = document.createElement('div');
+        delX.className = 'del-x'; delX.textContent = '✕';
+        delX.addEventListener('click', (e) => { e.stopPropagation(); elements = elements.filter(x => x.id !== el.id); if (selectedId === el.id) selectedId = null; renderOverlays(); renderElList(); syncSelControls(); });
+        div.appendChild(delX);
+        div.addEventListener('mousedown', (e) => {
+          if (e.target.classList.contains('del-x')) return;
+          selectedId = el.id; renderOverlays(); renderElList(); syncSelControls();
+          let offX = e.clientX - div.getBoundingClientRect().left, offY = e.clientY - div.getBoundingClientRect().top;
+          function move(ev) {
+            const rect = stageWrap.getBoundingClientRect();
+            el.xPx = ev.clientX - rect.left - offX; el.yPx = ev.clientY - rect.top - offY;
+            div.style.left = el.xPx + 'px'; div.style.top = el.yPx + 'px';
+          }
+          function up() { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); }
+          window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+          e.preventDefault();
+        });
+        stageWrap.appendChild(div);
+      });
+    }
+
+    function renderElList() {
+      document.getElementById('elCount').textContent = elements.length;
+      const list = document.getElementById('elList');
+      list.innerHTML = elements.map((el, i) =>
+        `<div class="el-list-item ${el.id === selectedId ? 'selected' : ''}" data-sel="${el.id}"><span>Signature ${i + 1} — p.${el.page}</span><button class="icon-btn" data-del="${el.id}" style="width:22px;height:22px;">✕</button></div>`
+      ).join('') || '<div class="hint">None placed yet.</div>';
+      list.querySelectorAll('[data-sel]').forEach(item => item.addEventListener('click', (e) => {
+        if (e.target.closest('[data-del]')) return;
+        const el = elements.find(x => x.id === item.dataset.sel);
+        if (el.page !== curPage) { curPage = el.page; renderStage(); }
+        selectedId = el.id; renderOverlays(); renderElList(); syncSelControls();
+      }));
+      list.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        elements = elements.filter(x => x.id !== btn.dataset.del);
+        if (selectedId === btn.dataset.del) selectedId = null;
+        renderOverlays(); renderElList(); syncSelControls();
+      }));
+    }
+
+    function syncSelControls() {
+      const el = elements.find(x => x.id === selectedId);
+      document.getElementById('noSelHint').classList.toggle('hidden', !!el);
+      document.getElementById('selControls').classList.toggle('hidden', !el);
+      if (!el) return;
+      document.getElementById('widthPct').value = Math.round((el.wPx / stageCanvas.width) * 100);
+      document.getElementById('rotInput').value = el.rotation;
+      document.getElementById('opInput').value = el.opacity;
+    }
+
+    document.getElementById('widthPct').addEventListener('input', (e) => {
+      const el = elements.find(x => x.id === selectedId); if (!el) return;
+      const newW = stageCanvas.width * (parseFloat(e.target.value) / 100);
+      const cx = el.xPx + el.wPx / 2, cy = el.yPx + el.hPx / 2;
+      el.wPx = newW; el.hPx = newW * el.ratio;
+      el.xPx = cx - el.wPx / 2; el.yPx = cy - el.hPx / 2;
+      renderOverlays();
+    });
+    document.getElementById('rotInput').addEventListener('input', (e) => { const el = elements.find(x => x.id === selectedId); if (el) { el.rotation = parseFloat(e.target.value) || 0; renderOverlays(); } });
+    document.getElementById('opInput').addEventListener('input', (e) => { const el = elements.find(x => x.id === selectedId); if (el) { el.opacity = parseFloat(e.target.value) || 0; renderOverlays(); } });
+    document.getElementById('deleteSelBtn').addEventListener('click', () => { elements = elements.filter(x => x.id !== selectedId); selectedId = null; renderOverlays(); renderElList(); syncSelControls(); });
+
+    document.getElementById('prevPageBtn').addEventListener('click', async () => { if (curPage > 1) { curPage--; selectedId = null; await renderStage(); renderElList(); syncSelControls(); } });
+    document.getElementById('nextPageBtn').addEventListener('click', async () => { if (curPage < pageCount) { curPage++; selectedId = null; await renderStage(); renderElList(); syncSelControls(); } });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      if (!elements.length) { alert('Place at least one signature first.'); return; }
+      hud.show('Embedding signatures...');
+      try {
+        const outDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const pages = outDoc.getPages();
+        const embedCache = {};
+        for (let i = 0; i < elements.length; i++) {
+          const el = elements[i];
+          hud.set(`Placing signature ${i + 1} of ${elements.length}...`, ((i + 1) / elements.length) * 85);
+          if (!embedCache[el.dataUrl]) {
+            const bytes = dataUrlToBytes(el.dataUrl);
+            embedCache[el.dataUrl] = el.dataUrl.includes('image/png') ? await outDoc.embedPng(bytes) : await outDoc.embedJpg(bytes);
+          }
+          const embedded = embedCache[el.dataUrl];
+          const page = pages[el.page - 1];
+          const page0 = await pdfjsDoc.getPage(el.page);
+          const natural = page0.getViewport({ scale: 1 });
+          const scale = Math.min(760 / natural.width, 1.6);
+          const wPt = el.wPx / scale, hPt = el.hPx / scale;
+          const xPt = el.xPx / scale;
+          const yPt = natural.height - (el.yPx / scale) - hPt;
+          page.drawImage(embedded, { x: xPt, y: yPt, width: wPt, height: hPt, opacity: el.opacity / 100, rotate: PDFLib.degrees(-el.rotation) });
+        }
+        hud.set('Saving PDF...', 95);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rCount').textContent = elements.length;
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Signature applied!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'signed';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

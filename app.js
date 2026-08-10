@@ -65,11 +65,19 @@ const toolsData = [
     icon: 'music',
   },
   {
-    id: 'pdf-tool',
+    id: 'basic-pdf-tool',
+    title: 'PDF Tool',
+    description: 'Split pdf files with ease.',
+    category: 'Document',
+    url: 'tools/pdf-tool.html',
+    icon: 'file-text',
+  },
+  {
+    id: 'pdf-toolkit',
     title: 'PDF Toolkit',
     description: 'Edit and manipulate PDF files with ease.',
     category: 'Document',
-    url: 'tools/pdf-tool.html',
+    url: 'pdf-toolkit/index.html',
     icon: 'file-text',
   },
   {
@@ -123,7 +131,7 @@ const toolsData = [
   {
     id: 'html-content',
     title: 'HTML Content',
-    description: 'Edit and preview HTML content in real-time.',
+    description: 'Extracts text content from HTML code, stripping away all tags and scripts.',
     category: 'Developer',
     url: 'tools/html-content.html',
     icon: 'code',

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grayscale PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Grayscale PDF</h1>
+    <p class="page-sub">Convert every page to grayscale — great for printing or reducing color-ink usage.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">⚫</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Preview (Page <span id="previewPageNum">1</span> of <span id="pageCountLabel">0</span>)</span>
+            <div class="canvas-stage"><canvas id="previewCanvas"></canvas></div>
+            <div class="page-nav">
+              <button class="icon-btn" id="prevPageBtn">‹</button>
+              <span id="pageNavLabel">1 / 1</span>
+              <button class="icon-btn" id="nextPageBtn">›</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Grayscale Settings</span>
+            <div class="field">
+              <label class="field-label">Output Resolution (<span id="scaleVal">2</span>x)</label>
+              <input type="range" id="scaleInput" min="1" max="4" step="0.5" value="2" />
+            </div>
+            <div class="field">
+              <label class="field-label">Output Quality (<span id="qualityVal">88</span>%)</label>
+              <input type="range" id="qualityInput" min="40" max="100" value="88" />
+            </div>
+            <div class="hint">Each page is rendered to an image, desaturated, then re-embedded. This keeps physical page size identical to the original.</div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">⚫ Convert to Grayscale</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Converting...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages converted</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download Grayscale PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0, currentPreview = 1;
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      currentPreview = 1;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderPreview();
+    }
+
+    async function renderPreview() {
+      document.getElementById('previewPageNum').textContent = currentPreview;
+      document.getElementById('pageNavLabel').textContent = `${currentPreview} / ${pageCount}`;
+      const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, currentPreview, 1.2);
+      grayscaleCanvas(canvas);
+      const target = document.getElementById('previewCanvas');
+      target.width = canvas.width; target.height = canvas.height;
+      target.getContext('2d').drawImage(canvas, 0, 0);
+    }
+
+    function grayscaleCanvas(canvas) {
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        d[i] = d[i + 1] = d[i + 2] = lum;
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    document.getElementById('prevPageBtn').addEventListener('click', () => { if (currentPreview > 1) { currentPreview--; renderPreview(); } });
+    document.getElementById('nextPageBtn').addEventListener('click', () => { if (currentPreview < pageCount) { currentPreview++; renderPreview(); } });
+    document.getElementById('scaleInput').addEventListener('input', (e) => document.getElementById('scaleVal').textContent = e.target.value);
+    document.getElementById('qualityInput').addEventListener('input', (e) => document.getElementById('qualityVal').textContent = e.target.value);
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const scale = parseFloat(document.getElementById('scaleInput').value);
+      const quality = parseInt(document.getElementById('qualityInput').value, 10) / 100;
+
+      hud.show('Converting pages to grayscale...');
+      try {
+        const outDoc = await PDFLib.PDFDocument.create();
+        for (let i = 1; i <= pageCount; i++) {
+          hud.set(`Processing page ${i} of ${pageCount}...`, (i / pageCount) * 90);
+          const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, i, scale);
+          grayscaleCanvas(canvas);
+          const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
+          const jpegBytes = dataUrlToBytes(jpegDataUrl);
+          const embedded = await outDoc.embedJpg(jpegBytes);
+
+          const page = await pdfjsDoc.getPage(i);
+          const vp = page.getViewport({ scale: 1 });
+          const outPage = outDoc.addPage([vp.width, vp.height]);
+          outPage.drawImage(embedded, { x: 0, y: 0, width: vp.width, height: vp.height });
+        }
+        hud.set('Saving PDF...', 95);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Converted to grayscale!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_grayscale.pdf');
+    });
+  </script>
+</body>
+</html>

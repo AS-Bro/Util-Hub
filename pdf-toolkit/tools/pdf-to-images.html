@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF to Images — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">PDF to Images</h1>
+    <p class="page-sub">Export any page (or all of them) as high-quality PNG or JPG images.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🌄</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Pages (<span id="pageCountLabel">0</span>) — click to select for export</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+            <div class="btn-row" style="margin-top:10px;">
+              <button class="secondary" id="selAllBtn" style="flex:1;">Select All</button>
+              <button class="secondary" id="selNoneBtn" style="flex:1;">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Export Settings</span>
+            <div class="field">
+              <label class="field-label">Format</label>
+              <select id="formatSelect">
+                <option value="png">PNG (Lossless)</option>
+                <option value="jpeg">JPG (Smaller Size)</option>
+              </select>
+            </div>
+            <div class="field" id="qualityField">
+              <label class="field-label">JPG Quality (<span id="qualityVal">90</span>%)</label>
+              <input type="range" id="qualityInput" min="30" max="100" value="90" />
+            </div>
+            <div class="field">
+              <label class="field-label">Resolution (scale)</label>
+              <select id="scaleSelect">
+                <option value="1">1x — Screen</option>
+                <option value="2" selected>2x — High Quality</option>
+                <option value="3">3x — Print Quality</option>
+                <option value="4">4x — Maximum</option>
+              </select>
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="exportBtn">🌄 Export Selected Pages</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Rendering...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Images generated</span><strong id="rCount">—</strong></div>
+            <div id="fileResults" style="margin:10px 0;max-height:220px;overflow-y:auto;"></div>
+            <button class="primary btn-full" id="downloadZipBtn">💾 Download All as ZIP</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcName = '', pageCount = 0;
+    let pageState = [];
+    let outputs = [];
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+    document.getElementById('formatSelect').addEventListener('change', (e) => {
+      document.getElementById('qualityField').classList.toggle('hidden', e.target.value !== 'jpeg');
+    });
+    document.getElementById('qualityInput').addEventListener('input', (e) => document.getElementById('qualityVal').textContent = e.target.value);
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      const buf = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(buf);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      pageState = [];
+      for (let i = 1; i <= pageCount; i++) pageState.push({ idx: i, selected: true });
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderThumbs();
+    }
+
+    async function renderThumbs() {
+      thumbGrid.innerHTML = '';
+      for (const ps of pageState) {
+        const card = document.createElement('div');
+        card.className = 'thumb-card selected';
+        card.innerHTML = `<div class="select-dot"></div><div class="page-num">Page ${ps.idx}</div>`;
+        thumbGrid.appendChild(card);
+        ps.cardEl = card;
+        card.addEventListener('click', () => {
+          ps.selected = !ps.selected;
+          card.classList.toggle('selected', ps.selected);
+        });
+        PDFUtils.renderThumbnail(pdfjsDoc, ps.idx, 150).then(canvas => card.insertBefore(canvas, card.firstChild));
+      }
+    }
+
+    document.getElementById('selAllBtn').addEventListener('click', () => pageState.forEach(p => { p.selected = true; p.cardEl.classList.add('selected'); }));
+    document.getElementById('selNoneBtn').addEventListener('click', () => pageState.forEach(p => { p.selected = false; p.cardEl.classList.remove('selected'); }));
+
+    document.getElementById('exportBtn').addEventListener('click', async () => {
+      const selected = pageState.filter(p => p.selected);
+      if (!selected.length) { alert('Select at least one page.'); return; }
+      const format = document.getElementById('formatSelect').value;
+      const ext = format === 'png' ? 'png' : 'jpg';
+      const quality = parseInt(document.getElementById('qualityInput').value, 10) / 100;
+      const scale = parseFloat(document.getElementById('scaleSelect').value);
+      const base = Toolkit.baseName(srcName);
+
+      hud.show('Rendering pages...');
+      outputs = [];
+      try {
+        for (let i = 0; i < selected.length; i++) {
+          const ps = selected[i];
+          hud.set(`Rendering page ${ps.idx} (${i + 1}/${selected.length})...`, ((i + 1) / selected.length) * 90);
+          const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, ps.idx, scale);
+          const mime = format === 'png' ? 'image/png' : 'image/jpeg';
+          const dataUrl = canvas.toDataURL(mime, format === 'jpeg' ? quality : undefined);
+          const blob = await (await fetch(dataUrl)).blob();
+          outputs.push({ name: `${base}_page${String(ps.idx).padStart(3, '0')}.${ext}`, blob });
+        }
+        renderResults();
+        hud.done('Export complete!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function renderResults() {
+      document.getElementById('resultBox').classList.remove('hidden');
+      document.getElementById('rCount').textContent = outputs.length;
+      document.getElementById('fileResults').innerHTML = outputs.map(o =>
+        `<div class="file-chip"><span class="name">${Toolkit.escapeHtml(o.name)}</span><span class="meta">${Toolkit.formatBytes(o.blob.size)}</span></div>`
+      ).join('');
+    }
+
+    document.getElementById('downloadZipBtn').addEventListener('click', async () => {
+      if (!outputs.length) return;
+      if (outputs.length === 1) { Toolkit.downloadBlob(outputs[0].blob, outputs[0].name); return; }
+      const zipBlob = await PDFUtils.zipFiles(outputs.map(o => ({ name: o.name, data: o.blob })));
+      Toolkit.downloadBlob(zipBlob, Toolkit.baseName(srcName) + '_images.zip');
+    });
+  </script>
+</body>
+</html>

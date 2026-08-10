@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resize PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Resize PDF</h1>
+    <p class="page-sub">Fit every page to a standard paper size. Content is preserved as vector/embedded page data, not rasterized.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">📐</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Source File</span>
+            <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+            <div class="stat-grid" style="margin-top:10px;">
+              <div class="stat-box"><div class="label">Current Page Size</div><div class="value" id="curSize" style="font-size:14px;">—</div></div>
+              <div class="stat-box"><div class="label">Target Page Size</div><div class="value good" id="targetSizeLabel" style="font-size:14px;">A4</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Resize Settings</span>
+            <div class="field">
+              <label class="field-label">Target Size</label>
+              <select id="sizeSelect">
+                <option value="A4">A4 (595 × 842 pt)</option>
+                <option value="Letter">Letter (612 × 792 pt)</option>
+                <option value="Legal">Legal (612 × 1008 pt)</option>
+                <option value="A3">A3 (842 × 1191 pt)</option>
+                <option value="A5">A5 (420 × 595 pt)</option>
+                <option value="Tabloid">Tabloid (792 × 1224 pt)</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </div>
+            <div class="field-row hidden" id="customFields">
+              <div class="field"><label class="field-label">Width (pt)</label><input type="number" id="customW" value="595" /></div>
+              <div class="field"><label class="field-label">Height (pt)</label><input type="number" id="customH" value="842" /></div>
+            </div>
+            <div class="field">
+              <label class="field-label">Orientation</label>
+              <select id="orientSelect">
+                <option value="auto">Match Each Page's Content</option>
+                <option value="portrait">Force Portrait</option>
+                <option value="landscape">Force Landscape</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Fit Mode</label>
+              <select id="fitSelect">
+                <option value="contain">Fit Within Page (adds margins)</option>
+                <option value="stretch">Stretch to Fill (may distort)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="resized" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">📐 Resize PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Resizing...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages resized</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let srcBuffer = null, srcName = '', pageCount = 0;
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      const pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      const page1 = await pdfjsDoc.getPage(1);
+      const vp = page1.getViewport({ scale: 1 });
+      document.getElementById('srcName').textContent = srcName;
+      document.getElementById('srcMeta').textContent = `${Toolkit.formatBytes(srcBuffer.byteLength)} · ${pageCount} pages`;
+      document.getElementById('curSize').textContent = `${vp.width.toFixed(0)} × ${vp.height.toFixed(0)} pt`;
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_resized';
+    }
+
+    document.getElementById('sizeSelect').addEventListener('change', (e) => {
+      document.getElementById('customFields').classList.toggle('hidden', e.target.value !== 'custom');
+      document.getElementById('targetSizeLabel').textContent = e.target.options[e.target.selectedIndex].text.split(' (')[0];
+    });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const sizeKey = document.getElementById('sizeSelect').value;
+      const orientation = document.getElementById('orientSelect').value;
+      const fitMode = document.getElementById('fitSelect').value;
+
+      hud.show('Resizing pages...');
+      try {
+        const srcDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const outDoc = await PDFLib.PDFDocument.create();
+        const srcPages = srcDoc.getPages();
+
+        let [baseW, baseH] = sizeKey === 'custom'
+          ? [parseFloat(document.getElementById('customW').value) || 595, parseFloat(document.getElementById('customH').value) || 842]
+          : PDFUtils.PAGE_SIZES_PT[sizeKey];
+
+        for (let i = 0; i < srcPages.length; i++) {
+          hud.set(`Resizing page ${i + 1} of ${srcPages.length}...`, ((i + 1) / srcPages.length) * 90);
+          const srcPage = srcPages[i];
+          const { width: origW, height: origH } = srcPage.getSize();
+
+          let targetW = baseW, targetH = baseH;
+          const wantLandscape = orientation === 'landscape' || (orientation === 'auto' && origW > origH);
+          if (wantLandscape && targetH > targetW) [targetW, targetH] = [targetH, targetW];
+          if (!wantLandscape && targetW > targetH) [targetW, targetH] = [targetH, targetW];
+
+          const embedded = await outDoc.embedPage(srcPage);
+          const newPage = outDoc.addPage([targetW, targetH]);
+
+          let drawW, drawH;
+          if (fitMode === 'stretch') { drawW = targetW; drawH = targetH; }
+          else {
+            const scale = Math.min(targetW / origW, targetH / origH);
+            drawW = origW * scale; drawH = origH * scale;
+          }
+          const x = (targetW - drawW) / 2, y = (targetH - drawH) / 2;
+          newPage.drawPage(embedded, { x, y, width: drawW, height: drawH });
+        }
+
+        hud.set('Saving PDF...', 96);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Resize complete!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'resized';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

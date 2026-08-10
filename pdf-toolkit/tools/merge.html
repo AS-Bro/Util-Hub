@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Merge PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .file-card { background: var(--panel); border: 1px solid var(--border-softer); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; }
+  .file-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .file-card-head .fh-left { display:flex; align-items:center; gap:10px; min-width:0; }
+  .file-card-head .fh-name { font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 260px; }
+  .file-card-head .fh-meta { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-dimmer); }
+  .file-card.dragging { opacity: .45; }
+  .drag-handle { cursor: grab; color: var(--text-dimmer); font-size: 16px; padding: 0 4px; }
+  .mini-thumbs { display:grid; grid-template-columns: repeat(auto-fill, minmax(88px,1fr)); gap:8px; margin-top:10px; }
+  .mini-thumb { background:#fff; border-radius:4px; overflow:hidden; position:relative; border:1.5px solid var(--border-softer); cursor:pointer; }
+  .mini-thumb.excluded { opacity: .3; }
+  .mini-thumb.excluded::after { content:'✕'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#e88a8a; font-size:20px; background:rgba(0,0,0,.5); }
+  .mini-thumb img, .mini-thumb canvas { width:100%; display:block; }
+  .mini-thumb .rot-badge { position:absolute; bottom:2px; right:2px; background:rgba(14,28,43,.85); color:#6fd8cb; font-size:10px; border-radius:3px; padding:0 3px; }
+  .mini-thumb .rotate-mini { position:absolute; top:2px; right:2px; background:rgba(14,28,43,.85); border:none; color:#e7eef4; width:18px; height:18px; border-radius:3px; font-size:10px; cursor:pointer; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Merge PDF</h1>
+    <p class="page-sub">Combine multiple PDFs into one. Reorder files, choose exactly which pages to include, and rotate pages before merging.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" multiple class="hidden" />
+      <div class="icon">🧩</div>
+      <div class="primary-txt">Click or drag PDF files here</div>
+      <div class="sub-txt">Add as many files as you like — order below controls merge order</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Files &amp; Pages (<span id="fileCountLabel">0</span>)</span>
+            <div id="fileListContainer"></div>
+            <button class="secondary btn-full" id="addMoreBtn" style="margin-top:6px;">+ Add More Files</button>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Merge Settings</span>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="merged" />
+            </div>
+            <div class="hint">Click any thumbnail to include/exclude that page. Use the rotate icon to spin a page 90° before merging. Drag file cards by the ⠿ handle to reorder.</div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="mergeBtn">🧩 Merge PDFs</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Merging...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Total pages</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>Output size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download Merged PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const fileListContainer = document.getElementById('fileListContainer');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let entries = []; // { id, name, size, arrayBuffer, pdfjsDoc, pages:[{idx, included, rotation}] }
+    let dragSrcId = null;
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: addFiles });
+    document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+
+    async function addFiles(files) {
+      for (const file of files) {
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) continue;
+        const buf = await Toolkit.readAsArrayBuffer(file);
+        try {
+          const pdfjsDoc = await PDFUtils.loadPdfJs(buf);
+          const pages = [];
+          for (let i = 1; i <= pdfjsDoc.numPages; i++) pages.push({ idx: i, included: true, rotation: 0 });
+          entries.push({ id: Toolkit.uid(), name: file.name, size: file.size, arrayBuffer: buf, pdfjsDoc, pages });
+        } catch (e) {
+          alert(`Could not read "${file.name}": ${e.message}`);
+        }
+      }
+      fileInput.value = '';
+      if (entries.length) {
+        workspace.classList.remove('hidden');
+        dropZone.style.padding = '20px';
+        renderFileList();
+      }
+    }
+
+    function renderFileList() {
+      document.getElementById('fileCountLabel').textContent = entries.length;
+      fileListContainer.innerHTML = '';
+      entries.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'file-card';
+        card.draggable = true;
+        card.dataset.id = entry.id;
+        const includedCount = entry.pages.filter(p => p.included).length;
+        card.innerHTML = `
+          <div class="file-card-head">
+            <div class="fh-left">
+              <span class="drag-handle">⠿</span>
+              <div>
+                <div class="fh-name">${Toolkit.escapeHtml(entry.name)}</div>
+                <div class="fh-meta">${Toolkit.formatBytes(entry.size)} · ${includedCount}/${entry.pages.length} pages selected</div>
+              </div>
+            </div>
+            <button class="icon-btn" data-remove="${entry.id}" title="Remove file">✕</button>
+          </div>
+          <div class="mini-thumbs" id="thumbs-${entry.id}"></div>`;
+        fileListContainer.appendChild(card);
+        renderThumbsForEntry(entry);
+
+        card.addEventListener('dragstart', () => { dragSrcId = entry.id; card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('dragover', (e) => e.preventDefault());
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (!dragSrcId || dragSrcId === entry.id) return;
+          const from = entries.findIndex(x => x.id === dragSrcId);
+          const to = entries.findIndex(x => x.id === entry.id);
+          const [moved] = entries.splice(from, 1);
+          entries.splice(to, 0, moved);
+          renderFileList();
+        });
+      });
+
+      fileListContainer.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          entries = entries.filter(e => e.id !== btn.dataset.remove);
+          renderFileList();
+          if (!entries.length) { workspace.classList.add('hidden'); }
+        });
+      });
+    }
+
+    async function renderThumbsForEntry(entry) {
+      const holder = document.getElementById(`thumbs-${entry.id}`);
+      holder.innerHTML = entry.pages.map(p => `<div class="mini-thumb" data-loading="1" style="min-height:60px;display:flex;align-items:center;justify-content:center;color:#888;font-size:10px;">…</div>`).join('');
+      for (let i = 0; i < entry.pages.length; i++) {
+        const p = entry.pages[i];
+        const canvas = await PDFUtils.renderThumbnail(entry.pdfjsDoc, p.idx, 140);
+        const wrap = holder.children[i];
+        wrap.dataset.loading = '';
+        wrap.innerHTML = '';
+        wrap.appendChild(canvas);
+        canvas.style.transform = `rotate(${p.rotation}deg)`;
+        const rotBtn = document.createElement('button');
+        rotBtn.className = 'rotate-mini';
+        rotBtn.textContent = '⟳';
+        rotBtn.title = 'Rotate this page 90°';
+        rotBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          p.rotation = (p.rotation + 90) % 360;
+          canvas.style.transform = `rotate(${p.rotation}deg)`;
+          let badge = wrap.querySelector('.rot-badge');
+          if (p.rotation !== 0) {
+            if (!badge) { badge = document.createElement('span'); badge.className = 'rot-badge'; wrap.appendChild(badge); }
+            badge.textContent = p.rotation + '°';
+          } else if (badge) badge.remove();
+        });
+        wrap.appendChild(rotBtn);
+        wrap.classList.toggle('excluded', !p.included);
+        wrap.addEventListener('click', () => {
+          p.included = !p.included;
+          wrap.classList.toggle('excluded', !p.included);
+          const meta = wrap.closest('.file-card').querySelector('.fh-meta');
+          const includedCount = entry.pages.filter(x => x.included).length;
+          meta.textContent = `${Toolkit.formatBytes(entry.size)} · ${includedCount}/${entry.pages.length} pages selected`;
+        });
+      }
+    }
+
+    document.getElementById('mergeBtn').addEventListener('click', async () => {
+      const anyIncluded = entries.some(e => e.pages.some(p => p.included));
+      if (!anyIncluded) { alert('Select at least one page to merge.'); return; }
+      hud.show('Loading source documents...');
+      try {
+        const outDoc = await PDFLib.PDFDocument.create();
+        let processed = 0;
+        const total = entries.length;
+        for (const entry of entries) {
+          hud.set(`Merging "${entry.name}"...`, 10 + (processed / total) * 80);
+          const srcDoc = await PDFUtils.loadPdfLib(entry.arrayBuffer);
+          const indicesToCopy = entry.pages.filter(p => p.included).map(p => p.idx - 1);
+          if (!indicesToCopy.length) { processed++; continue; }
+          const copied = await outDoc.copyPages(srcDoc, indicesToCopy);
+          copied.forEach((pg, i) => {
+            const originalIdx = indicesToCopy[i];
+            const pageInfo = entry.pages.find(p => p.idx - 1 === originalIdx);
+            if (pageInfo && pageInfo.rotation) {
+              const current = pg.getRotation().angle || 0;
+              pg.setRotation(PDFLib.degrees((current + pageInfo.rotation) % 360));
+            }
+            outDoc.addPage(pg);
+          });
+          processed++;
+        }
+        hud.set('Finalizing PDF...', 95);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Merge complete!');
+      } catch (e) {
+        hud.error('Merge failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      let name = document.getElementById('outputName').value.trim() || 'merged';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

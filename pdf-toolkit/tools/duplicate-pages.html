@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Duplicate Pages — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Duplicate Pages</h1>
+    <p class="page-sub">Select pages and duplicate them in place, one or more times, directly after the original.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">📑</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Pages (<span id="pageCountLabel">0</span>) — click to select for duplication</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Duplicate Settings</span>
+            <div class="stat-box" style="margin-bottom:14px;">
+              <div class="label">Selected pages</div>
+              <div class="value good" id="selCount">0</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Copies per selected page</label>
+              <input type="number" id="copiesInput" min="1" value="1" />
+            </div>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="duplicated" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">📑 Duplicate &amp; Save PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Processing...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Total pages</span><strong id="rCount">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0;
+    let pageState = [];
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_duplicated';
+      pageState = [];
+      for (let i = 1; i <= pageCount; i++) pageState.push({ idx: i, selected: false });
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderThumbs();
+    }
+
+    async function renderThumbs() {
+      thumbGrid.innerHTML = '';
+      for (const ps of pageState) {
+        const card = document.createElement('div');
+        card.className = 'thumb-card';
+        card.innerHTML = `<div class="select-dot"></div><div class="page-num">Page ${ps.idx}</div>`;
+        thumbGrid.appendChild(card);
+        ps.cardEl = card;
+        card.addEventListener('click', () => {
+          ps.selected = !ps.selected;
+          card.classList.toggle('selected', ps.selected);
+          document.getElementById('selCount').textContent = pageState.filter(p => p.selected).length;
+        });
+        PDFUtils.renderThumbnail(pdfjsDoc, ps.idx, 150).then(canvas => card.insertBefore(canvas, card.firstChild));
+      }
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const selected = pageState.filter(p => p.selected);
+      if (!selected.length) { alert('Select at least one page to duplicate.'); return; }
+      const copies = Math.max(1, parseInt(document.getElementById('copiesInput').value, 10) || 1);
+
+      hud.show('Building document...');
+      try {
+        const srcDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const outDoc = await PDFLib.PDFDocument.create();
+        // Build the final index sequence: each original page once, selected ones repeated (copies) extra times right after.
+        const finalIndices = [];
+        pageState.forEach(p => {
+          finalIndices.push(p.idx - 1);
+          if (p.selected) for (let c = 0; c < copies; c++) finalIndices.push(p.idx - 1);
+        });
+        hud.set('Copying pages...', 40);
+        const copiedPages = await outDoc.copyPages(srcDoc, finalIndices);
+        copiedPages.forEach(pg => outDoc.addPage(pg));
+        hud.set('Saving PDF...', 85);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rCount').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Done!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'duplicated';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF Information — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">PDF Information</h1>
+    <p class="page-sub">Inspect page count, file size, dimensions, metadata, encryption status and PDF version — all read locally in your browser.</p>
+
+    <div id="uploadPanel">
+      <div id="dropZone" class="drop-zone">
+        <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+        <div class="icon">📄</div>
+        <div class="primary-txt">Click or drag a PDF file here</div>
+        <div class="sub-txt">Your file is analyzed entirely on-device</div>
+      </div>
+    </div>
+
+    <div id="passwordPanel" class="hidden card" style="max-width:420px;margin-top:16px;">
+      <span class="card-title">Password Required</span>
+      <div class="field">
+        <label class="field-label">This PDF is encrypted</label>
+        <input type="text" id="pwInput" placeholder="Enter password" />
+      </div>
+      <button class="primary btn-full" id="pwSubmit">Unlock &amp; Inspect</button>
+      <div class="hint" id="pwError"></div>
+    </div>
+
+    <div id="resultsPanel" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Document Overview</span>
+            <div class="stat-grid">
+              <div class="stat-box"><div class="label">File Name</div><div class="value" id="oFileName" style="font-size:13px;">—</div></div>
+              <div class="stat-box"><div class="label">File Size</div><div class="value good" id="oFileSize">—</div></div>
+              <div class="stat-box"><div class="label">Page Count</div><div class="value good" id="oPageCount">—</div></div>
+              <div class="stat-box"><div class="label">PDF Version</div><div class="value" id="oVersion">—</div></div>
+              <div class="stat-box"><div class="label">Page Size (pt)</div><div class="value" id="oPageSize" style="font-size:13px;">—</div></div>
+              <div class="stat-box"><div class="label">Encrypted</div><div class="value" id="oEncrypted">—</div></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px;">
+            <span class="card-title">Per-Page Dimensions</span>
+            <div id="pageList" style="max-height:280px;overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Document Metadata</span>
+            <div id="metaList" class="mono" style="font-size:12px;line-height:1.9;"></div>
+          </div>
+          <button class="secondary btn-full" id="exportMetaBtn" style="margin-top:12px;">💾 Export Metadata as JSON</button>
+          <button class="secondary btn-full" id="resetBtn" style="margin-top:8px;">Analyze Another File</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const passwordPanel = document.getElementById('passwordPanel');
+    const resultsPanel = document.getElementById('resultsPanel');
+    const pwInput = document.getElementById('pwInput');
+    const pwSubmit = document.getElementById('pwSubmit');
+    const pwError = document.getElementById('pwError');
+
+    let currentBuffer = null;
+    let currentName = '';
+    let currentInfo = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (files) => handleFile(files[0]) });
+
+    async function handleFile(file) {
+      if (!file) return;
+      currentName = file.name;
+      currentBuffer = await Toolkit.readAsArrayBuffer(file);
+      await analyze();
+    }
+
+    async function analyze(password) {
+      try {
+        const info = await PDFUtils.getPdfInfo(currentBuffer, currentName, password);
+        if (info.needsPassword) {
+          uploadPanel.classList.add('hidden');
+          passwordPanel.classList.remove('hidden');
+          resultsPanel.classList.add('hidden');
+          return;
+        }
+        currentInfo = info;
+        renderResults(info);
+      } catch (e) {
+        pwError.textContent = 'Could not read this PDF: ' + e.message;
+      }
+    }
+
+    pwSubmit.addEventListener('click', () => analyze(pwInput.value));
+
+    function renderResults(info) {
+      uploadPanel.classList.add('hidden');
+      passwordPanel.classList.add('hidden');
+      resultsPanel.classList.remove('hidden');
+
+      document.getElementById('oFileName').textContent = info.filename;
+      document.getElementById('oFileSize').textContent = Toolkit.formatBytes(info.fileSize);
+      document.getElementById('oPageCount').textContent = info.pageCount;
+      document.getElementById('oVersion').textContent = 'PDF ' + info.pdfVersion;
+      document.getElementById('oPageSize').textContent = info.pageWidthPt ?
+        `${info.pageWidthPt.toFixed(0)} × ${info.pageHeightPt.toFixed(0)} pt (${PDFUtils.ptToIn(info.pageWidthPt)}" × ${PDFUtils.ptToIn(info.pageHeightPt)}")` : '—';
+      document.getElementById('oEncrypted').textContent = info.encrypted ? 'Yes' : 'No';
+
+      const pageList = document.getElementById('pageList');
+      pageList.innerHTML = info.pages.map(p =>
+        `<div class="file-chip"><span class="name">Page ${p.index}</span><span class="meta">${p.widthPt.toFixed(0)} × ${p.heightPt.toFixed(0)} pt · rot ${p.rotation}°</span></div>`
+      ).join('');
+
+      const metaList = document.getElementById('metaList');
+      const m = info.metadata || {};
+      const rows = [
+        ['Title', m.title], ['Author', m.author], ['Subject', m.subject],
+        ['Keywords', m.keywords], ['Creator', m.creator], ['Producer', m.producer],
+        ['Created', m.creationDate], ['Modified', m.modDate]
+      ];
+      metaList.innerHTML = rows.map(([k, v]) =>
+        `<div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border-softer);padding:4px 0;">
+          <span style="color:var(--text-dimmer);">${k}</span><span style="text-align:right;word-break:break-word;">${Toolkit.escapeHtml(v) || '<span style=\"color:var(--text-dimmer)\">—</span>'}</span>
+        </div>`
+      ).join('');
+    }
+
+    document.getElementById('exportMetaBtn').addEventListener('click', () => {
+      if (!currentInfo) return;
+      const blob = new Blob([JSON.stringify(currentInfo, null, 2)], { type: 'application/json' });
+      Toolkit.downloadBlob(blob, Toolkit.baseName(currentName) + '_metadata.json');
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      currentBuffer = null; currentInfo = null; fileInput.value = '';
+      resultsPanel.classList.add('hidden');
+      uploadPanel.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

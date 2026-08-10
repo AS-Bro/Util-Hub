@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flatten PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
+  .mode-tab { flex:1; text-align:center; padding:10px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
+  .mode-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Flatten PDF</h1>
+    <p class="page-sub">Bake interactive form fields (or the entire page) into static, non-editable content.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">📦</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Source File</span>
+            <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+            <div id="formInfo" class="hint"></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Flatten Method</span>
+            <div class="mode-tabs">
+              <div class="mode-tab active" data-mode="form">Form Fields</div>
+              <div class="mode-tab" data-mode="raster">Full Rasterize</div>
+            </div>
+            <div id="formModeHint" class="hint">Converts fillable AcroForm fields (text boxes, checkboxes, radio buttons, dropdowns) into permanent static page content. Preserves text/vector quality. Does not affect non-form markup annotations from other tools.</div>
+            <div id="rasterModeHint" class="hint hidden">Renders every page to a high-resolution image. Guarantees absolutely everything (forms, annotations, links, layers) becomes static pixels — but text is no longer selectable and file size may increase.</div>
+            <div id="rasterOptions" class="field hidden" style="margin-top:10px;">
+              <label class="field-label">Resolution (<span id="scaleVal">2</span>x)</label>
+              <input type="range" id="scaleInput" min="1" max="4" step="0.5" value="2" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="applyBtn">📦 Flatten PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Flattening...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Result</span><strong id="rInfo">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0, mode = 'form';
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('srcName').textContent = srcName;
+      document.getElementById('srcMeta').textContent = `${Toolkit.formatBytes(srcBuffer.byteLength)} · ${pageCount} pages`;
+
+      try {
+        const libDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const form = libDoc.getForm();
+        const fieldCount = form.getFields().length;
+        document.getElementById('formInfo').textContent = fieldCount
+          ? `Detected ${fieldCount} fillable form field(s) in this document.`
+          : 'No fillable AcroForm fields detected in this document — "Full Rasterize" is the option that will have an effect.';
+      } catch (e) {
+        document.getElementById('formInfo').textContent = 'Could not inspect form fields: ' + e.message;
+      }
+
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+    }
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        mode = tab.dataset.mode;
+        document.getElementById('formModeHint').classList.toggle('hidden', mode !== 'form');
+        document.getElementById('rasterModeHint').classList.toggle('hidden', mode !== 'raster');
+        document.getElementById('rasterOptions').classList.toggle('hidden', mode !== 'raster');
+      });
+    });
+    document.getElementById('scaleInput').addEventListener('input', (e) => document.getElementById('scaleVal').textContent = e.target.value);
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      hud.show('Flattening...');
+      try {
+        if (mode === 'form') {
+          const outDoc = await PDFUtils.loadPdfLib(srcBuffer);
+          const form = outDoc.getForm();
+          const fieldCount = form.getFields().length;
+          hud.set('Flattening form fields...', 50);
+          form.flatten();
+          const bytes = await outDoc.save();
+          outputBlob = PDFUtils.bytesToBlob(bytes);
+          document.getElementById('rInfo').textContent = `${fieldCount} field(s) flattened`;
+        } else {
+          const scale = parseFloat(document.getElementById('scaleInput').value);
+          const outDoc = await PDFLib.PDFDocument.create();
+          for (let i = 1; i <= pageCount; i++) {
+            hud.set(`Rasterizing page ${i} of ${pageCount}...`, (i / pageCount) * 90);
+            const canvas = await PDFUtils.renderPageToCanvas(pdfjsDoc, i, scale);
+            const jpegBytes = dataUrlToBytes(canvas.toDataURL('image/jpeg', 0.9));
+            const embedded = await outDoc.embedJpg(jpegBytes);
+            const page = await pdfjsDoc.getPage(i);
+            const vp = page.getViewport({ scale: 1 });
+            const outPage = outDoc.addPage([vp.width, vp.height]);
+            outPage.drawImage(embedded, { x: 0, y: 0, width: vp.width, height: vp.height });
+          }
+          const bytes = await outDoc.save();
+          outputBlob = PDFUtils.bytesToBlob(bytes);
+          document.getElementById('rInfo').textContent = `${pageCount} page(s) rasterized`;
+        }
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Flatten complete!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_flattened.pdf');
+    });
+  </script>
+</body>
+</html>

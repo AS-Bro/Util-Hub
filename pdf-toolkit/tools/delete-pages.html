@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Delete Pages — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .thumb-card.marked { border-color: var(--danger); background: rgba(232,138,138,.08); }
+  .thumb-card.marked img, .thumb-card.marked canvas { opacity: .35; }
+  .thumb-card.marked::before { content:'DELETE'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--danger); font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; letter-spacing:.05em; z-index:2; background:rgba(14,28,43,.7); padding:2px 6px; border-radius:4px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Delete Pages</h1>
+    <p class="page-sub">Click any page to mark it for deletion, then save a new PDF without those pages.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🗑️</div>
+      <div class="primary-txt">Click or drag a PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Pages (<span id="pageCountLabel">0</span>) — click to mark for deletion</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Delete Pages</span>
+            <div class="field">
+              <label class="field-label">Or type page numbers/ranges to mark</label>
+              <input type="text" id="rangeInput" placeholder="e.g. 2, 5-7" />
+            </div>
+            <button class="secondary btn-full" id="markBtn">Mark These Pages</button>
+            <div class="divider"></div>
+            <div class="stat-box" style="margin-bottom:14px;">
+              <div class="label">Marked for deletion</div>
+              <div class="value" id="markedCount" style="color:var(--danger);">0</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="pages-removed" />
+            </div>
+            <button class="primary btn-full" id="applyBtn">🗑️ Delete Marked Pages &amp; Save</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Processing...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages remaining</span><strong id="rCount">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let pdfjsDoc = null, srcBuffer = null, srcName = '', pageCount = 0;
+    let pageState = [];
+    let outputBlob = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      pdfjsDoc = await PDFUtils.loadPdfJs(srcBuffer);
+      pageCount = pdfjsDoc.numPages;
+      document.getElementById('pageCountLabel').textContent = pageCount;
+      document.getElementById('outputName').value = Toolkit.baseName(srcName) + '_edited';
+      pageState = [];
+      for (let i = 1; i <= pageCount; i++) pageState.push({ idx: i, marked: false });
+      workspace.classList.remove('hidden');
+      dropZone.style.padding = '20px';
+      await renderThumbs();
+    }
+
+    async function renderThumbs() {
+      thumbGrid.innerHTML = '';
+      for (const ps of pageState) {
+        const card = document.createElement('div');
+        card.className = 'thumb-card';
+        card.innerHTML = `<div class="page-num">Page ${ps.idx}</div>`;
+        thumbGrid.appendChild(card);
+        ps.cardEl = card;
+        card.addEventListener('click', () => toggleMark(ps));
+        PDFUtils.renderThumbnail(pdfjsDoc, ps.idx, 150).then(canvas => card.insertBefore(canvas, card.firstChild));
+      }
+    }
+
+    function toggleMark(ps) {
+      ps.marked = !ps.marked;
+      ps.cardEl.classList.toggle('marked', ps.marked);
+      document.getElementById('markedCount').textContent = pageState.filter(p => p.marked).length;
+    }
+
+    document.getElementById('markBtn').addEventListener('click', () => {
+      const text = document.getElementById('rangeInput').value;
+      const parts = text.split(',').map(s => s.trim()).filter(Boolean);
+      parts.forEach(part => {
+        const m = part.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (m) {
+          let [a, b] = [parseInt(m[1], 10), parseInt(m[2], 10)];
+          if (a > b) [a, b] = [b, a];
+          for (let i = a; i <= b; i++) { const ps = pageState[i - 1]; if (ps && !ps.marked) toggleMark(ps); }
+        } else if (/^\d+$/.test(part)) {
+          const ps = pageState[parseInt(part, 10) - 1];
+          if (ps && !ps.marked) toggleMark(ps);
+        }
+      });
+    });
+
+    document.getElementById('applyBtn').addEventListener('click', async () => {
+      const remaining = pageState.filter(p => !p.marked);
+      if (!remaining.length) { alert('You cannot delete every page — at least one page must remain.'); return; }
+      hud.show('Removing marked pages...');
+      try {
+        const srcDoc = await PDFUtils.loadPdfLib(srcBuffer);
+        const outDoc = await PDFLib.PDFDocument.create();
+        const indices = remaining.map(p => p.idx - 1);
+        hud.set('Copying pages...', 40);
+        const copied = await outDoc.copyPages(srcDoc, indices);
+        copied.forEach(pg => outDoc.addPage(pg));
+        hud.set('Saving PDF...', 80);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rCount').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Pages deleted!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'pages-removed';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>

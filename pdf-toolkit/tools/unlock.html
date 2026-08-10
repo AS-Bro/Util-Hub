@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unlock PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Unlock PDF</h1>
+    <p class="page-sub">Remove password protection from an encrypted PDF. Requires the correct password — this tool does not crack or brute-force passwords.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
+      <div class="icon">🔓</div>
+      <div class="primary-txt">Click or drag an encrypted PDF file here</div>
+      <div class="sub-txt">Processed entirely in your browser</div>
+    </div>
+
+    <div id="notEncryptedNote" class="warn-box hidden" style="max-width:600px;">This PDF does not appear to be password-protected — there's nothing to unlock.</div>
+
+    <div id="workspace" class="hidden card" style="max-width:460px;margin-top:20px;">
+      <span class="card-title">Enter Password</span>
+      <div class="file-chip"><span class="name" id="srcName">—</span><span class="meta" id="srcMeta">—</span></div>
+      <div class="field" style="margin-top:12px;">
+        <label class="field-label">Document Password</label>
+        <input type="text" id="pwInput" placeholder="Enter the PDF's password" />
+      </div>
+      <button class="primary btn-full" id="unlockBtn">🔓 Verify &amp; Unlock</button>
+      <div id="pwError" class="hint" style="color:var(--danger);"></div>
+
+      <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+        <div class="status-text" id="statusText">Verifying...</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+        <div class="result-row"><span>Status</span><strong style="color:var(--teal);">Password Verified &amp; Removed</strong></div>
+        <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+        <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download Unlocked PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let srcBuffer = null, srcName = '';
+    let outputBlob = null;
+    let isEncrypted = false;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: (f) => loadFile(f[0]) });
+
+    async function loadFile(file) {
+      if (!file) return;
+      srcName = file.name;
+      srcBuffer = await Toolkit.readAsArrayBuffer(file);
+      document.getElementById('notEncryptedNote').classList.add('hidden');
+      workspace.classList.add('hidden');
+      document.getElementById('resultBox').classList.add('hidden');
+      document.getElementById('pwError').textContent = '';
+
+      try {
+        await PDFUtils.loadPdfJs(srcBuffer);
+        isEncrypted = false;
+        document.getElementById('notEncryptedNote').classList.remove('hidden');
+      } catch (e) {
+        if (e && e.name === 'PasswordException') {
+          isEncrypted = true;
+          document.getElementById('srcName').textContent = srcName;
+          document.getElementById('srcMeta').textContent = Toolkit.formatBytes(srcBuffer.byteLength);
+          workspace.classList.remove('hidden');
+          dropZone.style.padding = '20px';
+        } else {
+          alert('Could not read this file: ' + e.message);
+        }
+      }
+    }
+
+    document.getElementById('unlockBtn').addEventListener('click', async () => {
+      const password = document.getElementById('pwInput').value;
+      if (!password) { document.getElementById('pwError').textContent = 'Enter the password.'; return; }
+      document.getElementById('pwError').textContent = '';
+
+      hud.show('Verifying password...');
+      try {
+        // pdf.js performs genuine password validation and throws on an incorrect password.
+        await PDFUtils.loadPdfJs(srcBuffer, password);
+        hud.set('Password correct — decrypting...', 45);
+
+        const doc = await PDFLib.PDFDocument.load(srcBuffer, { password });
+        hud.set('Removing encryption...', 75);
+        const bytes = await doc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('Unlocked!');
+      } catch (e) {
+        if (e && e.name === 'PasswordException') {
+          hud.hide();
+          document.getElementById('pwError').textContent = 'Incorrect password — please try again.';
+        } else {
+          hud.error('Failed: ' + e.message);
+          console.error(e);
+        }
+      }
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      Toolkit.downloadBlob(outputBlob, Toolkit.baseName(srcName) + '_unlocked.pdf');
+    });
+  </script>
+</body>
+</html>

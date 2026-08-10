@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Images to PDF — PDF Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/style.css" />
+<style>
+  .img-thumb { position: relative; }
+  .img-thumb img { width:100%; border-radius:4px; display:block; background:#fff; object-fit:contain; max-height:150px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
+    <h1 class="page-title display">Images to PDF</h1>
+    <p class="page-sub">Turn JPG, PNG or WebP images into a single paginated PDF, with full control over layout.</p>
+
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="image/*" multiple class="hidden" />
+      <div class="icon">🖼️</div>
+      <div class="primary-txt">Click or drag images here</div>
+      <div class="sub-txt">Supports JPG, PNG, WebP · add as many as you like</div>
+    </div>
+
+    <div id="workspace" class="hidden" style="margin-top:20px;">
+      <div class="grid">
+        <div class="col-7">
+          <div class="card">
+            <span class="card-title">Images (<span id="imgCount">0</span>) — drag to reorder</span>
+            <div id="thumbGrid" class="thumb-grid"></div>
+            <button class="secondary btn-full" id="addMoreBtn" style="margin-top:12px;">+ Add More Images</button>
+          </div>
+        </div>
+        <div class="col-5">
+          <div class="card">
+            <span class="card-title">Page Layout</span>
+            <div class="field">
+              <label class="field-label">Page Size</label>
+              <select id="pageSize">
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+                <option value="Legal">Legal</option>
+                <option value="A3">A3</option>
+                <option value="A5">A5</option>
+                <option value="fit">Fit to Image (no fixed size)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Orientation</label>
+              <select id="orientation">
+                <option value="auto">Auto (match each image)</option>
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Image Fit</label>
+              <select id="fitMode">
+                <option value="contain">Fit within page (contain)</option>
+                <option value="cover">Fill page (cover, may crop)</option>
+                <option value="stretch">Stretch to page</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Margin (pt)</label>
+              <input type="number" id="marginInput" min="0" value="24" />
+            </div>
+            <div class="field">
+              <label class="field-label">Background Color</label>
+              <input type="color" id="bgColor" value="#ffffff" />
+            </div>
+            <div class="field">
+              <label class="field-label">JPEG Quality (<span id="qualityVal">92</span>%)</label>
+              <input type="range" id="qualityInput" min="30" max="100" value="92" />
+            </div>
+            <div class="field">
+              <label class="field-label">Output File Name</label>
+              <input type="text" id="outputName" placeholder="images" />
+            </div>
+            <div class="divider"></div>
+            <button class="primary btn-full" id="buildBtn">🖼️ Create PDF</button>
+          </div>
+
+          <div id="statusHud" class="status-hud hidden" style="margin-top:14px;">
+            <div class="status-text" id="statusText">Building PDF...</div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          </div>
+
+          <div id="resultBox" class="result-box hidden" style="margin-top:14px;">
+            <div class="result-row"><span>Pages</span><strong id="rPages">—</strong></div>
+            <div class="result-row"><span>File size</span><strong id="rSize">—</strong></div>
+            <button class="primary btn-full" id="downloadBtn" style="margin-top:10px;">💾 Download PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/vendor/pdf-lib.min.js"></script>
+  <script src="../js/vendor/pdf.min.js"></script>
+  <script src="../js/vendor/jszip.min.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/pdf-utils.js"></script>
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const workspace = document.getElementById('workspace');
+    const thumbGrid = document.getElementById('thumbGrid');
+    const hud = Toolkit.StatusHud(document.getElementById('statusHud'), document.getElementById('statusText'), document.getElementById('progressFill'));
+
+    let images = []; // { id, file, dataUrl, width, height }
+    let outputBlob = null;
+    let dragSrcId = null;
+
+    Toolkit.setupDropzone({ dropZone, input: fileInput, onFiles: addImages });
+    document.getElementById('addMoreBtn').addEventListener('click', () => fileInput.click());
+    document.getElementById('qualityInput').addEventListener('input', (e) => document.getElementById('qualityVal').textContent = e.target.value);
+
+    async function addImages(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const dataUrl = await Toolkit.readAsDataURL(file);
+        const dims = await getImageDims(dataUrl);
+        images.push({ id: Toolkit.uid(), file, dataUrl, width: dims.width, height: dims.height });
+      }
+      fileInput.value = '';
+      if (images.length) {
+        workspace.classList.remove('hidden');
+        dropZone.style.padding = '20px';
+        renderThumbs();
+      }
+    }
+
+    function getImageDims(dataUrl) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.src = dataUrl;
+      });
+    }
+
+    function renderThumbs() {
+      document.getElementById('imgCount').textContent = images.length;
+      thumbGrid.innerHTML = '';
+      images.forEach(im => {
+        const card = document.createElement('div');
+        card.className = 'thumb-card img-thumb';
+        card.draggable = true;
+        card.dataset.id = im.id;
+        card.innerHTML = `
+          <div class="thumb-actions"><div class="mini-btn" data-del="${im.id}">✕</div></div>
+          <img src="${im.dataUrl}" />
+          <div class="page-num">${Toolkit.escapeHtml(im.file.name)}</div>`;
+        thumbGrid.appendChild(card);
+        card.addEventListener('dragstart', () => { dragSrcId = im.id; card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('dragover', (e) => e.preventDefault());
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (!dragSrcId || dragSrcId === im.id) return;
+          const from = images.findIndex(x => x.id === dragSrcId);
+          const to = images.findIndex(x => x.id === im.id);
+          const [moved] = images.splice(from, 1);
+          images.splice(to, 0, moved);
+          renderThumbs();
+        });
+      });
+      thumbGrid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        images = images.filter(x => x.id !== btn.dataset.del);
+        renderThumbs();
+        if (!images.length) workspace.classList.add('hidden');
+      }));
+    }
+
+    function hexToRgb01(hex) {
+      const r = parseInt(hex.slice(1, 3), 16) / 255;
+      const g = parseInt(hex.slice(3, 5), 16) / 255;
+      const b = parseInt(hex.slice(5, 7), 16) / 255;
+      return { r, g, b };
+    }
+
+    document.getElementById('buildBtn').addEventListener('click', async () => {
+      if (!images.length) return;
+      hud.show('Creating PDF...');
+      try {
+        const outDoc = await PDFLib.PDFDocument.create();
+        const sizeKey = document.getElementById('pageSize').value;
+        const orientation = document.getElementById('orientation').value;
+        const fitMode = document.getElementById('fitMode').value;
+        const margin = parseFloat(document.getElementById('marginInput').value) || 0;
+        const bg = hexToRgb01(document.getElementById('bgColor').value);
+        const quality = parseInt(document.getElementById('qualityInput').value, 10) / 100;
+
+        for (let i = 0; i < images.length; i++) {
+          const im = images[i];
+          hud.set(`Embedding image ${i + 1} of ${images.length}...`, 8 + (i / images.length) * 85);
+
+          // Re-encode via canvas to respect quality setting & normalize format
+          const canvas = document.createElement('canvas');
+          canvas.width = im.width; canvas.height = im.height;
+          const ctx = canvas.getContext('2d');
+          const imgEl = await loadImg(im.dataUrl);
+          ctx.drawImage(imgEl, 0, 0);
+          const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
+          const jpegBytes = dataUrlToBytes(jpegDataUrl);
+          const embedded = await outDoc.embedJpg(jpegBytes);
+
+          let pageW, pageH;
+          if (sizeKey === 'fit') {
+            pageW = im.width; pageH = im.height;
+          } else {
+            let [w, h] = PDFUtils.PAGE_SIZES_PT[sizeKey];
+            let wantLandscape = orientation === 'landscape' || (orientation === 'auto' && im.width > im.height);
+            if (wantLandscape && h > w) [w, h] = [h, w];
+            if (!wantLandscape && w > h) [w, h] = [h, w];
+            pageW = w; pageH = h;
+          }
+
+          const page = outDoc.addPage([pageW, pageH]);
+          page.drawRectangle({ x: 0, y: 0, width: pageW, height: pageH, color: PDFLib.rgb(bg.r, bg.g, bg.b) });
+
+          const availW = Math.max(1, pageW - margin * 2);
+          const availH = Math.max(1, pageH - margin * 2);
+          const imgRatio = embedded.width / embedded.height;
+          const areaRatio = availW / availH;
+          let drawW, drawH;
+
+          if (sizeKey === 'fit') {
+            drawW = availW; drawH = availH;
+          } else if (fitMode === 'stretch') {
+            drawW = availW; drawH = availH;
+          } else if (fitMode === 'cover') {
+            if (imgRatio > areaRatio) { drawH = availH; drawW = availH * imgRatio; }
+            else { drawW = availW; drawH = availW / imgRatio; }
+          } else { // contain
+            if (imgRatio > areaRatio) { drawW = availW; drawH = availW / imgRatio; }
+            else { drawH = availH; drawW = availH * imgRatio; }
+          }
+
+          const x = (pageW - drawW) / 2;
+          const y = (pageH - drawH) / 2;
+          page.drawImage(embedded, { x, y, width: drawW, height: drawH });
+        }
+
+        hud.set('Saving PDF...', 96);
+        const bytes = await outDoc.save();
+        outputBlob = PDFUtils.bytesToBlob(bytes);
+        document.getElementById('rPages').textContent = outDoc.getPageCount();
+        document.getElementById('rSize').textContent = Toolkit.formatBytes(outputBlob.size);
+        document.getElementById('resultBox').classList.remove('hidden');
+        hud.done('PDF created!');
+      } catch (e) {
+        hud.error('Failed: ' + e.message);
+        console.error(e);
+      }
+    });
+
+    function loadImg(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function dataUrlToBytes(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (!outputBlob) return;
+      const name = document.getElementById('outputName').value.trim() || 'images';
+      Toolkit.downloadBlob(outputBlob, Toolkit.sanitizeFilename(name) + '.pdf');
+    });
+  </script>
+</body>
+</html>
