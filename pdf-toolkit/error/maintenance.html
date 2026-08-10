@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System Maintenance — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; transition: all 0.2s ease; }
+  button.primary:hover { background:#93e5da; transform: translateY(-1px); }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; transition: all 0.2s ease; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+
+  /* Animated Gear Styling */
+  .gear-spin-cw {
+    transform-origin: center;
+    animation: spin 12s linear infinite;
+  }
+  .gear-spin-ccw {
+    transform-origin: center;
+    animation: spin-reverse 8s linear infinite;
+  }
+  .pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes spin-reverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+
+  @keyframes pulseGlow {
+    0% { opacity: 0.3; filter: drop-shadow(0 0 5px rgba(111, 216, 203, 0.2)); }
+    100% { opacity: 0.8; filter: drop-shadow(0 0 20px rgba(111, 216, 203, 0.6)); }
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Header Link -->
+  <div class="mx-auto max-w-4xl w-full px-6 pt-10">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline flex items-center gap-2">
+      &larr; Back to Utility Hub
+    </a>
+  </div>
+
+  <!-- Main Maintenance Content Container -->
+  <main class="mx-auto max-w-xl px-6 py-12 text-center flex flex-col items-center justify-center flex-grow">
+    
+    <!-- Animated SVG Maintenance Graphic -->
+    <div class="relative w-48 h-48 mb-8 flex items-center justify-center">
+      <!-- Glow Effect Ring -->
+      <div class="absolute inset-0 rounded-full bg-teal-500/10 blur-xl pulse-glow"></div>
+
+      <svg class="w-full h-full text-slate-700" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background Decorative Grid Lines -->
+        <circle cx="100" cy="100" r="85" stroke="#17304a" stroke-width="1" stroke-dasharray="4 4" />
+        
+        <!-- Large Primary Gear (Clockwise) -->
+        <g class="gear-spin-cw text-[#6fd8cb]">
+          <path d="M100 60 C102.5 60 104.5 62 104.5 64.5 L104.5 68 C108.8 69.1 112.8 70.9 116.5 73.2 L119 70.7 C120.8 68.9 123.6 68.9 125.4 70.7 L134.3 79.6 C136.1 81.4 136.1 84.2 134.3 86 L131.8 88.5 C134.1 92.2 135.9 96.2 137 100.5 L140.5 100.5 C143 100.5 145 102.5 145 105 L145 117.6 C145 120.1 143 122.1 140.5 122.1 L137 122.1 C135.9 126.4 134.1 130.4 131.8 134.1 L134.3 136.6 C136.1 138.4 136.1 141.2 134.3 143 L125.4 151.9 C123.6 153.7 120.8 153.7 119 151.9 L116.5 149.4 C112.8 151.7 108.8 153.5 104.5 154.6 L104.5 158.1 C104.5 160.6 102.5 162.6 100 162.6 L87.4 162.6 C84.9 162.6 82.9 160.6 82.9 158.1 L82.9 154.6 C78.6 153.5 74.6 151.7 70.9 149.4 L68.4 151.9 C66.6 153.7 63.8 153.7 62 151.9 L53.1 143 C51.3 141.2 51.3 138.4 53.1 136.6 L55.6 134.1 C53.3 130.4 51.5 126.4 50.4 122.1 L46.9 122.1 C44.4 122.1 42.4 120.1 42.4 117.6 L42.4 105 C42.4 102.5 44.4 100.5 46.9 100.5 L50.4 100.5 C51.5 96.2 53.3 92.2 55.6 88.5 L53.1 86 C51.3 84.2 51.3 81.4 53.1 79.6 L62 70.7 C63.8 68.9 66.6 68.9 68.4 70.7 L70.9 73.2 C74.6 70.9 78.6 69.1 82.9 68 L82.9 64.5 C82.9 62 84.9 60 87.4 60 L100 60 Z" fill="currentColor" opacity="0.85"/>
+          <circle cx="93.7" cy="111.3" r="22" fill="#0e1c2b" />
+        </g>
+
+        <!-- Small Secondary Gear (Counter-Clockwise) -->
+        <g class="gear-spin-ccw text-slate-500">
+          <path d="M140 40 C141.5 40 142.5 41 142.5 42.5 L142.5 44 C145 44.8 147.3 46 149.4 47.5 L150.8 46.1 C151.8 45.1 153.4 45.1 154.4 46.1 L159.9 51.6 C160.9 52.6 160.9 54.2 159.9 55.2 L158.5 56.6 C160 58.7 161.2 61 162 63.5 L163.5 63.5 C165 63.5 166 64.5 166 66 L166 73.8 C166 75.3 165 76.3 163.5 76.3 L162 76.3 C161.2 78.8 160 81.1 158.5 83.2 L159.9 84.6 C160.9 85.6 160.9 87.2 159.9 88.2 L154.4 93.7 C153.4 94.7 151.8 94.7 150.8 93.7 L149.4 92.3 C147.3 93.8 145 95 142.5 95.8 L142.5 97.3 C142.5 98.8 141.5 99.8 140 99.8 L132.2 99.8 C130.7 99.8 129.7 98.8 129.7 97.3 L129.7 95.8 C127.2 95 124.9 93.8 122.8 92.3 L121.4 93.7 C120.4 94.7 118.8 94.7 117.8 93.7 L112.3 88.2 C111.3 87.2 111.3 85.6 112.3 84.6 L113.7 83.2 C112.2 81.1 111 78.8 110.2 76.3 L108.7 76.3 C107.2 76.3 106.2 75.3 106.2 73.8 L106.2 66 C106.2 64.5 107.2 63.5 108.7 63.5 L110.2 63.5 C111 61 112.2 58.7 113.7 56.6 L112.3 55.2 C111.3 54.2 111.3 52.6 112.3 51.6 L117.8 46.1 C118.8 45.1 120.4 45.1 121.4 46.1 L122.8 47.5 C124.9 46 127.2 44.8 129.7 44 L129.7 42.5 C129.7 41 130.7 40 132.2 40 L140 40 Z" fill="currentColor" opacity="0.6"/>
+          <circle cx="136.1" cy="69.9" r="14" fill="#0e1c2b" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- Status Badge -->
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-300 mono text-xs uppercase tracking-widest mb-4">
+      <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+      System Status: 503 Maintenance
+    </div>
+
+    <!-- Main Heading & Message -->
+    <h1 class="display text-3xl sm:text-4xl font-bold mb-3 tracking-tight">
+      Page is in Maintenance
+    </h1>
+    <p class="text-slate-400 text-sm sm:text-base leading-relaxed mb-8 max-w-md">
+      This utility is currently offline while we upgrade our systems and perform scheduled optimizations. We’ll be back online shortly.
+    </p>
+
+    <!-- Interactive Actions & Refresh Utility -->
+    <div class="flex flex-wrap items-center justify-center gap-3 w-full">
+      <button type="button" onclick="checkStatus()" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md flex items-center gap-2">
+        <svg id="refreshIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <span id="btnText">Check Status</span>
+      </button>
+      
+      <a href="../index.html" class="secondary mono text-xs uppercase px-5 py-2.5 rounded-md inline-block">
+        Return Home
+      </a>
+    </div>
+
+    <!-- Live Status Console / System Log -->
+    <div class="mt-10 w-full bg-[#14283b] border border-[#8fb0cc]/15 rounded-md p-3.5 text-left">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-[#8fb0cc]/10">
+        <span class="mono text-[11px] text-slate-400 uppercase tracking-wider">System Output Log</span>
+        <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+      </div>
+      <div id="consoleLog" class="mono text-xs text-slate-300 space-y-1">
+        <p class="text-slate-400">&gt; Initializing service diagnostic check...</p>
+        <p class="text-amber-300/90">&gt; Status: Maintenance mode active [Code: 503]</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="py-6 text-center mono text-xs text-slate-500 border-t border-[#17304a]">
+    Utility Hub &copy; <span id="year"></span> — Automated Maintenance Monitor
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function checkStatus() {
+      const btnText = document.getElementById('btnText');
+      const refreshIcon = document.getElementById('refreshIcon');
+      const consoleLog = document.getElementById('consoleLog');
+
+      // Spin icon and update state
+      refreshIcon.classList.add('animate-spin');
+      btnText.textContent = 'Checking...';
+
+      setTimeout(() => {
+        refreshIcon.classList.remove('animate-spin');
+        btnText.textContent = 'Check Status';
+
+        const now = new Date().toLocaleTimeString();
+        const newLog = document.createElement('p');
+        newLog.className = 'text-teal-300/90';
+        newLog.textContent = `> [${now}] Server pinged: Service still undergoing upgrades.`;
+        
+        consoleLog.appendChild(newLog);
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
