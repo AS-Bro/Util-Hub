@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Social Media Post Previewer — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input[type="text"], select, textarea { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color: #e7eef4;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; transition: all 0.15s ease; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; transition: all 0.15s ease; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  
+  /* Active Platform Tab Styling */
+  .tab-btn.active {
+    background: #6fd8cb;
+    color: #0e1c2b;
+    font-weight: 700;
+  }
+  .tab-btn:not(.active) {
+    background: #17304a;
+    color: #94a3b8;
+  }
+  .tab-btn:not(.active):hover {
+    color: #e7eef4;
+    border-color: #6fd8cb;
+  }
+  
+  /* Custom Scrollbar for Previews */
+  .custom-scroll::-webkit-scrollbar { width: 6px; }
+  .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+  .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+</style>
+</head>
+<body class="min-h-screen pb-12">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    
+    <div class="flex flex-col md:flex-row md:items-center justify-between mt-4 mb-6 gap-4">
+      <div>
+        <h1 class="display text-2xl sm:text-3xl font-bold">Social Media Post Previewer</h1>
+        <p class="text-sm text-slate-400 mt-1">Draft, inspect, and optimize posts for Twitter/X, LinkedIn, Facebook, Instagram, and Google Search in real time.</p>
+      </div>
+      <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-lg border border-slate-700/60 self-start md:self-auto">
+        <span class="mono text-xs text-slate-400 px-2">Theme Mode:</span>
+        <button id="themeDark" onclick="setPreviewTheme('dark')" class="px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]">Dark</button>
+        <button id="themeLight" onclick="setPreviewTheme('light')" class="px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white">Light</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <div class="lg:col-span-5 space-y-5">
+        
+        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
+          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-3 font-semibold">1. Profile & Author Info</h2>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Display Name</label>
+              <input id="authorName" type="text" value="Utility Hub" class="w-full rounded-md p-2 text-xs">
+            </div>
+            <div>
+              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Username / Handle</label>
+              <input id="authorHandle" type="text" value="utilityhub" class="w-full rounded-md p-2 text-xs">
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Avatar Image URL (Optional)</label>
+            <input id="avatarUrl" type="text" placeholder="Paste image link or leave for default icon..." class="w-full rounded-md p-2 text-xs">
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="mono text-xs uppercase tracking-wider text-teal-300 font-semibold">2. Post Copy & Text</h2>
+            <button onclick="clearText()" class="mono text-[11px] text-slate-400 hover:text-rose-400 underline">Clear Text</button>
+          </div>
+          
+          <textarea id="postText" rows="6" placeholder="Write your post here... Include links, #hashtags, and @mentions to test how they render across platforms." class="w-full rounded-md p-3 text-sm leading-relaxed custom-scroll">🚀 Excited to announce our newest update to Utility Hub! Build, preview, and optimize your social media strategy effortlessly across Twitter, LinkedIn, Facebook, and Instagram.
+
+Check out the full release here: https://utilityhub.app/tools/social-previewer
+
+#WebDev #SocialMedia #MarketingTools #Productivity</textarea>
+
+          <div class="mt-3 pt-3 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-[11px]">
+            <div id="cntTwitter" class="p-1.5 rounded bg-[#17304a] text-center">
+              <span class="block text-[9px] text-slate-400 uppercase">X / Twitter</span>
+              <span class="val font-semibold">0 / 280</span>
+            </div>
+            <div id="cntLinkedin" class="p-1.5 rounded bg-[#17304a] text-center">
+              <span class="block text-[9px] text-slate-400 uppercase">LinkedIn</span>
+              <span class="val font-semibold">0 / 3000</span>
+            </div>
+            <div id="cntFacebook" class="p-1.5 rounded bg-[#17304a] text-center">
+              <span class="block text-[9px] text-slate-400 uppercase">Facebook</span>
+              <span class="val font-semibold">0 / 63206</span>
+            </div>
+            <div id="cntInstagram" class="p-1.5 rounded bg-[#17304a] text-center">
+              <span class="block text-[9px] text-slate-400 uppercase">Instagram</span>
+              <span class="val font-semibold">0 / 2200</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
+          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-3 font-semibold">3. Media & Link Attachment</h2>
+          
+          <div class="space-y-3">
+            <div>
+              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Attached Image</label>
+              <div class="flex gap-2">
+                <input id="mediaUrl" type="text" placeholder="Paste image URL..." value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" class="w-full rounded-md p-2 text-xs">
+                <label class="secondary cursor-pointer px-3 py-2 rounded-md text-xs font-semibold shrink-0 flex items-center gap-1">
+                  📁 Upload
+                  <input id="fileInput" type="file" accept="image/*" class="hidden">
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-700/50">
+              <span class="mono text-[10px] uppercase text-slate-400 block mb-2 font-semibold">Link Preview Card Overrides (OG Meta)</span>
+              <div class="space-y-2">
+                <input id="ogTitle" type="text" value="Utility Hub — All-in-One Client-Side Web Utilities" placeholder="OG Title (e.g. Article Headline)" class="w-full rounded-md p-2 text-xs">
+                <input id="ogDomain" type="text" value="utilityhub.app" placeholder="Domain (e.g. example.com)" class="w-full rounded-md p-2 text-xs">
+                <input id="ogDescription" type="text" value="Powerful, fast, and privacy-first web developer tools right inside your browser without any server latency." placeholder="OG Description..." class="w-full rounded-md p-2 text-xs">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
+          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-2 font-semibold">4. Detected Hashtags & Links</h2>
+          <div id="hashtagContainer" class="flex flex-wrap gap-1.5 min-h-[30px] items-center">
+            <span class="text-xs text-slate-500 italic">No hashtags detected yet. Type #hashtags in your post.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="lg:col-span-7 space-y-4">
+        
+        <div class="flex flex-wrap gap-2 border-b border-slate-700/80 pb-3">
+          <button onclick="switchTab('all')" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">All Platforms</button>
+          <button onclick="switchTab('twitter')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">X / Twitter</button>
+          <button onclick="switchTab('linkedin')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">LinkedIn</button>
+          <button onclick="switchTab('facebook')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Facebook</button>
+          <button onclick="switchTab('instagram')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Instagram</button>
+          <button onclick="switchTab('google')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Google Search</button>
+        </div>
+
+        <div id="previewContainer" class="space-y-6">
+
+          <div id="card-twitter" class="preview-card bg-black border border-slate-800 rounded-xl p-4 text-white shadow-xl transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="mono text-[10px] uppercase tracking-wider text-sky-400 font-semibold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X / Twitter Feed Preview
+              </span>
+              <span class="mono text-[10px] text-slate-500">Post View</span>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <img id="twAvatar" src="https://ui-avatars.com/api/?name=Utility+Hub&background=6fd8cb&color=0e1c2b" class="w-10 h-10 rounded-full object-cover shrink-0">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span id="twName" class="font-bold text-sm truncate">Utility Hub</span>
+                  <svg class="w-4 h-4 text-sky-400 fill-current shrink-0" viewBox="0 0 24 24"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.79-3.99-4-3.99-.495 0-.965.084-1.4.238C14.55 2.475 13.18 1.6 11.6 1.6c-2.21 0-3.99 1.79-3.99 4 0 .495.084.965.238 1.4C6.575 8.275 5.7 9.645 5.7 11.22c0 1.58.875 2.95 2.148 3.6-.154.435-.238.905-.238 1.4 0 2.21 1.79 3.99 4 3.99.495 0 .965-.084 1.4-.238 1.05 1.273 2.42 2.148 3.99 2.148 2.21 0 3.99-1.79 3.99-4 0-.495-.084-.965-.238-1.4 1.273-1.05 2.148-2.42 2.148-3.99zm-10.1 3.9l-3.5-3.5 1.4-1.4 2.1 2.1 5.3-5.3 1.4 1.4-6.7 6.7z"/></svg>
+                  <span id="twHandle" class="text-slate-500 text-xs truncate">@utilityhub</span>
+                  <span class="text-slate-500 text-xs">· 1m</span>
+                </div>
+
+                <p id="twText" class="text-sm mt-1 whitespace-pre-wrap leading-normal break-words"></p>
+
+                <div id="twMediaBox" class="mt-3 rounded-2xl border border-slate-800 overflow-hidden bg-zinc-900 hidden">
+                  <img id="twImg" src="" class="w-full max-h-72 object-cover hidden">
+                  <div id="twLinkBox" class="p-3 bg-zinc-900 border-t border-slate-800 hidden">
+                    <span id="twDomain" class="text-xs text-slate-500 block truncate">utilityhub.app</span>
+                    <span id="twOgTitle" class="text-sm font-semibold block text-slate-200 truncate mt-0.5">Utility Hub</span>
+                    <span id="twOgDesc" class="text-xs text-slate-400 block line-clamp-2 mt-1"></span>
+                  </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-3 text-slate-500 text-xs max-w-md">
+                  <span class="flex items-center gap-1 hover:text-sky-400 cursor-pointer">💬 24</span>
+                  <span class="flex items-center gap-1 hover:text-green-400 cursor-pointer">🔄 12</span>
+                  <span class="flex items-center gap-1 hover:text-rose-500 cursor-pointer">❤️ 182</span>
+                  <span class="flex items-center gap-1 hover:text-sky-400 cursor-pointer">📊 4.2K</span>
+                  <span>Bookmark</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="card-linkedin" class="preview-card bg-[#1b1f23] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="mono text-[10px] uppercase tracking-wider text-blue-400 font-semibold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                LinkedIn Feed Preview
+              </span>
+              <span class="mono text-[10px] text-slate-500">Feed Post</span>
+            </div>
+
+            <div class="flex items-center gap-3 mb-2">
+              <img id="liAvatar" src="https://ui-avatars.com/api/?name=Utility+Hub&background=6fd8cb&color=0e1c2b" class="w-12 h-12 rounded-full object-cover shrink-0">
+              <div>
+                <div class="flex items-center gap-1">
+                  <span id="liName" class="font-bold text-sm text-white">Utility Hub</span>
+                  <span class="text-xs text-slate-400">• 1st</span>
+                </div>
+                <p id="liHeadline" class="text-xs text-slate-400 line-clamp-1">Client-Side Web Developer Tools Ecosystem</p>
+                <p class="text-[11px] text-slate-500 flex items-center gap-1">1m • 🌐</p>
+              </div>
+            </div>
+
+            <p id="liText" class="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words mt-2 text-slate-200"></p>
+
+            <div id="liMediaBox" class="mt-3 rounded-lg border border-slate-700/60 overflow-hidden bg-[#282c31] hidden">
+              <img id="liImg" src="" class="w-full max-h-80 object-cover hidden">
+              <div id="liLinkBox" class="p-3 bg-[#23272b] border-t border-slate-700/60 hidden">
+                <span id="liOgTitle" class="text-sm font-semibold block text-slate-100 truncate">Utility Hub</span>
+                <span id="liDomain" class="text-xs text-slate-400 block truncate mt-0.5">utilityhub.app</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800 text-xs text-slate-400">
+              <span class="flex items-center gap-1">👍👏💡 142 comments</span>
+              <span>18 reposts</span>
+            </div>
+          </div>
+
+          <div id="card-facebook" class="preview-card bg-[#242526] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="mono text-[10px] uppercase tracking-wider text-blue-500 font-semibold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook Feed Preview
+              </span>
+              <span class="mono text-[10px] text-slate-500">Public Post</span>
+            </div>
+
+            <div class="flex items-center gap-2.5 mb-2">
+              <img id="fbAvatar" src="https://ui-avatars.com/api/?name=Utility+Hub&background=6fd8cb&color=0e1c2b" class="w-10 h-10 rounded-full object-cover">
+              <div>
+                <span id="fbName" class="font-bold text-sm text-white block">Utility Hub</span>
+                <span class="text-[11px] text-slate-400 flex items-center gap-1">Just now · 🌎</span>
+              </div>
+            </div>
+
+            <p id="fbText" class="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words mt-2 text-slate-200"></p>
+
+            <div id="fbMediaBox" class="mt-3 -mx-4 border-y border-slate-700/60 bg-[#18191a] hidden">
+              <img id="fbImg" src="" class="w-full max-h-80 object-cover hidden">
+              <div id="fbLinkBox" class="p-3 bg-[#3a3b3c]/60 hidden">
+                <span id="fbDomain" class="text-[10px] uppercase text-slate-400 block truncate">UTILITYHUB.APP</span>
+                <span id="fbOgTitle" class="text-sm font-semibold block text-slate-100 truncate mt-0.5">Utility Hub</span>
+                <span id="fbOgDesc" class="text-xs text-slate-300 block line-clamp-1 mt-0.5"></span>
+              </div>
+            </div>
+          </div>
+
+          <div id="card-instagram" class="preview-card bg-black border border-slate-800 rounded-xl p-4 text-white shadow-xl transition-all max-w-md mx-auto lg:max-w-none">
+            <div class="flex items-center justify-between mb-3">
+              <span class="mono text-[10px] uppercase tracking-wider text-pink-500 font-semibold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                Instagram Post Preview
+              </span>
+              <span class="mono text-[10px] text-slate-500">1:1 Square Visual</span>
+            </div>
+
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <img id="igAvatar" src="https://ui-avatars.com/api/?name=Utility+Hub&background=6fd8cb&color=0e1c2b" class="w-8 h-8 rounded-full border border-pink-500 p-0.5 object-cover">
+                <span id="igHandle" class="text-xs font-semibold text-white">utilityhub</span>
+              </div>
+              <span class="text-slate-400 text-xs">•••</span>
+            </div>
+
+            <div class="aspect-square bg-zinc-900 rounded border border-slate-800 overflow-hidden flex items-center justify-center">
+              <img id="igImg" src="" class="w-full h-full object-cover">
+              <div id="igNoImg" class="text-xs text-slate-500 p-4 text-center hidden">
+                📷 Instagram requires an attached image/video. Upload an image above to preview.
+              </div>
+            </div>
+
+            <div class="mt-3 text-xs leading-normal">
+              <span id="igHandleCaption" class="font-semibold text-white mr-1.5">utilityhub</span>
+              <span id="igText" class="text-slate-200 whitespace-pre-wrap break-words"></span>
+            </div>
+          </div>
+
+          <div id="card-google" class="preview-card bg-[#202124] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all">
+            <div class="flex items-center justify-between mb-3">
+              <span class="mono text-[10px] uppercase tracking-wider text-amber-400 font-semibold flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                Google SERP Snippet Preview
+              </span>
+              <span class="mono text-[10px] text-slate-500">Search Result</span>
+            </div>
+
+            <div class="max-w-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <div class="w-6 h-6 rounded-full bg-teal-400/20 text-teal-300 flex items-center justify-center text-[10px] font-bold">UH</div>
+                <div>
+                  <span id="googDomain" class="text-xs text-slate-300 block leading-none">https://utilityhub.app</span>
+                  <span id="googBreadcrumb" class="text-[10px] text-slate-400">utilityhub.app › tools › social-previewer</span>
+                </div>
+              </div>
+
+              <h3 id="googTitle" class="text-base sm:text-lg text-[#8ab4f8] hover:underline cursor-pointer font-normal line-clamp-1">Utility Hub — All-in-One Client-Side Web Utilities</h3>
+
+              <p id="googDesc" class="text-xs sm:text-sm text-[#bdc1c6] mt-1 leading-normal line-clamp-2">Powerful, fast, and privacy-first web developer tools right inside your browser without any server latency.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // State
+    let currentTheme = 'dark';
+    let currentTab = 'all';
+
+    // Character Limits
+    const LIMITS = {
+      twitter: 280,
+      linkedin: 3000,
+      facebook: 63206,
+      instagram: 2200
+    };
+
+    // DOM References
+    const postText = document.getElementById('postText');
+    const authorName = document.getElementById('authorName');
+    const authorHandle = document.getElementById('authorHandle');
+    const avatarUrl = document.getElementById('avatarUrl');
+    const mediaUrl = document.getElementById('mediaUrl');
+    const fileInput = document.getElementById('fileInput');
+
+    const ogTitle = document.getElementById('ogTitle');
+    const ogDomain = document.getElementById('ogDomain');
+    const ogDescription = document.getElementById('ogDescription');
+
+    // Update Function
+    function updatePreviews() {
+      const text = postText.value;
+      const name = authorName.value || 'Utility Hub';
+      const rawHandle = authorHandle.value.replace(/^@/, '') || 'utilityhub';
+      const handle = `@${rawHandle}`;
+      
+      const avatar = avatarUrl.value.trim() || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6fd8cb&color=0e1c2b`;
+      const img = mediaUrl.value.trim();
+
+      const title = ogTitle.value || name;
+      const domain = ogDomain.value || 'utilityhub.app';
+      const desc = ogDescription.value || text.slice(0, 150);
+
+      // --- Update Character Counters ---
+      updateCounter('cntTwitter', text.length, LIMITS.twitter);
+      updateCounter('cntLinkedin', text.length, LIMITS.linkedin);
+      updateCounter('cntFacebook', text.length, LIMITS.facebook);
+      updateCounter('cntInstagram', text.length, LIMITS.instagram);
+
+      // --- Formatted Text with Highlighted Links & Hashtags ---
+      const formattedText = formatSocialText(text);
+
+      // 1. Twitter
+      document.getElementById('twName').textContent = name;
+      document.getElementById('twHandle').textContent = handle;
+      document.getElementById('twAvatar').src = avatar;
+      document.getElementById('twText').innerHTML = formattedText;
+      document.getElementById('twDomain').textContent = domain;
+      document.getElementById('twOgTitle').textContent = title;
+      document.getElementById('twOgDesc').textContent = desc;
+
+      const twMediaBox = document.getElementById('twMediaBox');
+      const twImg = document.getElementById('twImg');
+      const twLinkBox = document.getElementById('twLinkBox');
+
+      if (img) {
+        twMediaBox.classList.remove('hidden');
+        twImg.src = img;
+        twImg.classList.remove('hidden');
+        twLinkBox.classList.add('hidden');
+      } else if (text.includes('http')) {
+        twMediaBox.classList.remove('hidden');
+        twImg.classList.add('hidden');
+        twLinkBox.classList.remove('hidden');
+      } else {
+        twMediaBox.classList.add('hidden');
+      }
+
+      // 2. LinkedIn
+      document.getElementById('liName').textContent = name;
+      document.getElementById('liAvatar').src = avatar;
+      document.getElementById('liText').innerHTML = formattedText;
+      document.getElementById('liOgTitle').textContent = title;
+      document.getElementById('liDomain').textContent = domain;
+
+      const liMediaBox = document.getElementById('liMediaBox');
+      const liImg = document.getElementById('liImg');
+      const liLinkBox = document.getElementById('liLinkBox');
+
+      if (img) {
+        liMediaBox.classList.remove('hidden');
+        liImg.src = img;
+        liImg.classList.remove('hidden');
+        liLinkBox.classList.remove('hidden');
+      } else if (text.includes('http')) {
+        liMediaBox.classList.remove('hidden');
+        liImg.classList.add('hidden');
+        liLinkBox.classList.remove('hidden');
+      } else {
+        liMediaBox.classList.add('hidden');
+      }
+
+      // 3. Facebook
+      document.getElementById('fbName').textContent = name;
+      document.getElementById('fbAvatar').src = avatar;
+      document.getElementById('fbText').innerHTML = formattedText;
+      document.getElementById('fbOgTitle').textContent = title;
+      document.getElementById('fbDomain').textContent = domain.toUpperCase();
+      document.getElementById('fbOgDesc').textContent = desc;
+
+      const fbMediaBox = document.getElementById('fbMediaBox');
+      const fbImg = document.getElementById('fbImg');
+      const fbLinkBox = document.getElementById('fbLinkBox');
+
+      if (img) {
+        fbMediaBox.classList.remove('hidden');
+        fbImg.src = img;
+        fbImg.classList.remove('hidden');
+        fbLinkBox.classList.remove('hidden');
+      } else if (text.includes('http')) {
+        fbMediaBox.classList.remove('hidden');
+        fbImg.classList.add('hidden');
+        fbLinkBox.classList.remove('hidden');
+      } else {
+        fbMediaBox.classList.add('hidden');
+      }
+
+      // 4. Instagram
+      document.getElementById('igHandle').textContent = rawHandle;
+      document.getElementById('igHandleCaption').textContent = rawHandle;
+      document.getElementById('igAvatar').src = avatar;
+      document.getElementById('igText').innerHTML = formattedText;
+
+      const igImg = document.getElementById('igImg');
+      const igNoImg = document.getElementById('igNoImg');
+      if (img) {
+        igImg.src = img;
+        igImg.classList.remove('hidden');
+        igNoImg.classList.add('hidden');
+      } else {
+        igImg.classList.add('hidden');
+        igNoImg.classList.remove('hidden');
+      }
+
+      // 5. Google SERP
+      document.getElementById('googTitle').textContent = title;
+      document.getElementById('googDomain').textContent = `https://${domain}`;
+      document.getElementById('googBreadcrumb').textContent = `${domain} › post › ${rawHandle}`;
+      document.getElementById('googDesc').textContent = text || desc;
+
+      // --- Extract Hashtags ---
+      extractHashtags(text);
+    }
+
+    // Helper: Character Count Indicator
+    function updateCounter(id, current, max) {
+      const el = document.getElementById(id);
+      const valEl = el.querySelector('.val');
+      valEl.textContent = `${current} / ${max}`;
+
+      if (current > max) {
+        el.className = 'p-1.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-center';
+      } else if (current > max * 0.9) {
+        el.className = 'p-1.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-center';
+      } else {
+        el.className = 'p-1.5 rounded bg-[#17304a] text-slate-300 text-center';
+      }
+    }
+
+    // Helper: Highlight #hashtags, @mentions, and URLs
+    function formatSocialText(raw) {
+      if (!raw) return '';
+      let escaped = raw
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // Highlight links
+      escaped = escaped.replace(/(https?:\/\/[^\s]+)/g, '<span class="text-sky-400 hover:underline">$1</span>');
+      // Highlight hashtags
+      escaped = escaped.replace(/#(\w+)/g, '<span class="text-sky-400 font-medium">#$1</span>');
+      // Highlight mentions
+      escaped = escaped.replace(/@(\w+)/g, '<span class="text-sky-400 font-medium">@$1</span>');
+
+      return escaped;
+    }
+
+    // Extract Hashtags Pill Generator
+    function extractHashtags(text) {
+      const container = document.getElementById('hashtagContainer');
+      const matches = text.match(/#\w+/g);
+
+      if (!matches || matches.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-500 italic">No hashtags detected yet. Type #hashtags in your post.</span>';
+        return;
+      }
+
+      const uniqueTags = [...new Set(matches)];
+      container.innerHTML = uniqueTags.map(tag => `
+        <span class="px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/30 text-teal-300 text-xs mono flex items-center gap-1">
+          ${tag}
+        </span>
+      `).join('');
+    }
+
+    // Clear Text
+    function clearText() {
+      postText.value = '';
+      updatePreviews();
+    }
+
+    // Switch Preview Tabs
+    function switchTab(tab) {
+      currentTab = tab;
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const cards = document.querySelectorAll('.preview-card');
+      cards.forEach(card => {
+        if (tab === 'all') {
+          card.classList.remove('hidden');
+        } else {
+          if (card.id === `card-${tab}`) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        }
+      });
+    }
+
+    // Theme Switcher (Dark vs Light Preview Themes)
+    function setPreviewTheme(mode) {
+      currentTheme = mode;
+      const darkBtn = document.getElementById('themeDark');
+      const lightBtn = document.getElementById('themeLight');
+
+      const cards = {
+        tw: document.getElementById('card-twitter'),
+        li: document.getElementById('card-linkedin'),
+        fb: document.getElementById('card-facebook'),
+        ig: document.getElementById('card-instagram'),
+        goog: document.getElementById('card-google')
+      };
+
+      if (mode === 'light') {
+        darkBtn.className = 'px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white';
+        lightBtn.className = 'px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]';
+
+        cards.tw.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
+        cards.li.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
+        cards.fb.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
+        cards.ig.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all max-w-md mx-auto lg:max-w-none';
+        cards.goog.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
+      } else {
+        darkBtn.className = 'px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]';
+        lightBtn.className = 'px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white';
+
+        cards.tw.className = 'preview-card bg-black border border-slate-800 rounded-xl p-4 text-white shadow-xl transition-all';
+        cards.li.className = 'preview-card bg-[#1b1f23] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all';
+        cards.fb.className = 'preview-card bg-[#242526] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all';
+        cards.ig.className = 'preview-card bg-black border border-slate-800 rounded-xl p-4 text-white shadow-xl transition-all max-w-md mx-auto lg:max-w-none';
+        cards.goog.className = 'preview-card bg-[#202124] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all';
+      }
+    }
+
+    // Handle Local File Upload
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          mediaUrl.value = event.target.result;
+          updatePreviews();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Event Listeners
+    [postText, authorName, authorHandle, avatarUrl, mediaUrl, ogTitle, ogDomain, ogDescription].forEach(el => {
+      el.addEventListener('input', updatePreviews);
+    });
+
+    // Initial render
+    updatePreviews();
+  </script>
+</body>
+</html>

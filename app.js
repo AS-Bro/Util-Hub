@@ -49,6 +49,14 @@ const toolsData = [
     icon: 'calendar',
   },
   {
+    id: 'photo-anonymizer',
+    title: 'Photo Anonymizer',
+    description: 'Remove faces and other identifying features from your photos.',
+    category: 'Utility',
+    url: 'tools/photo-anonymizer.html',
+    icon: 'user',
+  },
+  {
     id: 'age-difference',
     title: 'Age Difference',
     description: 'Calculate the difference in age between two people.',
@@ -185,12 +193,28 @@ const toolsData = [
     icon: 'braces',
   },
   {
+    id: 'social-previewer',
+    title: 'Social Previewer',
+    description: 'Preview how your links will appear when shared on social media platforms.',
+    category: 'Developer',
+    url: 'tools/social-previewer.html',
+    icon: 'share2',
+  },
+  {
     id: 'qr-generator',
     title: 'QR Code Generator',
     description: 'Turn any link or block of text into a downloadable QR code, live.',
     category: 'Developer',
     url: 'tools/qr-generator.html',
     icon: 'qr-code',
+  },
+  {
+    id: 'barcode-generator',
+    title: 'Barcode Generator',
+    description: 'Generate barcodes for any text or number, with support for multiple formats.',
+    category: 'Developer',
+    url: 'tools/barcode-generator.html',
+    icon: 'barcode',
   },
   {
     id: 'unit-converter',

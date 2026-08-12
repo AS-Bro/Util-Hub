@@ -1,397 +1,466 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Image Converter — Utility Hub</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
-  .preview-checkerboard {
-    background-color: #0b1622;
-    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
-    background-size: 16px 16px;
-    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Image Format Converter — Utility Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { background: #0e1c2b; color: #e7eef4; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    .display { font-family: 'Space Grotesk', sans-serif; }
+    .card { background: #14283b; border: 1px solid rgba(143, 176, 204, 0.16); }
+    .btn-secondary { background: #17304a; border: 1px solid rgba(143, 176, 204, 0.2); color: #e7eef4; transition: all 0.15s ease; }
+    .btn-secondary:hover { border-color: #6fd8cb; color: #6fd8cb; }
+    .btn-primary { background: #6fd8cb; color: #0e1c2b; font-weight: 600; transition: all 0.15s ease; }
+    .btn-primary:hover { background: #93e5da; }
+    .dropzone-active { border-color: #6fd8cb !important; background: rgba(111, 216, 203, 0.05); }
+    input[type="range"]::-webkit-slider-thumb { background: #6fd8cb; }
+    .modal-backdrop { background: rgba(14, 28, 43, 0.85); backdrop-filter: blur(6px); }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-4xl px-6 py-10">
-    <!-- Header -->
+<body class="min-h-screen pb-12">
+  <div class="mx-auto max-w-5xl px-6 py-10">
     <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Image Converter & Resizer</h1>
-    <p class="text-sm text-slate-400 mb-6">Convert, resize, and compress images in batch directly inside your browser.</p>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Universal Image Converter & Optimizer</h1>
+    <p class="text-sm text-slate-400 mb-6">Convert, resize, and compress images in bulk. Re-convert anytime from original files with dynamic settings.</p>
 
-    <!-- Controls Panel -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-[#14283b]/30 p-5 rounded-md border border-white/10">
-      <!-- Target Format -->
-      <div>
-        <label class="mono text-xs text-slate-400 uppercase block mb-1">Target Format</label>
-        <select id="targetFormat" class="w-full rounded-md p-2.5 text-sm font-medium">
-          <option value="image/png">PNG (.png)</option>
-          <option value="image/jpeg" selected>JPEG (.jpg)</option>
-          <option value="image/webp">WEBP (.webp)</option>
-          <option value="image/bmp">BMP (.bmp)</option>
+    <div class="card rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+      <div class="flex items-center gap-3">
+        <label for="globalFormat" class="mono text-xs uppercase tracking-wider text-slate-400 whitespace-nowrap">Format:</label>
+        <select id="globalFormat" onchange="applyGlobalFormat()" class="w-full bg-[#17304a] text-slate-200 border border-slate-700 text-xs rounded px-3 py-2 focus:outline-none focus:border-teal-400 mono">
+          <option value="image/webp" selected>WEBP (Best Compression)</option>
+          <option value="image/jpeg">JPG / JPEG</option>
+          <option value="image/png">PNG (Lossless Alpha)</option>
+          <option value="image/bmp">BMP</option>
+          <option value="image/gif">GIF (Static Frame)</option>
         </select>
       </div>
 
-      <!-- Quality Slider -->
-      <div>
-        <div class="flex justify-between items-center mb-1">
-          <label class="mono text-xs text-slate-400 uppercase">Quality</label>
-          <span id="qualityVal" class="mono text-xs text-teal-300 font-bold">85%</span>
-        </div>
-        <input id="qualitySlider" type="range" min="10" max="100" value="85" class="w-full accent-teal-400 mt-2" />
+      <div class="flex items-center gap-3">
+        <label for="globalQuality" class="mono text-xs uppercase tracking-wider text-slate-400 whitespace-nowrap">Quality: <span id="globalQualVal" class="text-teal-300">85%</span></label>
+        <input type="range" id="globalQuality" min="10" max="100" value="85" oninput="applyGlobalQuality(this.value)" class="w-full accent-teal-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
       </div>
 
-      <!-- Resize Mode -->
-      <div>
-        <label class="mono text-xs text-slate-400 uppercase block mb-1">Resize Mode</label>
-        <select id="resizeMode" class="w-full rounded-md p-2.5 text-sm font-medium">
-          <option value="none">Original Dimensions</option>
-          <option value="custom">Custom Dimensions (px)</option>
-          <option value="scale">Scale Percentage (%)</option>
-        </select>
+      <div class="flex items-center justify-start md:justify-end gap-2">
+        <button id="convertAllBtn" onclick="convertAll()" class="btn-primary mono text-xs uppercase px-4 py-2 rounded-md">Convert All</button>
+        <button id="downloadZipBtn" onclick="downloadAllZip()" class="btn-secondary mono text-xs uppercase px-3 py-2 rounded-md hidden">Download ZIP</button>
+        <button onclick="clearAll()" class="btn-secondary mono text-xs uppercase px-3 py-2 rounded-md text-rose-400 border-rose-400/30 hover:border-rose-400 hover:text-rose-300">Clear</button>
       </div>
+    </div>
 
-      <!-- Dynamic Dimensions Bar -->
-      <div id="dimensionsBar" class="md:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-white/5 hidden">
+    <div id="dropzone" onclick="document.getElementById('fileInput').click()" class="card border-dashed border-2 border-slate-700 rounded-xl p-8 mb-8 text-center cursor-pointer transition-colors hover:border-teal-400/50">
+      <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)" />
+      <div class="flex flex-col items-center justify-center">
+        <svg class="w-10 h-10 text-teal-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <p class="text-base font-medium mb-1">Drop images here or click to browse</p>
+        <p class="mono text-xs text-slate-400">Supports JPG, PNG, WEBP, GIF, BMP, SVG, and AVIF</p>
+      </div>
+    </div>
+
+    <div id="summaryBar" class="card rounded-lg p-4 mb-4 hidden bg-[#112233]">
+      <div class="flex flex-wrap items-center justify-between gap-4 mono text-xs">
         <div>
-          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Width (px)</label>
-          <input id="resizeWidth" type="number" placeholder="Auto" class="w-full rounded-md p-2 text-xs mono" />
+          <span class="text-slate-400 uppercase">Total Files:</span> 
+          <span id="queueCount" class="text-slate-200 font-bold">0</span>
         </div>
         <div>
-          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Height (px)</label>
-          <input id="resizeHeight" type="number" placeholder="Auto" class="w-full rounded-md p-2 text-xs mono" />
+          <span class="text-slate-400 uppercase">Original Size:</span> 
+          <span id="totalOrigSize" class="text-slate-200 font-bold">0 KB</span>
         </div>
-        <div class="flex items-end pb-1">
-          <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300 select-none">
-            <input id="keepAspect" type="checkbox" checked class="accent-teal-400 h-4 w-4" />
-            Keep Aspect Ratio
-          </label>
+        <div>
+          <span class="text-slate-400 uppercase">Converted Size:</span> 
+          <span id="totalConvSize" class="text-slate-200 font-bold">0 KB</span>
+        </div>
+        <div>
+          <span class="text-slate-400 uppercase">Total Space Saved:</span> 
+          <span id="totalSaved" class="text-teal-300 font-bold">0%</span>
         </div>
       </div>
     </div>
 
-    <!-- Drag & Drop Zone -->
-    <div id="dropZone" class="drop-zone rounded-md p-8 text-center bg-[#14283b]/20 cursor-pointer mb-6">
-      <input type="file" id="fileInput" multiple accept="image/*" class="hidden" />
-      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop images here or click to browse</div>
-      <div class="text-xs text-slate-400">Supports PNG, JPG, WEBP, GIF, SVG, BMP</div>
-    </div>
+    <div id="fileList" class="space-y-4"></div>
+  </div>
 
-    <!-- Side-by-Side Visual Preview Inspector -->
-    <div id="visualPreviewCard" class="bg-[#14283b]/40 border border-teal-500/30 rounded-md p-5 mb-6 hidden">
-      <div class="flex justify-between items-center mb-3">
-        <span class="mono text-xs uppercase font-bold text-teal-300">Live Visual Comparison</span>
-        <span id="previewFileName" class="mono text-xs text-slate-400 truncate max-w-xs"></span>
+  <div id="compareModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="card rounded-xl max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-700/60 mb-4">
+        <h3 class="display text-lg font-bold">Visual & Size Comparison</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Original Image Box -->
-        <div class="bg-[#0e1c2b] p-3 rounded border border-white/10 flex flex-col items-center">
-          <span class="mono text-[10px] uppercase text-slate-400 mb-2">Original Image</span>
-          <div class="w-full h-48 preview-checkerboard rounded flex items-center justify-center overflow-hidden p-2">
-            <img id="previewOrigImg" class="max-h-full max-w-full object-contain rounded" />
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto mb-4">
+        <div class="bg-[#0e1c2b] p-3 rounded-lg border border-slate-800 text-center flex flex-col">
+          <span class="mono text-xs text-slate-400 uppercase block mb-2">Original File</span>
+          <div class="h-64 flex-1 flex items-center justify-center bg-black/40 rounded overflow-hidden mb-3">
+            <img id="modalOrigImg" class="max-h-full max-w-full object-contain" />
           </div>
-          <div id="previewOrigStats" class="mono text-[11px] text-slate-300 mt-2"></div>
+          <p id="modalOrigMeta" class="mono text-xs text-slate-300"></p>
         </div>
-
-        <!-- Converted Image Box -->
-        <div class="bg-[#0e1c2b] p-3 rounded border border-white/10 flex flex-col items-center">
-          <span class="mono text-[10px] uppercase text-teal-300 mb-2">Converted Preview</span>
-          <div class="w-full h-48 preview-checkerboard rounded flex items-center justify-center overflow-hidden p-2">
-            <img id="previewConvImg" class="max-h-full max-w-full object-contain rounded" />
+        <div class="bg-[#0e1c2b] p-3 rounded-lg border border-slate-800 text-center flex flex-col">
+          <span class="mono text-xs text-teal-300 uppercase block mb-2">Converted File</span>
+          <div class="h-64 flex-1 flex items-center justify-center bg-black/40 rounded overflow-hidden mb-3">
+            <img id="modalConvImg" class="max-h-full max-w-full object-contain" />
           </div>
-          <div id="previewConvStats" class="mono text-[11px] text-teal-300 font-bold mt-2"></div>
+          <p id="modalConvMeta" class="mono text-xs text-teal-300"></p>
         </div>
       </div>
-    </div>
 
-    <!-- Actions & Stats Bar -->
-    <div id="batchActions" class="flex flex-wrap items-center justify-between gap-4 mb-4 hidden">
-      <div id="batchStats" class="mono text-xs text-slate-400">0 images queued</div>
-      <div class="flex gap-2">
-        <button id="clearAll" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Clear All</button>
-        <button id="downloadZip" class="primary mono text-xs uppercase px-4 py-2 rounded-md">Download ZIP</button>
+      <div class="flex justify-end pt-2 border-t border-slate-700/60">
+        <button onclick="closeModal()" class="btn-secondary mono text-xs uppercase px-4 py-2 rounded">Close</button>
       </div>
     </div>
-
-    <!-- Image List Preview -->
-    <div id="imageList" class="space-y-3"></div>
   </div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const dropZone = document.getElementById('dropZone');
-    const imageList = document.getElementById('imageList');
-    const targetFormat = document.getElementById('targetFormat');
-    const qualitySlider = document.getElementById('qualitySlider');
-    const qualityVal = document.getElementById('qualityVal');
-    const resizeMode = document.getElementById('resizeMode');
-    const dimensionsBar = document.getElementById('dimensionsBar');
-    const resizeWidth = document.getElementById('resizeWidth');
-    const resizeHeight = document.getElementById('resizeHeight');
-    const keepAspect = document.getElementById('keepAspect');
-    const batchActions = document.getElementById('batchActions');
-    const batchStats = document.getElementById('batchStats');
-    const downloadZipBtn = document.getElementById('downloadZip');
-    const clearAllBtn = document.getElementById('clearAll');
-
-    // Visual Inspector Elements
-    const visualPreviewCard = document.getElementById('visualPreviewCard');
-    const previewFileName = document.getElementById('previewFileName');
-    const previewOrigImg = document.getElementById('previewOrigImg');
-    const previewConvImg = document.getElementById('previewConvImg');
-    const previewOrigStats = document.getElementById('previewOrigStats');
-    const previewConvStats = document.getElementById('previewConvStats');
+    const fileListEl = document.getElementById('fileList');
+    const dropzone = document.getElementById('dropzone');
+    const globalFormat = document.getElementById('globalFormat');
+    const globalQuality = document.getElementById('globalQuality');
+    const globalQualVal = document.getElementById('globalQualVal');
+    const summaryBar = document.getElementById('summaryBar');
+    const downloadZipBtn = document.getElementById('downloadZipBtn');
 
     let filesQueue = [];
-    let selectedPreviewId = null;
 
-    function formatBytes(bytes) {
-      if (bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    qualitySlider.addEventListener('input', (e) => {
-      qualityVal.textContent = `${e.target.value}%`;
-      processAll();
+    // Drag and drop event handlers
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dropzone-active'); });
     });
-
-    resizeMode.addEventListener('change', () => {
-      dimensionsBar.classList.toggle('hidden', resizeMode.value === 'none');
-      processAll();
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dropzone-active'); });
     });
+    dropzone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
 
-    targetFormat.addEventListener('change', processAll);
-    [resizeWidth, resizeHeight, keepAspect].forEach(el => el.addEventListener('input', processAll));
-
-    dropZone.addEventListener('click', () => fileInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('active');
-      handleFiles(e.dataTransfer.files);
-    });
-    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-    function handleFiles(files) {
+    async function handleFiles(files) {
       const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-      validFiles.forEach(file => {
-        const id = Math.random().toString(36).substr(2, 9);
-        const origUrl = URL.createObjectURL(file);
-        filesQueue.push({ id, file, origUrl, convertedBlob: null, convertedUrl: null, convertedName: '', origWidth: 0, origHeight: 0, convWidth: 0, convHeight: 0 });
-      });
-
-      if (!selectedPreviewId && filesQueue.length > 0) {
-        selectedPreviewId = filesQueue[0].id;
+      
+      for (const file of validFiles) {
+        const id = 'file_' + Math.random().toString(36).substr(2, 9);
+        const dimensions = await getImageDimensions(file);
+        
+        filesQueue.push({
+          id,
+          file, // Original file preserved
+          origDimensions: dimensions,
+          targetFormat: globalFormat.value,
+          quality: parseInt(globalQuality.value),
+          targetWidth: dimensions.width,
+          targetHeight: dimensions.height,
+          aspectRatio: dimensions.width / (dimensions.height || 1),
+          lockAspectRatio: true,
+          convertedBlob: null,
+          convertedName: '',
+          convertedDimensions: null,
+          status: 'pending'
+        });
       }
-
-      processAll();
+      renderFileList();
     }
 
-    async function processImage(item) {
+    function getImageDimensions(file) {
       return new Promise((resolve) => {
         const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.onerror = () => resolve({ width: 0, height: 0 });
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function applyGlobalFormat() {
+      const fmt = globalFormat.value;
+      filesQueue.forEach(item => {
+        item.targetFormat = fmt;
+      });
+      convertAll();
+    }
+
+    function applyGlobalQuality(val) {
+      globalQualVal.textContent = `${val}%`;
+      filesQueue.forEach(item => {
+        item.quality = parseInt(val);
+      });
+      convertAll();
+    }
+
+    function updateItemFormat(id, fmt) {
+      const item = filesQueue.find(f => f.id === id);
+      if (!item) return;
+      item.targetFormat = fmt;
+      convertSingle(id);
+    }
+
+    function updateItemQuality(id, val) {
+      const item = filesQueue.find(f => f.id === id);
+      if (!item) return;
+      item.quality = parseInt(val);
+      document.getElementById(`qualVal_${id}`).textContent = `${val}%`;
+      convertSingle(id);
+    }
+
+    function updateItemDimension(id, dimensionType, val) {
+      const item = filesQueue.find(f => f.id === id);
+      if (!item) return;
+
+      const numVal = parseInt(val) || 0;
+      if (dimensionType === 'width') {
+        item.targetWidth = numVal;
+        if (item.lockAspectRatio && item.aspectRatio) {
+          item.targetHeight = Math.round(numVal / item.aspectRatio);
+          const heightInput = document.getElementById(`height_${id}`);
+          if (heightInput) heightInput.value = item.targetHeight;
+        }
+      } else if (dimensionType === 'height') {
+        item.targetHeight = numVal;
+        if (item.lockAspectRatio && item.aspectRatio) {
+          item.targetWidth = Math.round(numVal * item.aspectRatio);
+          const widthInput = document.getElementById(`width_${id}`);
+          if (widthInput) widthInput.value = item.targetWidth;
+        }
+      }
+      convertSingle(id);
+    }
+
+    function toggleAspectRatioLock(id) {
+      const item = filesQueue.find(f => f.id === id);
+      if (!item) return;
+      item.lockAspectRatio = !item.lockAspectRatio;
+      renderFileList();
+    }
+
+    function renderFileList() {
+      if (filesQueue.length === 0) {
+        summaryBar.classList.add('hidden');
+        downloadZipBtn.classList.add('hidden');
+        fileListEl.innerHTML = '';
+        return;
+      }
+
+      summaryBar.classList.remove('hidden');
+      updateSummaryMetrics();
+
+      fileListEl.innerHTML = filesQueue.map(item => {
+        const hasConverted = item.status === 'done' && item.convertedBlob;
+        const sizeDiff = hasConverted ? item.convertedBlob.size - item.file.size : 0;
+        const percentChange = hasConverted ? ((sizeDiff / item.file.size) * 100).toFixed(1) : 0;
+        const isSmaller = sizeDiff <= 0;
+
+        return `
+          <div class="card rounded-lg p-4 flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/50 pb-3">
+              <div class="flex items-center gap-3 overflow-hidden">
+                <div class="w-12 h-12 rounded bg-[#0e1c2b] flex items-center justify-center shrink-0 overflow-hidden border border-slate-700">
+                  <img src="${URL.createObjectURL(item.file)}" class="w-full h-full object-cover" alt="Preview"/>
+                </div>
+                <div class="truncate">
+                  <p class="text-sm font-medium truncate">${item.file.name}</p>
+                  <p class="mono text-xs text-slate-400">Original: ${formatBytes(item.file.size)} &bull; ${item.origDimensions.width}x${item.origDimensions.height}px (${item.file.type.split('/')[1] || 'IMG'})</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 self-end sm:self-auto">
+                <button onclick="convertSingle('${item.id}')" class="btn-secondary mono text-xs uppercase px-3 py-1.5 rounded flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                  ${hasConverted ? 'Re-convert' : 'Convert'}
+                </button>
+                ${hasConverted ? `
+                  <button onclick="openCompareModal('${item.id}')" class="btn-secondary mono text-xs uppercase px-2.5 py-1.5 rounded">Compare</button>
+                  <a href="${URL.createObjectURL(item.convertedBlob)}" download="${item.convertedName}" class="btn-primary mono text-xs uppercase px-3 py-1.5 rounded">Download</a>
+                ` : ''}
+                <button onclick="removeFile('${item.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded hover:bg-slate-800">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-center text-xs mono">
+              <div>
+                <label class="text-slate-400 uppercase text-[10px] block mb-1">Target Format</label>
+                <select onchange="updateItemFormat('${item.id}', this.value)" class="w-full bg-[#0e1c2b] text-slate-200 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-teal-400">
+                  <option value="image/webp" ${item.targetFormat === 'image/webp' ? 'selected' : ''}>WEBP</option>
+                  <option value="image/jpeg" ${item.targetFormat === 'image/jpeg' ? 'selected' : ''}>JPG</option>
+                  <option value="image/png" ${item.targetFormat === 'image/png' ? 'selected' : ''}>PNG</option>
+                  <option value="image/bmp" ${item.targetFormat === 'image/bmp' ? 'selected' : ''}>BMP</option>
+                  <option value="image/gif" ${item.targetFormat === 'image/gif' ? 'selected' : ''}>GIF</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-slate-400 uppercase text-[10px] block mb-1">Quality: <span id="qualVal_${item.id}" class="text-teal-300">${item.quality}%</span></label>
+                <input type="range" min="10" max="100" value="${item.quality}" onchange="updateItemQuality('${item.id}', this.value)" class="w-full accent-teal-400 h-1 bg-slate-700 rounded appearance-none cursor-pointer">
+              </div>
+
+              <div class="col-span-1 md:col-span-2 flex items-center gap-2">
+                <div class="flex-1">
+                  <label class="text-slate-400 uppercase text-[10px] block mb-1">Width (px)</label>
+                  <input type="number" id="width_${item.id}" value="${item.targetWidth}" onchange="updateItemDimension('${item.id}', 'width', this.value)" class="w-full bg-[#0e1c2b] border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-teal-400" />
+                </div>
+                <button onclick="toggleAspectRatioLock('${item.id}')" title="Toggle Aspect Ratio Lock" class="mt-4 p-1.5 rounded border border-slate-700 text-slate-400 hover:text-teal-300">
+                  ${item.lockAspectRatio ? '🔒' : '🔓'}
+                </button>
+                <div class="flex-1">
+                  <label class="text-slate-400 uppercase text-[10px] block mb-1">Height (px)</label>
+                  <input type="number" id="height_${item.id}" value="${item.targetHeight}" onchange="updateItemDimension('${item.id}', 'height', this.value)" class="w-full bg-[#0e1c2b] border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-teal-400" />
+                </div>
+              </div>
+            </div>
+
+            ${hasConverted ? `
+              <div class="bg-[#0e1c2b] border border-slate-800 rounded p-3 flex flex-wrap items-center justify-between gap-2 text-xs mono">
+                <div class="flex items-center gap-4">
+                  <span class="text-slate-400">Current Output: <span class="text-teal-300 font-bold uppercase">${getExtension(item.targetFormat)}</span></span>
+                  <span class="text-slate-400">New Size: <span class="text-white font-bold">${formatBytes(item.convertedBlob.size)}</span></span>
+                  <span class="text-slate-400">Dimensions: <span class="text-white">${item.convertedDimensions.width}x${item.convertedDimensions.height}px</span></span>
+                </div>
+                <div class="font-bold ${isSmaller ? 'text-emerald-400' : 'text-rose-400'}">
+                  ${isSmaller ? 'Reduced by ' + Math.abs(percentChange) + '%' : 'Increased by +' + percentChange + '%'}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      if (filesQueue.some(f => f.status === 'done')) {
+        downloadZipBtn.classList.remove('hidden');
+      }
+    }
+
+    async function convertSingle(id) {
+      const item = filesQueue.find(f => f.id === id);
+      if (!item) return;
+
+      const quality = item.quality / 100;
+
+      try {
+        const result = await processImage(item.file, item.targetFormat, quality, item.targetWidth, item.targetHeight);
+        const ext = getExtension(item.targetFormat);
+        const originalName = item.file.name.substring(0, item.file.name.lastIndexOf('.')) || item.file.name;
+
+        item.convertedBlob = result.blob;
+        item.convertedName = `${originalName}.${ext}`;
+        item.convertedDimensions = { width: result.width, height: result.height };
+        item.status = 'done';
+
+        renderFileList();
+      } catch (err) {
+        console.error('Conversion error:', err);
+      }
+    }
+
+    async function convertAll() {
+      for (const item of filesQueue) {
+        await convertSingle(item.id);
+      }
+    }
+
+    function processImage(file, mimeType, quality, targetW, targetH) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
         img.onload = () => {
-          item.origWidth = img.width;
-          item.origHeight = img.height;
-
-          let w = img.width;
-          let h = img.height;
-          const mode = resizeMode.value;
-
-          if (mode === 'custom') {
-            const rw = parseInt(resizeWidth.value);
-            const rh = parseInt(resizeHeight.value);
-            if (rw && rh) { w = rw; h = rh; }
-            else if (rw) { w = rw; h = keepAspect.checked ? Math.round((rw / img.width) * img.height) : img.height; }
-            else if (rh) { h = rh; w = keepAspect.checked ? Math.round((rh / img.height) * img.width) : img.width; }
-          } else if (mode === 'scale') {
-            const scale = parseFloat(resizeWidth.value) || 100;
-            w = Math.round(img.width * (scale / 100));
-            h = Math.round(img.height * (scale / 100));
-          }
-
-          item.convWidth = Math.max(1, w);
-          item.convHeight = Math.max(1, h);
-
           const canvas = document.createElement('canvas');
-          canvas.width = item.convWidth;
-          canvas.height = item.convHeight;
+          canvas.width = targetW || img.width;
+          canvas.height = targetH || img.height;
           const ctx = canvas.getContext('2d');
 
-          if (targetFormat.value === 'image/jpeg' || targetFormat.value === 'image/bmp') {
+          // White background for transparency handling in JPG format
+          if (mimeType === 'image/jpeg') {
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
           }
 
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-          const mime = targetFormat.value;
-          const quality = parseFloat(qualitySlider.value) / 100;
-
           canvas.toBlob((blob) => {
-            if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
-            item.convertedBlob = blob;
-            item.convertedUrl = URL.createObjectURL(blob);
-            const ext = mime.split('/')[1].replace('jpeg', 'jpg');
-            const baseName = item.file.name.substring(0, item.file.name.lastIndexOf('.')) || item.file.name;
-            item.convertedName = `${baseName}_converted.${ext}`;
-            resolve(item);
-          }, mime, quality);
+            if (blob) resolve({ blob, width: canvas.width, height: canvas.height });
+            else reject(new Error('Canvas export error'));
+          }, mimeType, quality);
         };
-        img.src = item.origUrl;
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
       });
     }
 
-    async function processAll() {
-      if (filesQueue.length === 0) return;
-      await Promise.all(filesQueue.map(item => processImage(item)));
-      renderList();
-      updateVisualPreview();
-    }
+    function updateSummaryMetrics() {
+      const totalCount = filesQueue.length;
+      const origSum = filesQueue.reduce((acc, curr) => acc + curr.file.size, 0);
+      
+      const convertedFiles = filesQueue.filter(f => f.status === 'done');
+      const convSum = convertedFiles.reduce((acc, curr) => acc + (curr.convertedBlob ? curr.convertedBlob.size : 0), 0);
 
-    function updateVisualPreview() {
-      const activeItem = filesQueue.find(i => i.id === selectedPreviewId) || filesQueue[0];
-      if (!activeItem) {
-        visualPreviewCard.classList.add('hidden');
-        return;
-      }
+      document.getElementById('queueCount').textContent = totalCount;
+      document.getElementById('totalOrigSize').textContent = formatBytes(origSum);
+      document.getElementById('totalConvSize').textContent = convertedFiles.length > 0 ? formatBytes(convSum) : '0 KB';
 
-      visualPreviewCard.classList.remove('hidden');
-      previewFileName.textContent = activeItem.file.name;
-      previewOrigImg.src = activeItem.origUrl;
-      previewOrigStats.textContent = `${formatBytes(activeItem.file.size)} | ${activeItem.origWidth}×${activeItem.origHeight}px`;
-
-      if (activeItem.convertedUrl) {
-        previewConvImg.src = activeItem.convertedUrl;
-        previewConvStats.textContent = `${formatBytes(activeItem.convertedBlob.size)} | ${activeItem.convWidth}×${activeItem.convHeight}px`;
+      if (convertedFiles.length > 0 && origSum > 0) {
+        const savedBytes = origSum - convSum;
+        const savedPercent = ((savedBytes / origSum) * 100).toFixed(1);
+        document.getElementById('totalSaved').textContent = `${savedPercent}%`;
+      } else {
+        document.getElementById('totalSaved').textContent = '0%';
       }
     }
 
-    function renderList() {
-      if (filesQueue.length === 0) {
-        batchActions.classList.add('hidden');
-        visualPreviewCard.classList.add('hidden');
-        imageList.innerHTML = '';
-        selectedPreviewId = null;
-        return;
-      }
-
-      batchActions.classList.remove('hidden');
-      batchStats.textContent = `${filesQueue.length} image(s) queued`;
-
-      imageList.innerHTML = filesQueue.map((item) => {
-        const origSize = formatBytes(item.file.size);
-        const convSize = item.convertedBlob ? formatBytes(item.convertedBlob.size) : 'Processing...';
-        const isSelected = item.id === selectedPreviewId;
-
-        return `
-          <div onclick="selectItem('${item.id}')" class="bg-[#14283b]/40 border ${isSelected ? 'border-teal-400 bg-[#14283b]/80' : 'border-white/10'} rounded-md p-4 flex flex-col sm:flex-row items-center justify-between gap-4 cursor-pointer transition-all hover:border-teal-400/50">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-              <div class="w-12 h-12 bg-[#0e1c2b] rounded border border-white/5 flex items-center justify-center overflow-hidden shrink-0 preview-checkerboard">
-                <img src="${item.origUrl}" class="object-cover w-full h-full" />
-              </div>
-              <div class="min-w-0">
-                <div class="text-sm font-semibold text-slate-100 truncate max-w-xs">${item.file.name}</div>
-                <div class="mono text-[10px] text-slate-400 mt-0.5">
-                  Orig: ${origSize} (${item.origWidth}×${item.origHeight}px)
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
-              <div class="text-right">
-                <div class="mono text-xs text-teal-300 font-bold">${convSize}</div>
-                <div class="mono text-[10px] text-slate-400 uppercase">${targetFormat.value.split('/')[1]}</div>
-              </div>
-
-              <div class="flex gap-2">
-                <button onclick="event.stopPropagation(); downloadSingle('${item.id}')" class="secondary p-2 rounded-md" title="Download">
-                  <svg class="w-4 h-4 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                </button>
-                <button onclick="event.stopPropagation(); removeItem('${item.id}')" class="secondary p-2 rounded-md hover:text-rose-400" title="Remove">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    window.selectItem = function(id) {
-      selectedPreviewId = id;
-      renderList();
-      updateVisualPreview();
-    };
-
-    window.removeItem = function(id) {
-      const item = filesQueue.find(i => i.id === id);
-      if (item) {
-        if (item.origUrl) URL.revokeObjectURL(item.origUrl);
-        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
-      }
-      filesQueue = filesQueue.filter(i => i.id !== id);
-      if (selectedPreviewId === id) {
-        selectedPreviewId = filesQueue.length > 0 ? filesQueue[0].id : null;
-      }
-      renderList();
-      updateVisualPreview();
-    };
-
-    window.downloadSingle = function(id) {
-      const item = filesQueue.find(i => i.id === id);
+    function openCompareModal(id) {
+      const item = filesQueue.find(f => f.id === id);
       if (!item || !item.convertedBlob) return;
-      const a = document.createElement('a');
-      a.href = item.convertedUrl;
-      a.download = item.convertedName;
-      a.click();
-    };
 
-    downloadZipBtn.addEventListener('click', async () => {
-      if (filesQueue.length === 0) return;
+      document.getElementById('modalOrigImg').src = URL.createObjectURL(item.file);
+      document.getElementById('modalOrigMeta').textContent = `${formatBytes(item.file.size)} | ${item.origDimensions.width}x${item.origDimensions.height}px`;
+
+      document.getElementById('modalConvImg').src = URL.createObjectURL(item.convertedBlob);
+      document.getElementById('modalConvMeta').textContent = `${formatBytes(item.convertedBlob.size)} | ${item.convertedDimensions.width}x${item.convertedDimensions.height}px`;
+
+      document.getElementById('compareModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('compareModal').classList.add('hidden');
+    }
+
+    function downloadAllZip() {
       const zip = new JSZip();
       filesQueue.forEach(item => {
         if (item.convertedBlob) {
           zip.file(item.convertedName, item.convertedBlob);
         }
       });
-      const content = await zip.generateAsync({ type: 'blob' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(content);
-      a.download = `converted-images-${Date.now()}.zip`;
-      a.click();
-    });
+      zip.generateAsync({ type: 'blob' }).then(content => saveAs(content, 'converted-images.zip'));
+    }
 
-    clearAllBtn.addEventListener('click', () => {
-      filesQueue.forEach(item => {
-        if (item.origUrl) URL.revokeObjectURL(item.origUrl);
-        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
-      });
+    function removeFile(id) {
+      filesQueue = filesQueue.filter(f => f.id !== id);
+      renderFileList();
+    }
+
+    function clearAll() {
       filesQueue = [];
-      selectedPreviewId = null;
-      renderList();
-      updateVisualPreview();
-    });
+      renderFileList();
+    }
+
+    function getExtension(mime) {
+      switch (mime) {
+        case 'image/jpeg': return 'jpg';
+        case 'image/png': return 'png';
+        case 'image/webp': return 'webp';
+        case 'image/bmp': return 'bmp';
+        case 'image/gif': return 'gif';
+        default: return 'img';
+      }
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
   </script>
 </body>
 </html>

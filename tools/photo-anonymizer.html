@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Blur & Anonymizer Pro — Utility Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { background: #0e1c2b; color: #e7eef4; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+    .display { font-family: 'Space Grotesk', sans-serif; }
+    .card { background: #14283b; border: 1px solid rgba(143, 176, 204, 0.16); }
+    .btn-secondary { background: #17304a; border: 1px solid rgba(143, 176, 204, 0.2); color: #e7eef4; transition: all 0.15s ease; }
+    .btn-secondary:hover { border-color: #6fd8cb; color: #6fd8cb; }
+    .btn-primary { background: #6fd8cb; color: #0e1c2b; font-weight: 600; transition: all 0.15s ease; }
+    .btn-primary:hover { background: #5bc4b7; }
+    canvas { touch-action: none; cursor: crosshair; }
+    .active-tab { border-color: #6fd8cb !important; color: #6fd8cb !important; background-color: rgba(111, 216, 203, 0.1); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+
+  <header class="max-w-7xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold text-xl">
+        🛡️
+      </div>
+      <div>
+        <h1 class="display text-xl font-bold tracking-tight text-white">Photo Blur & Anonymizer Pro</h1>
+        <p class="text-xs text-slate-400">Client-Side Redaction, Masking & Privacy Tool</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="btn-primary px-4 py-2 rounded-lg cursor-pointer text-sm flex items-center gap-2 shadow-lg shadow-teal-900/20">
+        <span>📁 Open Image</span>
+        <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+      </label>
+    </div>
+  </header>
+
+  <main class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 flex-grow mb-8">
+    
+    <aside class="lg:col-span-1 space-y-4">
+      
+      <div class="card p-4 rounded-xl space-y-4">
+        <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mono">1. Selection Shape</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setShape('rect')" id="shape-rect" class="shape-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center active-tab">
+            ⬛ Rectangle
+          </button>
+          <button onclick="setShape('ellipse')" id="shape-ellipse" class="shape-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center">
+            ⚪ Ellipse
+          </button>
+        </div>
+
+        <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mono pt-2">2. Redaction Mode</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setStyle('blur')" id="btn-blur" class="style-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center active-tab">
+            Blur
+          </button>
+          <button onclick="setStyle('pixelate')" id="btn-pixelate" class="style-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center">
+            Pixelate
+          </button>
+          <button onclick="setStyle('solid')" id="btn-solid" class="style-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center">
+            Blackout
+          </button>
+          <button onclick="setStyle('invert')" id="btn-invert" class="style-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center">
+            Invert
+          </button>
+          <button onclick="setStyle('emoji')" id="btn-emoji" class="style-btn btn-secondary py-1.5 rounded-lg text-xs font-medium text-center col-span-2">
+            Emoji Mask
+          </button>
+        </div>
+
+        <div id="emojiContainer" class="hidden space-y-1 pt-1">
+          <label class="text-[11px] text-slate-400">Select Emoji Overlay:</label>
+          <div class="flex justify-between gap-1 bg-[#0a1521] p-1.5 rounded-lg text-lg">
+            <button onclick="setEmoji('🎭')" class="emoji-opt hover:bg-slate-700 rounded px-1">🎭</button>
+            <button onclick="setEmoji('🕶️')" class="emoji-opt hover:bg-slate-700 rounded px-1">🕶️</button>
+            <button onclick="setEmoji('🤡')" class="emoji-opt hover:bg-slate-700 rounded px-1">🤡</button>
+            <button onclick="setEmoji('⛔')" class="emoji-opt hover:bg-slate-700 rounded px-1">⛔</button>
+            <button onclick="setEmoji('🐱')" class="emoji-opt hover:bg-slate-700 rounded px-1">🐱</button>
+          </div>
+        </div>
+
+        <div id="intensityContainer" class="space-y-1.5 pt-1">
+          <div class="flex justify-between text-xs text-slate-400">
+            <span>Effect Intensity</span>
+            <span id="intensityVal" class="mono text-teal-400">15px</span>
+          </div>
+          <input type="range" id="intensitySlider" min="4" max="50" value="15" class="w-full accent-teal-400 bg-slate-800 rounded-lg h-1.5 cursor-pointer" oninput="updateIntensity(this.value)">
+        </div>
+      </div>
+
+      <div class="card p-4 rounded-xl space-y-2">
+        <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mono">Fast Presets</h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="applyPreset('full-blur')" class="btn-secondary py-1.5 rounded-lg">Blur All</button>
+          <button onclick="applyPreset('full-black')" class="btn-secondary py-1.5 rounded-lg">Blackout All</button>
+        </div>
+      </div>
+
+      <div class="card p-4 rounded-xl space-y-3">
+        <h2 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mono">History & Export</h2>
+        
+        <div class="flex gap-2">
+          <button id="undoBtn" onclick="undo()" disabled class="btn-secondary flex-1 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+            ↩ Undo (Ctrl+Z)
+          </button>
+          <button id="redoBtn" onclick="redo()" disabled class="btn-secondary flex-1 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+            ↪ Redo
+          </button>
+        </div>
+
+        <button onclick="clearAllMasks()" class="btn-secondary w-full py-1.5 rounded-lg text-xs text-rose-400 hover:text-rose-300 border-rose-900/30 hover:border-rose-500/50">
+          🗑️ Clear All Masks
+        </button>
+
+        <hr class="border-slate-800 my-2" />
+
+        <div class="space-y-2">
+          <div class="flex gap-2">
+            <select id="exportFormat" class="bg-[#17304a] text-slate-200 border border-slate-700 text-xs rounded-lg px-2 py-1.5 flex-grow">
+              <option value="image/png">PNG (.png)</option>
+              <option value="image/jpeg">JPG (.jpg)</option>
+              <option value="image/webp">WEBP (.webp)</option>
+            </select>
+          </div>
+
+          <button onclick="downloadImage()" class="btn-primary w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2">
+            <span>💾 Save Image</span>
+          </button>
+          <button onclick="copyToClipboard()" class="btn-secondary w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2">
+            <span>📋 Copy Image</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card p-4 rounded-xl space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="mono font-semibold text-slate-300 uppercase">Active Masks</span>
+          <span id="layerCount" class="bg-teal-500/10 text-teal-400 px-2 py-0.5 rounded text-[11px] mono">0</span>
+        </div>
+        <div id="layerList" class="max-h-36 overflow-y-auto space-y-1.5 text-xs">
+          <span class="text-slate-500 italic">No redactions applied yet. Click & drag on image.</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <section class="lg:col-span-3 card rounded-xl p-4 flex flex-col justify-center items-center min-h-[500px] relative overflow-hidden bg-[#0a1521]" id="dropZone">
+      
+      <div id="uploadPrompt" class="text-center space-y-3 p-8 border-2 border-dashed border-slate-700 hover:border-teal-500/50 rounded-xl transition-all cursor-pointer" onclick="document.getElementById('fileInput').click()">
+        <div class="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto text-2xl">
+          🖼️
+        </div>
+        <div>
+          <p class="text-sm font-medium text-slate-200">Drag & drop your photo here, or click to browse</p>
+          <p class="text-xs text-slate-500 mt-1">Supports JPG, PNG, WEBP, GIF, and BMP</p>
+        </div>
+      </div>
+
+      <div id="canvasWrapper" class="hidden relative max-w-full max-h-[75vh] flex items-center justify-center overflow-auto">
+        <canvas id="imageCanvas" class="rounded-lg shadow-2xl border border-slate-800"></canvas>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="max-w-7xl w-full mx-auto text-center py-4 border-t border-slate-800/80 text-xs text-slate-500">
+    Utility Hub &bull; 100% Private Client-Side Processing (No Image Uploads To Server)
+  </footer>
+
+  <script>
+    let canvas = document.getElementById('imageCanvas');
+    let ctx = canvas.getContext('2d');
+    let img = new Image();
+    
+    let currentShape = 'rect';
+    let currentStyle = 'blur';
+    let currentIntensity = 15;
+    let selectedEmoji = '🎭';
+    let hoveredMaskIndex = null;
+    
+    let masks = [];
+    let historyStack = [];
+    let historyStep = -1;
+
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let currentRect = null;
+
+    // Hotkey Handling
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) redo();
+        else undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        redo();
+      } else if (e.key === 'Escape') {
+        isDrawing = false;
+        currentRect = null;
+        render();
+      }
+    });
+
+    // File Handling
+    function handleDrop(e) {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        loadImageFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    function handleFileSelect(e) {
+      if (e.target.files && e.target.files[0]) {
+        loadImageFile(e.target.files[0]);
+      }
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          masks = [];
+          historyStack = [];
+          historyStep = -1;
+          saveHistory();
+          
+          document.getElementById('uploadPrompt').classList.add('hidden');
+          document.getElementById('canvasWrapper').classList.remove('hidden');
+          render();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setShape(shape) {
+      currentShape = shape;
+      document.querySelectorAll('.shape-btn').forEach(btn => btn.classList.remove('active-tab'));
+      document.getElementById(`shape-${shape}`).classList.add('active-tab');
+    }
+
+    function setStyle(style) {
+      currentStyle = style;
+      document.querySelectorAll('.style-btn').forEach(btn => btn.classList.remove('active-tab'));
+      document.getElementById(`btn-${style}`).classList.add('active-tab');
+
+      document.getElementById('emojiContainer').classList.toggle('hidden', style !== 'emoji');
+      document.getElementById('intensityContainer').classList.toggle('hidden', style === 'solid' || style === 'emoji');
+    }
+
+    function setEmoji(char) {
+      selectedEmoji = char;
+    }
+
+    function updateIntensity(val) {
+      currentIntensity = parseInt(val);
+      document.getElementById('intensityVal').textContent = `${val}px`;
+    }
+
+    function applyPreset(presetType) {
+      if (!img.src) return;
+      
+      if (presetType === 'full-blur') {
+        masks.push({ shape: 'rect', style: 'blur', intensity: 25, x: 0, y: 0, w: canvas.width, h: canvas.height });
+      } else if (presetType === 'full-black') {
+        masks.push({ shape: 'rect', style: 'solid', intensity: 0, x: 0, y: 0, w: canvas.width, h: canvas.height });
+      }
+      saveHistory();
+      render();
+    }
+
+    // History Tracking
+    function saveHistory() {
+      historyStack = historyStack.slice(0, historyStep + 1);
+      historyStack.push(JSON.parse(JSON.stringify(masks)));
+      historyStep++;
+      updateUndoRedoUI();
+    }
+
+    function undo() {
+      if (historyStep > 0) {
+        historyStep--;
+        masks = JSON.parse(JSON.stringify(historyStack[historyStep]));
+        render();
+        updateUndoRedoUI();
+      }
+    }
+
+    function redo() {
+      if (historyStep < historyStack.length - 1) {
+        historyStep++;
+        masks = JSON.parse(JSON.stringify(historyStack[historyStep]));
+        render();
+        updateUndoRedoUI();
+      }
+    }
+
+    function updateUndoRedoUI() {
+      document.getElementById('undoBtn').disabled = historyStep <= 0;
+      document.getElementById('redoBtn').disabled = historyStep >= historyStack.length - 1;
+    }
+
+    // Pointer Coordinates Calculation
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    // Canvas Events
+    canvas.addEventListener('mousedown', startRedaction);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startRedaction(e); });
+
+    canvas.addEventListener('mousemove', drawRedaction);
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); drawRedaction(e); });
+
+    canvas.addEventListener('mouseup', endRedaction);
+    canvas.addEventListener('touchend', endRedaction);
+
+    function startRedaction(e) {
+      if (!img.src) return;
+      isDrawing = true;
+      const coords = getCanvasCoords(e);
+      startX = coords.x;
+      startY = coords.y;
+    }
+
+    function drawRedaction(e) {
+      if (!isDrawing) return;
+      const coords = getCanvasCoords(e);
+      
+      currentRect = {
+        shape: currentShape,
+        x: Math.min(startX, coords.x),
+        y: Math.min(startY, coords.y),
+        w: Math.abs(coords.x - startX),
+        h: Math.abs(coords.y - startY)
+      };
+
+      render();
+      
+      // Selection outline preview
+      ctx.strokeStyle = '#6fd8cb';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 6]);
+      
+      if (currentShape === 'ellipse') {
+        ctx.beginPath();
+        ctx.ellipse(
+          currentRect.x + currentRect.w/2, currentRect.y + currentRect.h/2, 
+          currentRect.w/2, currentRect.h/2, 0, 0, Math.PI * 2
+        );
+        ctx.stroke();
+      } else {
+        ctx.strokeRect(currentRect.x, currentRect.y, currentRect.w, currentRect.h);
+      }
+      
+      ctx.setLineDash([]);
+    }
+
+    function endRedaction() {
+      if (!isDrawing) return;
+      isDrawing = false;
+
+      if (currentRect && currentRect.w > 5 && currentRect.h > 5) {
+        masks.push({
+          shape: currentShape,
+          style: currentStyle,
+          intensity: currentIntensity,
+          emoji: selectedEmoji,
+          x: currentRect.x,
+          y: currentRect.y,
+          w: currentRect.w,
+          h: currentRect.h
+        });
+        saveHistory();
+      }
+      currentRect = null;
+      render();
+    }
+
+    // Rendering Engine
+    function applyRedactionMask(m) {
+      ctx.save();
+      ctx.beginPath();
+      
+      if (m.shape === 'ellipse') {
+        ctx.ellipse(m.x + m.w/2, m.y + m.h/2, m.w/2, m.h/2, 0, 0, Math.PI * 2);
+      } else {
+        ctx.rect(m.x, m.y, m.w, m.h);
+      }
+      ctx.clip();
+
+      if (m.style === 'blur') {
+        ctx.filter = `blur(${m.intensity}px)`;
+        ctx.drawImage(canvas, 0, 0);
+        ctx.filter = 'none';
+      } else if (m.style === 'pixelate') {
+        const size = Math.max(4, m.intensity);
+        const offCanvas = document.createElement('canvas');
+        const offCtx = offCanvas.getContext('2d');
+        
+        const sw = Math.max(1, Math.floor(m.w / size));
+        const sh = Math.max(1, Math.floor(m.h / size));
+        
+        offCanvas.width = sw;
+        offCanvas.height = sh;
+
+        offCtx.drawImage(canvas, m.x, m.y, m.w, m.h, 0, 0, sw, sh);
+        
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(offCanvas, 0, 0, sw, sh, m.x, m.y, m.w, m.h);
+        ctx.imageSmoothingEnabled = true;
+      } else if (m.style === 'solid') {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(m.x, m.y, m.w, m.h);
+      } else if (m.style === 'invert') {
+        const imgData = ctx.getImageData(m.x, m.y, m.w, m.h);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          data[i]     = 255 - data[i];     // Red
+          data[i + 1] = 255 - data[i + 1]; // Green
+          data[i + 2] = 255 - data[i + 2]; // Blue
+        }
+        ctx.putImageData(imgData, m.x, m.y);
+      } else if (m.style === 'emoji') {
+        const fontSize = Math.min(m.w, m.h);
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(m.emoji || '🎭', m.x + m.w/2, m.y + m.h/2);
+      }
+
+      ctx.restore();
+    }
+
+    function render() {
+      if (!img.src) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      masks.forEach((m, idx) => {
+        applyRedactionMask(m);
+        if (hoveredMaskIndex === idx) {
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(m.x, m.y, m.w, m.h);
+        }
+      });
+
+      updateLayerUI();
+    }
+
+    function highlightMask(idx) {
+      hoveredMaskIndex = idx;
+      render();
+    }
+
+    function unhighlightMask() {
+      hoveredMaskIndex = null;
+      render();
+    }
+
+    function removeMask(idx) {
+      masks.splice(idx, 1);
+      saveHistory();
+      render();
+    }
+
+    function clearAllMasks() {
+      masks = [];
+      saveHistory();
+      render();
+    }
+
+    function updateLayerUI() {
+      const listEl = document.getElementById('layerList');
+      document.getElementById('layerCount').textContent = masks.length;
+
+      if (masks.length === 0) {
+        listEl.innerHTML = '<span class="text-slate-500 italic">No redactions applied yet. Click & drag on image.</span>';
+        return;
+      }
+
+      listEl.innerHTML = masks.map((m, idx) => `
+        <div onmouseenter="highlightMask(${idx})" onmouseleave="unhighlightMask()" class="bg-[#17304a] border border-slate-700/80 px-2.5 py-1.5 rounded flex items-center justify-between text-slate-300">
+          <span class="capitalize text-teal-300 font-medium text-xs">${m.style} (${m.shape})</span>
+          <button onclick="removeMask(${idx})" class="text-slate-400 hover:text-rose-400 font-bold ml-1">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    // Export Options
+    function downloadImage() {
+      if (!img.src) return;
+      render();
+      const format = document.getElementById('exportFormat').value;
+      const ext = format.split('/')[1];
+      const link = document.createElement('a');
+      link.download = `anonymized-photo.${ext}`;
+      link.href = canvas.toDataURL(format, 0.92);
+      link.click();
+    }
+
+    async function copyToClipboard() {
+      if (!img.src) return;
+      render();
+      canvas.toBlob(async (blob) => {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          alert('Copied anonymized image to clipboard!');
+        } catch (err) {
+          alert('Failed to copy. Try downloading instead.');
+        }
+      }, 'image/png');
+    }
+  </script>
+</body>
+</html>

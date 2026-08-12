@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Barcode Generator — Utility Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .display { font-family:'Space Grotesk',sans-serif; }
+  input[type="text"], select, textarea { 
+    background:#14283b; 
+    border:1px solid rgba(143,176,204,.16); 
+    color: #e7eef4;
+  }
+  input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
+  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; transition: background 0.15s ease; }
+  button.primary:hover { background:#93e5da; }
+  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; transition: all 0.15s ease; }
+  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  input[type="color"] {
+    -webkit-appearance: none;
+    border: none;
+    cursor: pointer;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+  input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(143,176,204,.3); border-radius: 4px; }
+  
+  input[type="range"] {
+    accent-color: #6fd8cb;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+  <div class="mx-auto max-w-3xl px-6 py-10">
+    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
+    <h1 class="display text-2xl font-bold mt-4 mb-1">Barcode Generator</h1>
+    <p class="text-sm text-slate-400 mb-6">Create high-resolution barcodes for products, inventory, logistics, and retail in multiple standard formats.</p>
+
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button type="button" onclick="setPreset('CODE128', 'UtilityHub-2026')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Code 128 (Text/Digits)</button>
+      <button type="button" onclick="setPreset('EAN13', '9780201379624')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">EAN-13 (Books/Retail)</button>
+      <button type="button" onclick="setPreset('UPC', '012345678905')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">UPC-A (US Retail)</button>
+      <button type="button" onclick="setPreset('CODE39', 'HUB-987')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Code 39 (Logistics)</button>
+      <button type="button" onclick="setPreset('ITF14', '10012345678902')" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">ITF-14 (Cartons)</button>
+    </div>
+
+    <div class="mb-6">
+      <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Barcode Content</label>
+      <input id="input" type="text" value="UtilityHub-2026" placeholder="Enter barcode data…" class="w-full rounded-md p-3 text-sm mono">
+      <p id="errorMsg" class="text-xs text-rose-400 mt-1.5 hidden"></p>
+    </div>
+
+    <div class="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4 rounded-md border border-white/10 p-4 bg-[#14283b]/50">
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Symbology</label>
+        <select id="symbology" class="w-full rounded-md p-2 text-xs">
+          <option value="CODE128" selected>Code 128 (Auto)</option>
+          <option value="EAN13">EAN-13 (12-13 digits)</option>
+          <option value="EAN8">EAN-8 (7-8 digits)</option>
+          <option value="UPC">UPC-A (11-12 digits)</option>
+          <option value="CODE39">Code 39</option>
+          <option value="ITF14">ITF-14 (13-14 digits)</option>
+          <option value="MSI">MSI (Digits only)</option>
+          <option value="pharmacode">Pharmacode</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Bar Width (<span id="widthVal">2</span>px)</label>
+        <input id="barWidth" type="range" min="1" max="4" step="1" value="2" class="w-full mt-2">
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Bar Height (<span id="heightVal">80</span>px)</label>
+        <input id="barHeight" type="range" min="30" max="150" step="5" value="80" class="w-full mt-2">
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Margin (<span id="marginVal">10</span>px)</label>
+        <input id="margin" type="range" min="0" max="30" step="2" value="10" class="w-full mt-2">
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Foreground Color</label>
+        <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-md border border-slate-700">
+          <input id="fgColor" type="color" value="#000000" class="h-6 w-8 rounded cursor-pointer bg-transparent">
+          <span id="fgColorHex" class="mono text-xs text-slate-300">#000000</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Background Color</label>
+        <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-md border border-slate-700">
+          <input id="bgColor" type="color" value="#FFFFFF" class="h-6 w-8 rounded cursor-pointer bg-transparent">
+          <span id="bgColorHex" class="mono text-xs text-slate-300">#FFFFFF</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Text Label</label>
+        <select id="displayValue" class="w-full rounded-md p-2 text-xs">
+          <option value="true" selected>Show Text Below</option>
+          <option value="false">Hide Text</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mono text-[11px] uppercase tracking-wide text-slate-400 block mb-1.5">Format Export</label>
+        <select id="exportFormat" class="w-full rounded-md p-2 text-xs">
+          <option value="png" selected>PNG</option>
+          <option value="svg">SVG</option>
+          <option value="jpg">JPG</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center justify-center rounded-md border border-slate-800 bg-[#14283b] p-8 mb-6 min-h-[220px]">
+      <div id="previewBox" class="p-4 rounded bg-white shadow-xl flex items-center justify-center max-w-full overflow-x-auto">
+        <canvas id="barcodeCanvas"></canvas>
+      </div>
+      <p id="barcodeStatus" class="mono text-xs text-slate-400 mt-4">Live Preview Ready</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button id="downloadBtn" type="button" class="primary flex-1 py-2.5 rounded-md text-sm text-center">
+        Download PNG
+      </button>
+      <button id="copyBtn" type="button" class="secondary flex-1 py-2.5 rounded-md text-sm text-center">
+        Copy Image
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const input = document.getElementById('input');
+    const symbology = document.getElementById('symbology');
+    const barWidth = document.getElementById('barWidth');
+    const barHeight = document.getElementById('barHeight');
+    const margin = document.getElementById('margin');
+    const fgColor = document.getElementById('fgColor');
+    const bgColor = document.getElementById('bgColor');
+    const displayValue = document.getElementById('displayValue');
+    const exportFormat = document.getElementById('exportFormat');
+    const canvas = document.getElementById('barcodeCanvas');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const barcodeStatus = document.getElementById('barcodeStatus');
+
+    // Live value indicators
+    const widthVal = document.getElementById('widthVal');
+    const heightVal = document.getElementById('heightVal');
+    const marginVal = document.getElementById('marginVal');
+    const fgColorHex = document.getElementById('fgColorHex');
+    const bgColorHex = document.getElementById('bgColorHex');
+
+    // Update Barcode
+    function generateBarcode() {
+      const value = input.value.trim();
+      
+      // Update numerical labels
+      widthVal.textContent = barWidth.value;
+      heightVal.textContent = barHeight.value;
+      marginVal.textContent = margin.value;
+      fgColorHex.textContent = fgColor.value.toUpperCase();
+      bgColorHex.textContent = bgColor.value.toUpperCase();
+
+      if (!value) {
+        errorMsg.textContent = 'Please enter text or digits to generate a barcode.';
+        errorMsg.classList.remove('hidden');
+        barcodeStatus.textContent = 'Awaiting input...';
+        return;
+      }
+
+      try {
+        JsBarcode(canvas, value, {
+          format: symbology.value,
+          width: parseInt(barWidth.value, 10),
+          height: parseInt(barHeight.value, 10),
+          margin: parseInt(margin.value, 10),
+          lineColor: fgColor.value,
+          background: bgColor.value,
+          displayValue: displayValue.value === 'true',
+          font: 'IBM Plex Mono',
+          fontSize: 14,
+          textMargin: 4
+        });
+
+        errorMsg.classList.add('hidden');
+        barcodeStatus.textContent = `Generated ${symbology.value} Barcode`;
+      } catch (err) {
+        errorMsg.textContent = `Invalid data format for ${symbology.value}. ${getFormatHelp(symbology.value)}`;
+        errorMsg.classList.remove('hidden');
+        barcodeStatus.textContent = 'Generation Error';
+      }
+    }
+
+    function getFormatHelp(format) {
+      switch (format) {
+        case 'EAN13': return 'Requires 12 or 13 numeric digits.';
+        case 'EAN8': return 'Requires 7 or 8 numeric digits.';
+        case 'UPC': return 'Requires 11 or 12 numeric digits.';
+        case 'ITF14': return 'Requires 13 or 14 numeric digits.';
+        case 'MSI': return 'Requires numeric digits only.';
+        default: return 'Please check input characters.';
+      }
+    }
+
+    function setPreset(format, val) {
+      symbology.value = format;
+      input.value = val;
+      generateBarcode();
+    }
+
+    // Download Functionality
+    function downloadBarcode() {
+      const format = exportFormat.value;
+      const fileName = `barcode-${symbology.value.toLowerCase()}.${format}`;
+
+      if (format === 'svg') {
+        // Render temporary SVG
+        const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        try {
+          JsBarcode(svgEl, input.value.trim(), {
+            format: symbology.value,
+            width: parseInt(barWidth.value, 10),
+            height: parseInt(barHeight.value, 10),
+            margin: parseInt(margin.value, 10),
+            lineColor: fgColor.value,
+            background: bgColor.value,
+            displayValue: displayValue.value === 'true',
+            font: 'IBM Plex Mono'
+          });
+          const svgData = new XMLSerializer().serializeToString(svgEl);
+          const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          alert('Failed to generate SVG.');
+        }
+      } else {
+        // PNG / JPG
+        let mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+        
+        if (format === 'jpg') {
+          // Flatten canvas with white background if transparent
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = canvas.height;
+          const ctx = tempCanvas.getContext('2d');
+          ctx.fillStyle = bgColor.value;
+          ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+          ctx.drawImage(canvas, 0, 0);
+          
+          const a = document.createElement('a');
+          a.download = fileName;
+          a.href = tempCanvas.toDataURL(mimeType, 0.95);
+          a.click();
+        } else {
+          const a = document.createElement('a');
+          a.download = fileName;
+          a.href = canvas.toDataURL(mimeType);
+          a.click();
+        }
+      }
+    }
+
+    // Copy Image to Clipboard
+    async function copyBarcode() {
+      try {
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          copyBtn.innerText = 'Copied!';
+          setTimeout(() => copyBtn.innerText = 'Copy Image', 2000);
+        }, 'image/png');
+      } catch (err) {
+        alert('Copying image failed or is not supported by your browser.');
+      }
+    }
+
+    // Event Listeners
+    input.addEventListener('input', generateBarcode);
+    symbology.addEventListener('change', generateBarcode);
+    barWidth.addEventListener('input', generateBarcode);
+    barHeight.addEventListener('input', generateBarcode);
+    margin.addEventListener('input', generateBarcode);
+    fgColor.addEventListener('input', generateBarcode);
+    bgColor.addEventListener('input', generateBarcode);
+    displayValue.addEventListener('change', generateBarcode);
+
+    exportFormat.addEventListener('change', () => {
+      downloadBtn.innerText = `Download ${exportFormat.value.toUpperCase()}`;
+    });
+
+    downloadBtn.addEventListener('click', downloadBarcode);
+    copyBtn.addEventListener('click', copyBarcode);
+
+    // Initial Generation
+    generateBarcode();
+  </script>
+</body>
+</html>
