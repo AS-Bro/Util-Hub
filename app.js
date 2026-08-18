@@ -41,6 +41,14 @@ const CONFIG = {
 
 const toolsData = [
   {
+    id: 'terminal-editor',
+    title: 'Terminal Editor',
+    description: 'Edit the terminal UI.',
+    category: 'Development',
+    url: 'tools/terminal-editor.html',
+    icon: 'code',
+  },
+  {
     id: 'age-calculator',
     title: 'Age Calculator',
     description: 'Calculate your age in years, months, and days.',

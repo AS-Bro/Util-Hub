@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ubuntu Terminal UI Studio — Pro Workstation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@600;700&family=Source+Code+Pro:wght@400;600&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+  <style>
+    body { background: #0b131e; color: #e7eef4; font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'Ubuntu Mono', monospace; }
+    .display { font-family: 'Space Grotesk', sans-serif; }
+    .card { background: #112131; border: 1px solid rgba(143, 176, 204, 0.16); }
+    
+    input[type="text"], input[type="number"], select, textarea { 
+      background-color: #0b1622 !important; 
+      border: 1px solid rgba(143, 176, 204, 0.25) !important; 
+      color: #e7eef4 !important; 
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus { 
+      outline: none; 
+      border-color: #6fd8cb !important; 
+      box-shadow: 0 0 0 1px #6fd8cb;
+    }
+    
+    input[type="color"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 38px;
+      width: 100%;
+      padding: 3px;
+      background-color: #0b1622;
+      border: 1px solid rgba(143, 176, 204, 0.2);
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
+    .btn-action {
+      background: #6fd8cb;
+      color: #0e1c2b;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover {
+      background: #5bc4b7;
+      box-shadow: 0 0 12px rgba(111, 216, 203, 0.3);
+    }
+    .btn-secondary {
+      background: #172c42;
+      border: 1px solid rgba(143, 176, 204, 0.2);
+      color: #e7eef4;
+      transition: all 0.15s ease;
+    }
+    .btn-secondary:hover { border-color: #6fd8cb; }
+
+    .stage { transform-origin: center center; transition: transform 0.1s ease-out; }
+    
+    #terminal { 
+      position: relative; 
+      overflow: hidden; 
+      white-space: pre; 
+      -webkit-font-smoothing: antialiased; 
+      border-radius: 8px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      transition: box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    .term-glass {
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    .term-glow {
+      box-shadow: 0 0 35px rgba(111, 216, 203, 0.25) !important;
+    }
+
+    .line { white-space: pre; min-height: 1.1em; padding: 0 4px; border-radius: 2px; display: flex; align-items: flex-start; }
+    .line-num { display: inline-block; min-width: 2.2em; color: rgba(255,255,255,0.3); text-align: right; margin-right: 12px; user-select: none; }
+    .line-highlight { background: rgba(255, 255, 255, 0.08); border-left: 3px solid #6fd8cb; }
+    .user { color: #4e9a06; font-weight: 700; }
+    .path { color: #3465a4; font-weight: 700; }
+    .white { color: #ffffff; }
+    .content-body { display: inline; flex: 1; }
+
+    .cursor-solid { display: inline-block; width: 0.62em; height: 1.05em; background: #ffffff; vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-hollow { display: inline-block; width: 0.62em; height: 1.05em; border: 1px solid #ffffff; vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-line { display: inline-block; width: 2px; height: 1.05em; background: #ffffff; vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-blink { animation: blink 1s step-end infinite; }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .line-error { color: #ff5555; }
+    .line-success { color: #50fa7b; }
+    .line-comment { color: #6272a4; font-style: italic; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b131e; }
+    ::-webkit-scrollbar-thumb { background: #1c334d; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Header Bar -->
+  <header class="border-b border-slate-800 bg-[#0b131e]/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-teal-400/10 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold display text-xl">
+          &gt;_
+        </div>
+        <div>
+          <h1 class="display font-bold text-lg text-slate-100 leading-tight">Ubuntu Terminal UI Studio</h1>
+          <p class="text-xs text-slate-400">Ubuntu Terminal &bull; Editor</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="reset" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+          <span>🔄</span> Reset
+        </button>
+        <button id="copy" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+          <span>📋</span> Copy Text
+        </button>
+        <button id="downloadScript" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+          <span>📜</span> Export .sh
+        </button>
+        <button id="download" class="btn-action px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5">
+          <span>💾</span> Export PNG
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 w-full space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Controls Sidebar -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- Theme & Font Settings -->
+        <div class="card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span>🎨</span> Color Schemes &amp; Fonts
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Color Preset</label>
+              <select id="themePreset" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="ubuntu" selected>Ubuntu Purple</option>
+                <option value="dracula">Dracula Dark</option>
+                <option value="monokai">Monokai Pro</option>
+                <option value="matrix">Matrix Hacker</option>
+                <option value="cyberpunk">Cyberpunk Neon</option>
+                <option value="solarized">Solarized Dark</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Font Family</label>
+              <select id="fontFamily" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="'Ubuntu Mono', monospace" selected>Ubuntu Mono</option>
+                <option value="'Fira Code', monospace">Fira Code</option>
+                <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                <option value="'Source Code Pro', monospace">Source Code Pro</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Dimensions -->
+        <div class="card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span>🖼️</span> Canvas Layout &amp; Spacing
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Width (px)</label>
+              <input id="w" type="number" value="1280" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Height (px)</label>
+              <input id="h" type="number" value="720" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Font Size (px)</label>
+              <input id="font" type="number" value="22" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Line Spacing</label>
+              <input id="line" type="number" step="0.05" value="1.2" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Padding X (px)</label>
+              <input id="px" type="number" value="24" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Padding Y (px)</label>
+              <input id="py" type="number" value="18" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Background Color</label>
+              <input id="bg" type="color" value="#300a24">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Default Text Color</label>
+              <input id="text" type="color" value="#ffffff">
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Display & Cursor Options -->
+        <div class="card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span>✨</span> Terminal Display FX &amp; Cursor
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Cursor Style</label>
+              <select id="cursorStyle" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="hollow" selected>Hollow Box</option>
+                <option value="solid">Solid Block</option>
+                <option value="line">Vertical Line</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Visual FX</label>
+              <select id="visualFx" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+                <option value="none" selected>Standard View</option>
+                <option value="glow">Neon Glow Shadow</option>
+                <option value="glass">Glassmorphic Blur</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+              <input id="hideCursor" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
+              <span class="font-medium text-slate-200">Hide Cursor</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+              <input id="cursorBlink" type="checkbox" checked class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
+              <span>Blinking</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+              <input id="showLineNums" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
+              <span>Line Nums</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Prompt Variables -->
+        <div class="card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+            <span>⚙️</span> Prompt Variables
+          </h3>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Username</label>
+              <input id="username" type="text" value="student" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Hostname</label>
+              <input id="hostname" type="text" value="student-OptiPlex-390" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Directory</label>
+              <input id="directory" type="text" value="~/Desktop/kailas" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">User Color</label>
+              <input id="userColor" type="color" value="#4e9a06">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Path Color</label>
+              <input id="pathColor" type="color" value="#3465a4">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Prompt Symbol</label>
+              <input id="promptSymbol" type="text" value="$" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono text-center">
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Presets & Input -->
+        <div class="card p-4 rounded-xl space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2">
+              <span>📝</span> Terminal Input
+            </h3>
+            <select id="codePreset" class="px-2 py-1 rounded text-xs bg-[#0b1622] border border-slate-700">
+              <option value="" disabled selected>Load Clean Preset...</option>
+              <option value="cprog">C Compile &amp; Run</option>
+              <option value="pyt">Python Execution</option>
+              <option value="git">Git Workflow</option>
+              <option value="neo">Neofetch Summary</option>
+              <option value="docker">Docker Status Check</option>
+            </select>
+          </div>
+          <div>
+            <textarea id="content" rows="6" class="w-full p-3 rounded-xl mono text-xs leading-relaxed resize-y focus:ring-1 focus:ring-teal-400">$ gedit hello.c
+$ gcc hello.c -o hello
+! compilation warning: unused variable 'x'
+$ ./hello
+> Hello World! Execution complete.</textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Preview Area -->
+      <div class="lg:col-span-7 space-y-4 flex flex-col">
+        
+        <!-- Viewport Toolbar -->
+        <div class="flex items-center justify-between bg-[#112131] p-3 rounded-xl border border-slate-700/50">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 font-medium">Terminal Viewport:</span>
+            <span id="sizeLabel" class="text-xs text-teal-300 mono font-bold">1280 × 720</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="zoomLevel" class="text-xs text-slate-400 mono font-semibold px-2">100%</span>
+            <button id="zoomOut" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom Out">-</button>
+            <button id="zoomIn" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom In">+</button>
+            <button id="zoomReset" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-medium">1:1</button>
+            <button id="fit" class="btn-secondary px-3 py-1 rounded-lg text-xs font-medium">Fit Preview</button>
+          </div>
+        </div>
+
+        <!-- Terminal Stage -->
+        <div class="relative card flex-1 min-h-[550px] flex items-center justify-center p-6 overflow-auto bg-[#070d14] rounded-xl border border-slate-800" id="previewArea">
+          <div class="stage" id="stage">
+            <div id="terminal"></div>
+          </div>
+          <div id="toast" class="hidden absolute bottom-4 right-4 bg-teal-400 text-slate-950 font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg transition-all">
+            Action Applied!
+          </div>
+        </div>
+
+        <!-- Formatting Reference -->
+        <div class="card p-3.5 rounded-xl text-xs text-slate-400 space-y-1">
+          <div class="font-semibold text-slate-200">💡 Custom Syntax Guide:</div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <p>• <code class="text-teal-300 font-bold">$</code> = Command prompt line</p>
+            <p>• <code class="text-amber-300 font-bold">*</code> = Line focus highlight</p>
+            <p>• <code class="text-rose-400 font-bold">!</code> = Error / Warning line</p>
+            <p>• <code class="text-emerald-400 font-bold">&gt;</code> = Program output</p>
+            <p>• <code class="text-slate-500 font-bold">#</code> = Comment string</p>
+            <p>• <code class="text-sky-300 font-bold">**text**</code> = Bold output font</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const $=id=>document.getElementById(id);
+    let currentZoom = 1.0;
+    let autoFitMode = true;
+
+    const fields=["w","h","font","line","px","py","bg","text","userColor","pathColor","promptSymbol","username","hostname","directory","content","cursorStyle","hideCursor","cursorBlink","showLineNums","visualFx","fontFamily"];
+    fields.forEach(id=>$(id).addEventListener("input",()=>{ autoFitMode = false; render(); }));
+
+    // Dynamic Color Presets
+    $("themePreset").addEventListener("change", () => {
+      const v = $("themePreset").value;
+      if (v === "ubuntu") {
+        $("bg").value = "#300a24"; $("text").value = "#ffffff";
+        $("userColor").value = "#4e9a06"; $("pathColor").value = "#3465a4";
+      } else if (v === "dracula") {
+        $("bg").value = "#282a36"; $("text").value = "#f8f8f2";
+        $("userColor").value = "#50fa7b"; $("pathColor").value = "#bd93f9";
+      } else if (v === "monokai") {
+        $("bg").value = "#272822"; $("text").value = "#f8f8f2";
+        $("userColor").value = "#a6e22e"; $("pathColor").value = "#66d9ef";
+      } else if (v === "matrix") {
+        $("bg").value = "#050a05"; $("text").value = "#00ff66";
+        $("userColor").value = "#00cc44"; $("pathColor").value = "#008822";
+      } else if (v === "cyberpunk") {
+        $("bg").value = "#120e24"; $("text").value = "#00f0ff";
+        $("userColor").value = "#ff0055"; $("pathColor").value = "#ffe600";
+      } else if (v === "solarized") {
+        $("bg").value = "#002b36"; $("text").value = "#839496";
+        $("userColor").value = "#859900"; $("pathColor").value = "#268bd2";
+      }
+      render();
+    });
+
+    // Clean Code Presets
+    $("codePreset").addEventListener("change", () => {
+      const v = $("codePreset").value;
+      if (v === "cprog") {
+        $("content").value = "$ gedit main.c\n$ gcc -Wall main.c -o app\n! main.c:6: warning: implicit declaration of function\n$ ./app\n> Process finished with status code 0";
+      } else if (v === "pyt") {
+        $("content").value = "$ python3 -m venv venv\n$ source venv/bin/activate\n$ python3 script.py\n> Processing dataset...\n> 100% complete successfully!";
+      } else if (v === "git") {
+        $("content").value = "$ git status\n$ git add .\n$ git commit -m 'feat: complete pure terminal upgrade'\n> [main a1b2c3d] feat: complete pure terminal upgrade\n$ git push origin main";
+      } else if (v === "neo") {
+        $("content").value = "$ neofetch\n> OS: Ubuntu 24.04 LTS x86_64\n> Kernel: 6.8.0-generic\n> Uptime: 4 hours, 12 mins\n> Shell: bash 5.2.21\n> Terminal: GNOME Terminal";
+      } else if (v === "docker") {
+        $("content").value = "$ docker ps -a\n> CONTAINER ID   IMAGE          COMMAND                  CREATED         STATUS\n> e3b0c44298fc   redis:alpine   \"docker-entrypoint.s…\"   2 hours ago     Up 2 hours\n$ docker logs -f redis-server";
+      }
+      render();
+    });
+
+    function esc(s){
+      return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+    }
+
+    function parseFormattedText(str) {
+      let escaped = esc(str);
+      escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      return escaped;
+    }
+
+    function promptHTML(){
+      const sym = esc($("promptSymbol").value || "$");
+      return `<span class="user prompt-text">${esc($("username").value)}@${esc($("hostname").value)}:</span><span class="path prompt-text">${esc($("directory").value)}</span><span class="white prompt-text">${sym}</span>`;
+    }
+
+    function render(){
+      const w=+$("w").value||1280, h=+$("h").value||720;
+      const t=$("terminal");
+      
+      t.style.width = w + "px";
+      t.style.height = h + "px";
+      t.style.fontSize=(+$("font").value||22)+"px";
+      t.style.fontFamily=$("fontFamily").value;
+      t.style.lineHeight=$("line").value||1.2;
+      t.style.padding=`${+$("py").value||18}px ${+$("px").value||24}px`;
+      t.style.background=$("bg").value;
+      t.style.color=$("text").value;
+
+      t.classList.remove("term-glass", "term-glow");
+      if ($("visualFx").value === "glass") t.classList.add("term-glass");
+      if ($("visualFx").value === "glow") t.classList.add("term-glow");
+
+      const lines=$("content").value.split("\n");
+      const showNums = $("showLineNums").checked;
+      let html="";
+      
+      lines.forEach((line, index) => {
+        let raw = line.trimStart();
+        let isHighlighted = false;
+
+        if (raw.startsWith("*")) {
+          isHighlighted = true;
+          raw = raw.substring(1).trimStart();
+        }
+
+        const highlightClass = isHighlighted ? " line-highlight" : "";
+        const numSpan = showNums ? `<span class="line-num">${index + 1}</span>` : "";
+
+        if (raw.startsWith("$")) {
+          let cmd = raw.replace(/^\$\s?/, "");
+          html += `<div class="line${highlightClass}">${numSpan}<div class="content-body">${promptHTML()} <span class="white">${parseFormattedText(cmd)}</span></div></div>`;
+        } else if (raw.startsWith("!")) {
+          html += `<div class="line line-error${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw.substring(1))}</div></div>`;
+        } else if (raw.startsWith(">")) {
+          html += `<div class="line line-success${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw.substring(1))}</div></div>`;
+        } else if (raw.startsWith("#")) {
+          html += `<div class="line line-comment${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw)}</div></div>`;
+        } else {
+          html += `<div class="line${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw)}</div></div>`;
+        }
+      });
+
+      // Cursor rendering logic with Hide Cursor override
+      const isHidden = $("hideCursor").checked;
+      const cursorStyle = $("cursorStyle").value;
+      const cursorBlink = $("cursorBlink").checked ? " cursor-blink" : "";
+      let cursorHTML = "";
+
+      if (!isHidden) {
+        cursorHTML = `<span class="cursor-${cursorStyle}${cursorBlink}"></span>`;
+      }
+
+      const lastNumSpan = showNums ? `<span class="line-num">${lines.length + 1}</span>` : "";
+      html += `<div class="line">${lastNumSpan}<div class="content-body">${promptHTML()} ${cursorHTML}</div></div>`;
+      
+      t.innerHTML = html;
+
+      t.querySelectorAll(".user").forEach(e=>e.style.color=$("userColor").value);
+      t.querySelectorAll(".path").forEach(e=>e.style.color=$("pathColor").value);
+
+      $("stage").style.width=w+"px";
+      $("stage").style.height=h+"px";
+      $("sizeLabel").textContent=`${w} × ${h}`;
+
+      if (autoFitMode) {
+        fit();
+      } else {
+        applyZoom(currentZoom);
+      }
+    }
+
+    function applyZoom(zoom) {
+      currentZoom = zoom;
+      const w=+$("w").value, h=+$("h").value;
+      const stage=$("stage");
+      stage.style.transform=`scale(${currentZoom})`;
+      stage.style.margin=`${(h*(1-currentZoom))/2}px ${(w*(1-currentZoom))/2}px`;
+      $("zoomLevel").textContent = Math.round(currentZoom * 100) + "%";
+    }
+
+    function fit(){
+      autoFitMode = true;
+      const area=$("previewArea");
+      const w=+$("w").value, h=+$("h").value;
+      const scale=Math.min((area.clientWidth-48)/w, (area.clientHeight-48)/h, 1);
+      applyZoom(Math.max(scale, 0.05));
+    }
+
+    $("zoomIn").onclick = () => { autoFitMode = false; applyZoom(Math.min(currentZoom + 0.15, 3.0)); };
+    $("zoomOut").onclick = () => { autoFitMode = false; applyZoom(Math.max(currentZoom - 0.15, 0.1)); };
+    $("zoomReset").onclick = () => { autoFitMode = false; applyZoom(1.0); };
+    $("fit").onclick = fit;
+    window.addEventListener("resize", () => { if (autoFitMode) fit(); });
+
+    $("reset").onclick=()=>{
+      $("w").value=1280;$("h").value=720;
+      $("font").value=22;$("line").value=1.2;$("px").value=24;$("py").value=18;
+      $("themePreset").value="ubuntu";
+      $("fontFamily").value="'Ubuntu Mono', monospace";
+      $("cursorStyle").value="hollow";
+      $("visualFx").value="none";
+      $("hideCursor").checked=false;
+      $("cursorBlink").checked=true;
+      $("showLineNums").checked=false;
+      $("bg").value="#300a24";$("text").value="#ffffff";
+      $("userColor").value="#4e9a06";$("pathColor").value="#3465a4";
+      $("promptSymbol").value="$";
+      $("username").value="student";$("hostname").value="student-OptiPlex-390";
+      $("directory").value="~/Desktop/kailas";
+      $("content").value="$ gedit hello.c\n$ gcc hello.c -o hello\n! compilation warning: unused variable 'x'\n$ ./hello\n> Hello World! Execution complete.";
+      autoFitMode = true;
+      render();
+      showToast("Reset Desktop Settings");
+    };
+
+    $("copy").onclick=async()=>{
+      await navigator.clipboard.writeText($("content").value.replace(/\*\*|\*|^\$ /gm, ''));
+      showToast("Copied Commands!");
+    };
+
+    $("downloadScript").onclick=()=>{
+      const scriptContent = "#!/bin/bash\n\n" + $("content").value
+        .split('\n')
+        .filter(l => l.startsWith('$'))
+        .map(l => l.replace(/^\$\s?/, ''))
+        .join('\n');
+
+      const blob = new Blob([scriptContent], { type: "text/x-shellscript" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "terminal-script.sh";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      showToast("Exported .sh Script!");
+    };
+
+    $("download").onclick=async()=>{
+      await document.fonts.load(`${+$("font").value||22}px ${$("fontFamily").value}`);
+      const w=+$("w").value, h=+$("h").value;
+      const canvas=document.createElement("canvas"); canvas.width=w; canvas.height=h;
+      const ctx=canvas.getContext("2d");
+
+      ctx.fillStyle=$("bg").value;
+      ctx.fillRect(0,0,w,h);
+
+      const size=+$("font").value||22, lh=size*(+$("line").value||1.2);
+      const px=+$("px").value||24, py=+$("py").value||18;
+      const baseFont = $("fontFamily").value;
+      ctx.textBaseline="top";
+
+      const sym = $("promptSymbol").value || "$";
+      const prompt=`${$("username").value}@${$("hostname").value}:`;
+      const path=$("directory").value;
+      const lines=$("content").value.split("\n");
+      let y=py;
+
+      function drawPrompt(){
+        ctx.font = `normal 700 ${size}px ${baseFont}`;
+        ctx.fillStyle=$("userColor").value;ctx.fillText(prompt,px,y);
+        const a=ctx.measureText(prompt).width;
+        ctx.fillStyle=$("pathColor").value;ctx.fillText(path,px+a,y);
+        const b=ctx.measureText(path).width;
+        ctx.fillStyle=$("text").value;ctx.fillText(sym,px+a+b,y);
+        return a+b+ctx.measureText(sym).width;
+      }
+
+      lines.forEach(line => {
+        let raw = line.trimStart();
+        if (raw.startsWith("*")) raw = raw.substring(1).trimStart();
+
+        if (raw.startsWith("$")) {
+          let cmd = raw.replace(/^\$\s?/, "");
+          let off = drawPrompt();
+          ctx.font = `normal 400 ${size}px ${baseFont}`;
+          ctx.fillStyle = $("text").value;
+          ctx.fillText(" " + cmd, px + off, y);
+        } else if (raw.startsWith("!")) {
+          ctx.font = `normal 400 ${size}px ${baseFont}`;
+          ctx.fillStyle = "#ff5555";
+          ctx.fillText(raw.substring(1), px, y);
+        } else if (raw.startsWith(">")) {
+          ctx.font = `normal 400 ${size}px ${baseFont}`;
+          ctx.fillStyle = "#50fa7b";
+          ctx.fillText(raw.substring(1), px, y);
+        } else {
+          ctx.font = `normal 400 ${size}px ${baseFont}`;
+          ctx.fillStyle = $("text").value;
+          ctx.fillText(raw, px, y);
+        }
+        y += lh;
+      });
+
+      let off=drawPrompt(); 
+      if(!$("hideCursor").checked){
+        ctx.strokeStyle="#ffffff";
+        ctx.lineWidth=1;
+        ctx.strokeRect(px+off+6,y+1,size*.62,size*1.05);
+      }
+      
+      canvas.toBlob(blob=>{
+        const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ubuntu-terminal-output.png";a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+        showToast("Exported PNG!");
+      },"image/png");
+    };
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2000);
+    }
+
+    document.fonts.ready.then(render);
+    render();
+  </script>
+</body>
+</html>
