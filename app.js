@@ -30,7 +30,7 @@ const CONFIG = {
   maxRecents: 5,
   // Swap this for a real inbox, or point buildRequestPayload() at a form
   // endpoint (Formspree, Getform, your own API, etc.) instead of mailto:.
-  requestEmail: 'requests@utilityhub.example',
+  requestEmail: 'mailto:probro.offl@gmail.com',
   // Optional: force a specific 3-letter code for a category's coordinate
   // tag instead of the auto-generated one. Leave empty to auto-derive.
   categoryCodeOverrides: {},
@@ -48,6 +48,14 @@ const toolsData = [
     url: 'tools/terminal-editor.html',
     icon: 'code',
   },
+  // {
+  //   id: 'share-qr',
+  //   title: 'Share QR',
+  //   description: 'Generate and share QR codes for any URL.',
+  //   category: 'Utility',
+  //   url: 'tools/share-qr.html',
+  //   icon: 'share',
+  // },
   {
     id: 'age-calculator',
     title: 'Age Calculator',
@@ -98,7 +106,7 @@ const toolsData = [
   },
   {
     id: 'basic-pdf-tool',
-    title: 'PDF Tool',
+    title: 'Basic PDF Tool',
     description: 'Split pdf files with ease.',
     category: 'Document',
     url: 'tools/pdf-tool.html',

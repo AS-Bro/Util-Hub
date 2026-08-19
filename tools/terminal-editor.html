@@ -113,7 +113,7 @@
         </div>
         <div>
           <h1 class="display font-bold text-base sm:text-lg text-slate-100 leading-tight">Ubuntu Terminal UI Studio</h1>
-          <p class="text-xs text-slate-400">Ubuntu Terminal &bull; Editor</p>
+          <p class="text-xs text-slate-400">Pure Canvas &bull; Feature-Packed Pro</p>
         </div>
       </div>
       <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 shrink-0">
@@ -123,12 +123,13 @@
         <button id="copy" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
           <span>📋</span> Copy Text
         </button>
-        <button id="downloadScript" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
-          <span>📜</span> Export .sh
-        </button>
         <button id="download" class="btn-action px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 whitespace-nowrap">
           <span>💾</span> Export PNG
         </button>
+        <button id="downloadScript" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
+          <span>📜</span> Export .sh
+        </button>
+        
       </div>
     </div>
   </header>
@@ -296,17 +297,22 @@
             <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2">
               <span>📝</span> Terminal Input
             </h3>
-            <select id="codePreset" class="w-full sm:w-auto px-2 py-1 rounded text-xs bg-[#0b1622] border border-slate-700">
-              <option value="" disabled selected>Load Clean Preset...</option>
-              <option value="cprog">C Compile &amp; Run</option>
-              <option value="pyt">Python Execution</option>
-              <option value="git">Git Workflow</option>
-              <option value="neo">Neofetch Summary</option>
-              <option value="docker">Docker Status Check</option>
-            </select>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <button id="insertTab" class="btn-secondary px-2 py-1 rounded text-xs font-semibold flex items-center gap-1" title="Insert Tab Space">
+                <span>⇥</span> Add Tab
+              </button>
+              <select id="codePreset" class="w-full sm:w-auto px-2 py-1 rounded text-xs bg-[#0b1622] border border-slate-700">
+                <option value="" disabled selected>Load Clean Preset...</option>
+                <option value="cprog">C Compile &amp; Run</option>
+                <option value="pyt">Python Execution</option>
+                <option value="git">Git Workflow</option>
+                <option value="neo">Neofetch Summary</option>
+                <option value="docker">Docker Status Check</option>
+              </select>
+            </div>
           </div>
           <div>
-            <textarea id="content" rows="6" class="w-full p-3 rounded-xl mono text-xs leading-relaxed resize-y focus:ring-1 focus:ring-teal-400">$ gedit hello.c
+            <textarea id="content" rows="6" class="w-full p-3 rounded-xl mono text-xs leading-relaxed resize-y focus:ring-1 focus:ring-teal-400" placeholder="Type or paste here. Press Tab or click 'Add Tab' to insert indentations...">$ gedit hello.c
 $ gcc hello.c -o hello
 ! compilation warning: unused variable 'x'
 $ ./hello
@@ -353,7 +359,7 @@ $ ./hello
             <p>• <code class="text-rose-400 font-bold">!</code> = Error / Warning line</p>
             <p>• <code class="text-emerald-400 font-bold">&gt;</code> = Program output</p>
             <p>• <code class="text-slate-500 font-bold">#</code> = Comment string</p>
-            <p>• <code class="text-sky-300 font-bold">**text**</code> = Bold output font</p>
+            <p>• <code class="text-sky-300 font-bold">Tab key / ⇥</code> = Indent tab spaces</p>
           </div>
         </div>
 
@@ -369,6 +375,29 @@ $ ./hello
 
     const fields=["w","h","font","line","px","py","bg","text","userColor","pathColor","promptSymbol","username","hostname","directory","content","cursorStyle","hideCursor","cursorBlink","showLineNums","visualFx","fontFamily"];
     fields.forEach(id=>$(id).addEventListener("input",()=>{ autoFitMode = false; render(); }));
+
+    // Tab key listener directly on textarea
+    $("content").addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        insertTabAtCursor();
+      }
+    });
+
+    // Tab button click listener
+    $("insertTab").addEventListener("click", () => {
+      insertTabAtCursor();
+      $("content").focus();
+    });
+
+    function insertTabAtCursor() {
+      const el = $("content");
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      el.value = el.value.substring(0, start) + "\t" + el.value.substring(end);
+      el.selectionStart = el.selectionEnd = start + 1;
+      render();
+    }
 
     // Dynamic Color Presets
     $("themePreset").addEventListener("change", () => {
@@ -418,6 +447,8 @@ $ ./hello
 
     function parseFormattedText(str) {
       let escaped = esc(str);
+      // Replace tabs with 4 non-breaking spaces for display
+      escaped = escaped.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
       escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
       return escaped;
@@ -471,7 +502,7 @@ $ ./hello
         } else if (raw.startsWith("#")) {
           html += `<div class="line line-comment${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw)}</div></div>`;
         } else {
-          html += `<div class="line${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(raw)}</div></div>`;
+          html += `<div class="line${highlightClass}">${numSpan}<div class="content-body">${parseFormattedText(line)}</div></div>`;
         }
       });
 
@@ -610,23 +641,26 @@ $ ./hello
       }
 
       lines.forEach(line => {
-        let raw = line.trimStart();
-        if (raw.startsWith("*")) raw = raw.substring(1).trimStart();
+        let raw = line.replace(/\t/g, '    ');
+        let isHighlighted = false;
+        if (raw.trimStart().startsWith("*")) {
+          raw = raw.replace("*", "");
+        }
 
-        if (raw.startsWith("$")) {
+        if (raw.trimStart().startsWith("$")) {
           let cmd = raw.replace(/^\$\s?/, "");
           let off = drawPrompt();
           ctx.font = `normal 400 ${size}px ${baseFont}`;
           ctx.fillStyle = $("text").value;
           ctx.fillText(" " + cmd, px + off, y);
-        } else if (raw.startsWith("!")) {
+        } else if (raw.trimStart().startsWith("!")) {
           ctx.font = `normal 400 ${size}px ${baseFont}`;
           ctx.fillStyle = "#ff5555";
-          ctx.fillText(raw.substring(1), px, y);
-        } else if (raw.startsWith(">")) {
+          ctx.fillText(raw, px, y);
+        } else if (raw.trimStart().startsWith(">")) {
           ctx.font = `normal 400 ${size}px ${baseFont}`;
           ctx.fillStyle = "#50fa7b";
-          ctx.fillText(raw.substring(1), px, y);
+          ctx.fillText(raw, px, y);
         } else {
           ctx.font = `normal 400 ${size}px ${baseFont}`;
           ctx.fillStyle = $("text").value;
