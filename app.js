@@ -30,7 +30,7 @@ const CONFIG = {
   maxRecents: 5,
   // Swap this for a real inbox, or point buildRequestPayload() at a form
   // endpoint (Formspree, Getform, your own API, etc.) instead of mailto:.
-  requestEmail: 'mailto:probro.offl@gmail.com',
+  requestEmail: 'probro.offl@gmail.com',
   // Optional: force a specific 3-letter code for a category's coordinate
   // tag instead of the auto-generated one. Leave empty to auto-derive.
   categoryCodeOverrides: {},
