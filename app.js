@@ -57,11 +57,27 @@ const toolsData = [
   //   icon: 'share',
   // },
   {
+    id: 'fam-tree',
+    title: 'Family Tree',
+    description: 'Create and visualize your family tree.',
+    category: 'Utility',
+    url: 'tools/fam-tree.html',
+    icon: 'users',
+  },
+  {
     id: 'age-calculator',
     title: 'Age Calculator',
     description: 'Calculate your age in years, months, and days.',
     category: 'Utility',
     url: 'tools/age-calculator.html',
+    icon: 'calendar',
+  },
+  {
+    id: 'age-difference',
+    title: 'Age Difference',
+    description: 'Calculate the difference in age between two people.',
+    category: 'Utility',
+    url: 'tools/age-difference.html',
     icon: 'calendar',
   },
   {
