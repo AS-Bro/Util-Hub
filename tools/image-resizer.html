@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Utility Hub / Image Resizer</title>
+<style>
+  :root{--uh-bg:#07111f;--uh-panel:#0b192a;--uh-panel2:#0d2033;--uh-line:#203b50;--uh-text:#e8f3fb;--uh-muted:#8da6b9;--uh-cyan:#54d8f5;--uh-mint:#80f0ce;--uh-danger:#ff7d91;--uh-radius:16px}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(ellipse at 15% -10%,#12314a 0,transparent 38%),var(--uh-bg);color:var(--uh-text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .uh-image-resizer{max-width:1240px;margin:auto;padding:24px 20px 54px}
+  .uh-topline{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 0 24px;border-bottom:1px solid var(--uh-line);margin-bottom:28px}
+  .uh-brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:.02em}
+  .uh-logo{width:38px;height:38px;border:1px solid #34778b;border-radius:10px;display:grid;place-items:center;color:var(--uh-cyan);background:linear-gradient(145deg,#15364b,#0a1b2c);font-size:18px}
+  .uh-brand small{display:block;font-weight:500;color:var(--uh-muted);font-size:11px;letter-spacing:.13em;text-transform:uppercase}
+  .uh-local{color:var(--uh-mint);border:1px solid #285b56;background:#0d282d;padding:7px 10px;border-radius:999px;font-size:12px;white-space:nowrap}
+  .uh-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}
+  .uh-eyebrow{color:var(--uh-cyan);font-size:11px;font-weight:750;letter-spacing:.18em;text-transform:uppercase}
+  h1{font-size:clamp(28px,4vw,42px);line-height:1.12;letter-spacing:-.04em;margin:8px 0 10px}
+  .uh-subtitle{margin:0;color:var(--uh-muted);max-width:650px}
+  .uh-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(285px,.8fr);gap:20px;align-items:start}
+  .uh-main,.uh-side{display:grid;gap:18px;min-width:0}
+  .uh-card{background:linear-gradient(145deg,rgba(15,35,54,.97),rgba(8,23,38,.98));border:1px solid var(--uh-line);border-radius:var(--uh-radius);padding:20px;box-shadow:0 14px 35px #02091335;min-width:0}
+  .uh-cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
+  .uh-cardhead h2{font-size:15px;margin:0;letter-spacing:.01em}
+  .uh-cardhead p{font-size:12px;color:var(--uh-muted);margin:4px 0 0}
+  .uh-count{font-size:12px;color:var(--uh-muted);white-space:nowrap}
+  .uh-drop{border:1px dashed #37657c;border-radius:13px;background:linear-gradient(135deg,#0d2538,#0b1c2c);padding:28px 16px;text-align:center;transition:border-color .18s,background .18s}
+  .uh-drop.is-over{border-color:var(--uh-mint);background:#10333b}
+  .uh-upload-icon{width:46px;height:46px;border:1px solid #31576d;background:#112d42;border-radius:14px;margin:0 auto 12px;display:grid;place-items:center;color:var(--uh-cyan);font-size:22px}
+  .uh-drop strong{display:block;font-size:15px}
+  .uh-drop p{margin:5px 0 15px;color:var(--uh-muted);font-size:13px}
+  .uh-actions{display:flex;flex-wrap:wrap;gap:9px}
+  .uh-actions.center{justify-content:center}
+  .uh-btn{border:1px solid #31536b;border-radius:9px;background:#11283b;color:var(--uh-text);padding:9px 13px;font-weight:650;font-size:13px;transition:transform .15s,border-color .15s,background .15s}
+  .uh-btn:hover{border-color:#4a91a9;background:#17354a}
+  .uh-btn:active{transform:translateY(1px)}
+  .uh-btn.primary{color:#06151f;border-color:transparent;background:linear-gradient(100deg,var(--uh-cyan),var(--uh-mint))}
+  .uh-btn.primary:hover{filter:brightness(1.06)}
+  .uh-btn:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.5)}
+  .uh-btn.danger{color:#ffacb7;border-color:#693746;background:#2a1a2a}
+  .uh-btn.small{padding:6px 9px;font-size:12px}
+  .uh-privacy{display:flex;gap:8px;align-items:center;color:var(--uh-muted);font-size:12px;margin-top:14px}
+  .uh-privacy span{color:var(--uh-mint)}
+  .uh-queue{display:grid;gap:10px}
+  .uh-empty{padding:25px 12px;text-align:center;color:var(--uh-muted);border:1px solid #1d3549;border-radius:12px;background:#091725}
+  .uh-empty .symbol{font-size:24px;color:#527b91;margin-bottom:7px}
+  .uh-file{display:grid;grid-template-columns:68px minmax(0,1fr) auto;gap:13px;align-items:center;padding:11px;border:1px solid #1d374b;background:#091827;border-radius:12px}
+  .uh-thumb{width:68px;height:68px;object-fit:cover;border-radius:8px;background:#132a3d;border:1px solid #244257}
+  .uh-filemeta{min-width:0}
+  .uh-filename{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .uh-fileinfo{color:var(--uh-muted);font-size:11px;margin-top:4px;overflow-wrap:anywhere}
+  .uh-status{display:inline-flex;align-items:center;gap:5px;margin-top:7px;font-size:11px;color:var(--uh-muted)}
+  .uh-status:before{content:"";width:6px;height:6px;border-radius:50%;background:#617b8c}
+  .uh-status.done{color:var(--uh-mint)}.uh-status.done:before{background:var(--uh-mint)}
+  .uh-status.error{color:var(--uh-danger)}.uh-status.error:before{background:var(--uh-danger)}
+  .uh-fileactions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:end}
+  .uh-settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .uh-field{display:grid;gap:6px;min-width:0}
+  .uh-field label,.uh-label{font-size:12px;color:#b5c9d8;font-weight:650}
+  .uh-field input[type=number],.uh-field select{width:100%;min-width:0;background:#071522;color:var(--uh-text);border:1px solid #29465b;border-radius:8px;padding:10px 11px;outline:none}
+  .uh-field input:focus,.uh-field select:focus{border-color:var(--uh-cyan);box-shadow:0 0 0 3px #54d8f51a}
+  .uh-dimensions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .uh-ratio{display:flex;align-items:center;gap:8px;color:var(--uh-muted);font-size:12px;margin-top:10px}
+  .uh-ratio input{accent-color:var(--uh-cyan)}
+  .uh-presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+  .uh-chip{border:1px solid #2b4b61;color:#b7ccdb;background:#0b1c2c;border-radius:7px;padding:6px 10px;font-size:12px}
+  .uh-chip:hover,.uh-chip.active{border-color:#43869a;color:var(--uh-mint);background:#10303a}
+  .uh-divider{height:1px;background:#1c3548;margin:17px 0}
+  .uh-note{font-size:11px;color:var(--uh-muted);margin:9px 0 0}
+  .uh-check{display:flex;align-items:center;gap:8px;color:#bfd0dc;font-size:12px;margin-top:12px}
+  .uh-check input{accent-color:var(--uh-cyan)}
+  .uh-quality{display:flex;align-items:center;gap:10px}
+  .uh-quality input{width:100%;accent-color:var(--uh-cyan)}
+  .uh-quality output{min-width:40px;text-align:right;color:var(--uh-mint);font-variant-numeric:tabular-nums}
+  .uh-progress-wrap{margin-top:15px;display:none}
+  .uh-progress-label{display:flex;justify-content:space-between;gap:10px;color:var(--uh-muted);font-size:11px;margin-bottom:7px}
+  .uh-progress{height:6px;background:#152b3d;border-radius:20px;overflow:hidden}
+  .uh-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--uh-cyan),var(--uh-mint));transition:width .2s}
+  .uh-results{display:none}
+  .uh-result-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .uh-previewbox{min-width:0;border:1px solid #1e3b50;border-radius:10px;padding:8px;background:#081725}
+  .uh-previewbox img{width:100%;height:120px;object-fit:contain;display:block;background:repeating-conic-gradient(#102538 0% 25%,#0b1c2a 0% 50%) 50%/16px 16px;border-radius:6px}
+  .uh-previewbox small{display:block;color:var(--uh-muted);font-size:11px;margin-top:7px;overflow-wrap:anywhere}
+  .uh-warning{display:none;border:1px solid #6c5632;background:#2b2417;color:#f4d7a1;padding:10px 12px;border-radius:9px;font-size:12px;margin-top:12px}
+  .uh-toast{position:fixed;right:18px;bottom:18px;z-index:99;max-width:min(390px,calc(100vw - 36px));padding:12px 15px;border-radius:10px;border:1px solid #35627a;background:#0c2031;color:var(--uh-text);box-shadow:0 10px 30px #0006;display:none}
+  .uh-toast.error{border-color:#8b3d50}.uh-toast.success{border-color:#367a69}
+  .uh-footer{border-top:1px solid var(--uh-line);margin-top:34px;padding-top:18px;color:var(--uh-muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .uh-muted{color:var(--uh-muted)}
+  @media(max-width:850px){.uh-workspace{grid-template-columns:1fr}.uh-side{grid-template-columns:1fr 1fr;align-items:start}.uh-side .uh-card:last-child{grid-column:1/-1}}
+  @media(max-width:570px){.uh-image-resizer{padding:12px 12px 34px}.uh-topline{margin-bottom:22px}.uh-heading{align-items:start;flex-direction:column}.uh-card{padding:15px}.uh-side{grid-template-columns:1fr}.uh-side .uh-card:last-child{grid-column:auto}.uh-file{grid-template-columns:54px minmax(0,1fr);gap:10px}.uh-thumb{width:54px;height:54px}.uh-fileactions{grid-column:2;justify-content:start}.uh-settings-grid{gap:10px}.uh-result-preview{grid-template-columns:1fr 1fr}.uh-previewbox img{height:90px}.uh-local{font-size:10px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+<script src="../style.js" data-uh-page-type="tool" data-uh-title="Image Resizer"></script>
+</head>
+<body class="uh-image-resizer-page">
+<div class="uh-image-resizer">
+  <!-- Integration note: replace this demo top bar/footer with Utility Hub's shared components when embedding in the existing site. -->
+  <header class="uh-topline">
+    <div class="uh-brand"><div class="uh-logo" aria-hidden="true">⌘</div><div>UTILITY HUB<small>Blueprint / Schematic Console</small></div></div>
+    <div class="uh-local">● LOCAL PROCESSING</div>
+  </header>
+
+  <section class="uh-heading">
+    <div><div class="uh-eyebrow">Image tools / Media utilities</div><h1>Image Resizer</h1><p class="uh-subtitle">Resize, convert, and export your images in one clean workflow. Your files stay on this device.</p></div>
+  </section>
+
+  <div class="uh-workspace">
+    <main class="uh-main">
+      <section class="uh-card">
+        <div class="uh-cardhead"><div><h2>01 / Add images</h2><p>Drop files here or browse your device.</p></div><span class="uh-count" id="uh-count">0 files</span></div>
+        <div class="uh-drop" id="uh-drop" tabindex="0" role="button" aria-label="Choose images or drop image files">
+          <div class="uh-upload-icon" aria-hidden="true">↥</div><strong>Drop your images here</strong><p>JPEG, PNG, WebP and other browser-supported image files</p>
+          <div class="uh-actions center"><button class="uh-btn primary" type="button" id="uh-browse">Choose images</button></div>
+          <input id="uh-files" type="file" accept="image/*" multiple hidden>
+        </div>
+        <div class="uh-privacy"><span>◆</span> Images are processed locally in your browser. Nothing is uploaded.</div>
+      </section>
+
+      <section class="uh-card">
+        <div class="uh-cardhead"><div><h2>02 / Image queue</h2><p>Review source files and download completed results.</p></div><div class="uh-actions"><button class="uh-btn small" type="button" id="uh-clear" disabled>Clear queue</button></div></div>
+        <div class="uh-queue" id="uh-queue"><div class="uh-empty"><div class="symbol">▧</div><strong>Your queue is empty</strong><div class="uh-note">Add one or more images to get started.</div></div></div>
+        <div class="uh-progress-wrap" id="uh-progress-wrap"><div class="uh-progress-label"><span id="uh-progress-text">Preparing images…</span><span id="uh-progress-percent">0%</span></div><div class="uh-progress" role="progressbar" aria-label="Batch progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="uh-progress"><span id="uh-progress-bar"></span></div></div>
+        <div class="uh-actions" style="margin-top:15px"><button class="uh-btn primary" id="uh-process" type="button" disabled>▶ Process images</button><button class="uh-btn" id="uh-cancel" type="button" disabled>Cancel</button><button class="uh-btn" id="uh-download-all" type="button" disabled>↓ Download all ZIP</button></div>
+      </section>
+    </main>
+
+    <aside class="uh-side">
+      <section class="uh-card">
+        <div class="uh-cardhead"><div><h2>03 / Resize settings</h2><p>Applied to every queued image.</p></div></div>
+        <div class="uh-settings-grid">
+          <div class="uh-field"><label for="uh-width">Width (px)</label><input id="uh-width" type="number" min="1" max="12000" value="1280" step="1"></div>
+          <div class="uh-field"><label for="uh-height">Height (px)</label><input id="uh-height" type="number" min="1" max="12000" value="720" step="1"></div>
+        </div>
+        <label class="uh-ratio"><input type="checkbox" id="uh-lock" checked> Lock aspect ratio when changing dimensions</label>
+        <div class="uh-presets" aria-label="Resize percentage presets"><button class="uh-chip" data-scale="25">25%</button><button class="uh-chip" data-scale="50">50%</button><button class="uh-chip" data-scale="75">75%</button><button class="uh-chip" data-scale="100">100%</button></div>
+        <div class="uh-divider"></div>
+        <div class="uh-field"><label for="uh-fit">Dimension mode</label><select id="uh-fit"><option value="stretch">Custom dimensions (fit exact size)</option><option value="width">Fit to width (preserve ratio)</option><option value="height">Fit to height (preserve ratio)</option><option value="contain">Fit inside width × height</option></select></div>
+        <label class="uh-check"><input type="checkbox" id="uh-upscale" checked> Allow upscaling</label>
+        <p class="uh-note">Upscaling cannot restore detail and may reduce perceived image quality. Maximum output: 12000 × 12000 pixels per image.</p>
+      </section>
+
+      <section class="uh-card">
+        <div class="uh-cardhead"><div><h2>04 / Output format</h2><p>Choose your exported file type.</p></div></div>
+        <div class="uh-field"><label for="uh-format">Format</label><select id="uh-format"><option value="image/webp">WebP — smaller files</option><option value="image/jpeg">JPEG — broad compatibility</option><option value="image/png">PNG — lossless / transparency</option><option value="image/keep">Keep original format (best effort)</option></select></div>
+        <div class="uh-field" id="uh-quality-field" style="margin-top:14px"><label for="uh-quality">Quality (lossy formats)</label><div class="uh-quality"><input type="range" id="uh-quality" min="10" max="100" value="88"><output id="uh-quality-value">88%</output></div></div>
+        <div class="uh-field" id="uh-bg-field" style="margin-top:14px;display:none"><label for="uh-bgcolor">Background for transparent images</label><input id="uh-bgcolor" type="color" value="#ffffff" style="width:100%;height:42px;border:1px solid #29465b;border-radius:8px;background:#071522;padding:4px"></div>
+        <div class="uh-warning" id="uh-warning" role="status">JPEG does not support transparency. Transparent areas will be filled with the selected background color.</div>
+        <p class="uh-note">Browsers may encode unsupported requested formats as PNG. The actual output format is checked after encoding.</p>
+      </section>
+
+      <section class="uh-card uh-results" id="uh-results">
+        <div class="uh-cardhead"><div><h2>05 / Latest preview</h2><p>Before and after comparison.</p></div></div>
+        <div class="uh-result-preview"><div class="uh-previewbox"><img id="uh-before" alt="Original image preview"><small id="uh-before-label">Original</small></div><div class="uh-previewbox"><img id="uh-after" alt="Processed image preview"><small id="uh-after-label">Processed</small></div></div>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="uh-footer"><span>UTILITY HUB / IMAGE RESIZER</span><span>Client-side processing · No image uploads</span></footer>
+</div>
+<div class="uh-toast" id="uh-toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const MAX_SIDE = 12000, MAX_PIXELS = 40000000, MAX_FILE_BYTES = 100 * 1024 * 1024;
+  const state = {items: [], busy:false, cancel:false, toastTimer:null, ratio:1280/720};
+  const els = {
+    drop:$('uh-drop'), files:$('uh-files'), browse:$('uh-browse'), queue:$('uh-queue'), count:$('uh-count'),
+    clear:$('uh-clear'), process:$('uh-process'), cancel:$('uh-cancel'), downloadAll:$('uh-download-all'),
+    width:$('uh-width'), height:$('uh-height'), lock:$('uh-lock'), fit:$('uh-fit'), upscale:$('uh-upscale'),
+    format:$('uh-format'), quality:$('uh-quality'), qualityValue:$('uh-quality-value'),
+    qualityField:$('uh-quality-field'), bgField:$('uh-bg-field'), bg:$('uh-bgcolor'), warning:$('uh-warning'),
+    progressWrap:$('uh-progress-wrap'), progressText:$('uh-progress-text'), progressPercent:$('uh-progress-percent'),
+    progress:$('uh-progress'), progressBar:$('uh-progress-bar'), results:$('uh-results'),
+    before:$('uh-before'), after:$('uh-after'), beforeLabel:$('uh-before-label'), afterLabel:$('uh-after-label'),
+    toast:$('uh-toast')
+  };
+  const fmtBytes = n => n < 1024 ? `${n} B` : n < 1048576 ? `${(n/1024).toFixed(1)} KB` : `${(n/1048576).toFixed(2)} MB`;
+  const safeName = name => (name || 'image').replace(/\.[^.]+$/, '').normalize('NFKC').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').replace(/^\.+$/,'image').slice(0,100) || 'image';
+  const extFor = mime => ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif','image/avif':'avif','image/bmp':'bmp'}[mime] || 'png');
+  function toast(message, type='') {
+    clearTimeout(state.toastTimer); els.toast.textContent=message; els.toast.className='uh-toast'+(type?' '+type:''); els.toast.style.display='block';
+    state.toastTimer=setTimeout(()=>els.toast.style.display='none',4200);
+  }
+  function updateControls() {
+    const ready = state.items.some(x=>x.status!=='done' || !x.blob);
+    els.count.textContent=`${state.items.length} file${state.items.length===1?'':'s'}`;
+    els.clear.disabled=state.items.length===0 || state.busy;
+    els.process.disabled=state.items.length===0 || state.busy || !ready;
+    els.cancel.disabled=!state.busy;
+    els.downloadAll.disabled=state.busy || !state.items.some(x=>x.blob);
+  }
+  function setProgress(done,total,label) {
+    const pct=total?Math.round(done/total*100):0;
+    els.progressWrap.style.display=total?'block':'none';
+    els.progressText.textContent=label || `${done} of ${total} images processed`;
+    els.progressPercent.textContent=`${pct}%`; els.progressBar.style.width=pct+'%';
+    els.progress.setAttribute('aria-valuenow',String(pct));
+  }
+  function revokeItem(item) {
+    if(item.thumbUrl) URL.revokeObjectURL(item.thumbUrl);
+    if(item.resultUrl) URL.revokeObjectURL(item.resultUrl);
+    item.thumbUrl=null; item.resultUrl=null;
+  }
+  function loadImage(file) {
+    return new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(file), img=new Image();
+      img.onload=()=>{URL.revokeObjectURL(url);resolve({width:img.naturalWidth,height:img.naturalHeight});};
+      img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('This image could not be decoded by your browser.'));};
+      img.src=url;
+    });
+  }
+  async function addFiles(fileList) {
+    const files=Array.from(fileList||[]);
+    if(!files.length)return;
+    let added=0;
+    for(const file of files) {
+      if(!file.type.startsWith('image/')) { toast(`${file.name}: this file is not identified as an image.`, 'error'); continue; }
+      if(file.size===0 || file.size>MAX_FILE_BYTES) { toast(`${file.name}: file must be between 1 byte and 100 MB.`, 'error'); continue; }
+      const key=`${file.name}|${file.size}|${file.lastModified}|${file.type}`;
+      if(state.items.some(x=>x.key===key)) { toast(`${file.name} is already in the queue.`); continue; }
+      const item={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()),key,file,name:file.name,size:file.size,type:file.type,status:'loading',error:'',blob:null,resultName:'',width:0,height:0,outWidth:0,outHeight:0,thumbUrl:null,resultUrl:null};
+      state.items.push(item); added++;
+      renderQueue(); updateControls();
+      try {
+        const dims=await loadImage(file);
+        if(dims.width<1||dims.height<1||dims.width* dims.height>MAX_PIXELS*4) throw new Error('Image dimensions are too large for safe browser processing.');
+        item.width=dims.width; item.height=dims.height; item.thumbUrl=URL.createObjectURL(file); item.status='ready';
+      } catch(err) { item.status='error'; item.error=err.message || 'Unsupported or corrupt image.'; }
+      renderQueue(); updateControls();
+    }
+    if(added) toast(`${added} image${added===1?'':'s'} added to the queue.`, 'success');
+  }
+  function renderQueue() {
+    if(!state.items.length) {
+      els.queue.innerHTML='<div class="uh-empty"><div class="symbol">▧</div><strong>Your queue is empty</strong><div class="uh-note">Add one or more images to get started.</div></div>';
+      updateControls(); return;
+    }
+    els.queue.innerHTML='';
+    state.items.forEach(item=>{
+      const row=document.createElement('article'); row.className='uh-file';
+      const img=document.createElement('img'); img.className='uh-thumb'; img.alt=''; img.src=item.resultUrl||item.thumbUrl||''; if(!img.src)img.style.visibility='hidden';
+      const meta=document.createElement('div');meta.className='uh-filemeta';
+      const name=document.createElement('div');name.className='uh-filename';name.textContent=item.name;name.title=item.name;
+      const info=document.createElement('div');info.className='uh-fileinfo';
+      info.textContent=item.width?`${item.width} × ${item.height} px · ${fmtBytes(item.size)}${item.blob?' → '+item.outWidth+' × '+item.outHeight+' px · '+fmtBytes(item.blob.size):''}`:fmtBytes(item.size);
+      const status=document.createElement('div');status.className='uh-status '+(item.status==='done'?'done':item.status==='error'?'error':'');status.textContent=item.status==='loading'?'Reading image…':item.status==='processing'?'Processing…':item.status==='done'?'Completed':item.status==='error'?'Failed: '+item.error:item.status==='cancelled'?'Cancelled':'Ready';
+      meta.append(name,info,status);
+      const actions=document.createElement('div');actions.className='uh-fileactions';
+      if(item.blob){const dl=document.createElement('button');dl.type='button';dl.className='uh-btn small';dl.textContent='Download';dl.addEventListener('click',()=>downloadItem(item));actions.append(dl);}
+      if(item.status==='error'||item.status==='cancelled'){const retry=document.createElement('button');retry.type='button';retry.className='uh-btn small';retry.textContent='Retry';retry.addEventListener('click',()=>{item.status='ready';item.error='';renderQueue();updateControls();});actions.append(retry);}
+      const remove=document.createElement('button');remove.type='button';remove.className='uh-btn small';remove.textContent='Remove';remove.setAttribute('aria-label','Remove '+item.name);remove.disabled=state.busy;remove.addEventListener('click',()=>removeItem(item.id));actions.append(remove);
+      row.append(img,meta,actions);els.queue.append(row);
+    });
+    updateControls();
+  }
+  function removeItem(id) {
+    if(state.busy)return;
+    const i=state.items.findIndex(x=>x.id===id);if(i<0)return;
+    revokeItem(state.items[i]);state.items.splice(i,1);renderQueue();toast('Image removed from queue.');
+  }
+  function clearQueue() {
+    if(state.busy)return;
+    state.items.forEach(revokeItem);state.items=[];renderQueue();setProgress(0,0);els.results.style.display='none';toast('Queue cleared.');
+  }
+  function setDimensionsFromWidth() {
+    if(!els.lock.checked||!state.ratio)return;
+    const w=Number(els.width.value);if(Number.isFinite(w)&&w>0)els.height.value=Math.max(1,Math.round(w/state.ratio));
+  }
+  function setDimensionsFromHeight() {
+    if(!els.lock.checked||!state.ratio)return;
+    const h=Number(els.height.value);if(Number.isFinite(h)&&h>0)els.width.value=Math.max(1,Math.round(h*state.ratio));
+  }
+  function applyScale(scale) {
+    const item=state.items.find(x=>x.width&&x.height);
+    const baseW=item?item.width:1280,baseH=item?item.height:720;
+    els.width.value=Math.max(1,Math.round(baseW*scale/100));els.height.value=Math.max(1,Math.round(baseH*scale/100));
+    state.ratio=Number(els.width.value)/Number(els.height.value);
+    document.querySelectorAll('.uh-chip').forEach(b=>b.classList.toggle('active',Number(b.dataset.scale)===scale));
+  }
+  function settingsFor(item) {
+    let w=Number(els.width.value),h=Number(els.height.value);
+    if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||w>MAX_SIDE||h>MAX_SIDE)throw new Error(`Dimensions must be whole numbers between 1 and ${MAX_SIDE} pixels.`);
+    const mode=els.fit.value,ratio=item.width/item.height;
+    if(mode==='width')h=Math.max(1,Math.round(w/ratio));
+    else if(mode==='height')w=Math.max(1,Math.round(h*ratio));
+    else if(mode==='contain'){const s=Math.min(w/item.width,h/item.height);w=Math.max(1,Math.round(item.width*s));h=Math.max(1,Math.round(item.height*s));}
+    if(!els.upscale.checked){const s=Math.min(1,w/item.width,h/item.height);w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));}
+    if(w>MAX_SIDE||h>MAX_SIDE||w*h>MAX_PIXELS)throw new Error(`Output dimensions ${w} × ${h} exceed the safe output limit.`);
+    return {w,h};
+  }
+  function canvasToBlob(canvas,type,quality) {
+    return new Promise((resolve,reject)=>{
+      try{canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Browser could not encode this output format.')),type,quality);}
+      catch(e){reject(new Error('Browser could not encode this output format: '+e.message));}
+    });
+  }
+  async function processItem(item) {
+    if(!item.width||!item.height)throw new Error(item.error||'Image could not be decoded.');
+    const {w,h}=settingsFor(item);
+    if(w*h>MAX_PIXELS)throw new Error('Output has too many pixels for safe processing.');
+    const url=URL.createObjectURL(item.file);
+    try {
+      const img=new Image();
+      await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('Could not decode image for processing.'));img.src=url;});
+      const requested=els.format.value==='image/keep'?(item.type==='image/jpeg'||item.type==='image/png'||item.type==='image/webp'?item.type:'image/png'):els.format.value;
+      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d',{alpha:requested!=='image/jpeg'});
+      if(!ctx)throw new Error('Canvas is unavailable in this browser.');
+      if(requested==='image/jpeg'){ctx.fillStyle=els.bg.value;ctx.fillRect(0,0,w,h);}
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(img,0,0,w,h);
+      const q=Number(els.quality.value)/100;
+      let blob=await canvasToBlob(canvas,requested,requested==='image/png'?undefined:q);
+      let actual=blob.type||requested;
+      if(actual!==requested) {
+        if(els.format.value!=='image/keep' && requested!=='image/png') {
+          // Browser fallback is accepted only after checking the actual encoded MIME type.
+          actual=blob.type||'application/octet-stream';
+        }
+      }
+      if(!['image/jpeg','image/png','image/webp'].includes(actual))throw new Error(`Browser returned unsupported output type (${actual||'unknown'}).`);
+      item.blob=blob;item.outWidth=w;item.outHeight=h;item.outputType=actual;
+      item.resultName=safeName(item.name)+'.'+extFor(actual);
+      item.status='done';item.error='';
+      if(item.resultUrl)URL.revokeObjectURL(item.resultUrl);
+      item.resultUrl=URL.createObjectURL(blob);
+      return item;
+    } finally {URL.revokeObjectURL(url);}
+  }
+  async function processQueue() {
+    if(state.busy||!state.items.length)return;
+    const pending=state.items.filter(x=>x.status!=='done');
+    if(!pending.length){toast('All images have already been processed.');return;}
+    state.busy=true;state.cancel=false;updateControls();
+    const total=pending.length;let finished=0;
+    setProgress(0,total,'Starting batch…');
+    try {
+      for(const item of pending) {
+        if(state.cancel)break;
+        item.status='processing';item.error='';renderQueue();
+        try {await processItem(item);} catch(err){item.status='error';item.error=err.message||'Processing failed.';item.blob=null;}
+        finished++;setProgress(finished,total,state.cancel?'Cancelling…':`${finished} of ${total} processed`);renderQueue();
+      }
+      if(state.cancel) {
+        pending.filter(x=>x.status==='ready'||x.status==='processing').forEach(x=>x.status='cancelled');
+        toast('Batch cancelled. Completed results are still available.');
+      } else {
+        const successes=pending.filter(x=>x.status==='done').length,failures=pending.filter(x=>x.status==='error').length;
+        toast(`${successes} completed${failures?`, ${failures} failed`:''}.`,failures?'error':'success');
+      }
+    } finally {
+      state.busy=false;els.cancel.disabled=true;updateControls();renderQueue();
+      const latest=state.items.find(x=>x.status==='done'&&x.resultUrl);
+      if(latest)showPreview(latest);
+    }
+  }
+  function showPreview(item) {
+    els.results.style.display='block';
+    els.before.src=item.thumbUrl||URL.createObjectURL(item.file);
+    els.after.src=item.resultUrl;
+    els.beforeLabel.textContent=`Original · ${item.width} × ${item.height} · ${fmtBytes(item.size)}`;
+    els.afterLabel.textContent=`Output · ${item.outWidth} × ${item.outHeight} · ${fmtBytes(item.blob.size)} · ${item.outputType}`;
+  }
+  function downloadBlob(blob,name) {
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=name;a.style.display='none';document.body.append(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }
+  function downloadItem(item) {if(!item.blob)return;downloadBlob(item.blob,item.resultName||safeName(item.name)+'.'+extFor(item.blob.type));}
+  async function downloadAll() {
+    const successful=state.items.filter(x=>x.blob);
+    if(!successful.length){toast('There are no processed images to download.','error');return;}
+    if(!window.JSZip){toast('ZIP library could not load. Download images individually instead.','error');return;}
+    const zip=new JSZip(),used=new Set();
+    successful.forEach(item=>{
+      const original=item.resultName||safeName(item.name)+'.'+extFor(item.blob.type);
+      const dot=original.lastIndexOf('.'),base=dot>0?original.slice(0,dot):original,ext=dot>0?original.slice(dot):'';
+      let name=original,n=2;
+      while(used.has(name.toLowerCase()))name=`${base} (${n++})${ext}`;
+      used.add(name.toLowerCase());zip.file(name,item.blob);
+    });
+    els.downloadAll.disabled=true;els.downloadAll.textContent='Preparing ZIP…';
+    try {
+      const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:5}});
+      downloadBlob(blob,'utility-hub-images.zip');toast(`ZIP ready: ${successful.length} image${successful.length===1?'':'s'}.`,'success');
+    } catch(e){toast('Could not create ZIP. Try downloading images individually.','error');}
+    finally{els.downloadAll.textContent='↓ Download all ZIP';updateControls();}
+  }
+  function updateFormatUI() {
+    const format=els.format.value;
+    els.qualityField.style.display=format==='image/png'?'none':'grid';
+    els.bgField.style.display=format==='image/jpeg'?'grid':'none';
+    els.warning.style.display=format==='image/jpeg'?'block':'none';
+  }
+
+  els.browse.addEventListener('click',e=>{e.stopPropagation();els.files.click();});
+  els.drop.addEventListener('click',e=>{if(e.target.closest('button'))return;els.files.click();});
+  els.drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();els.files.click();}});
+  els.files.addEventListener('change',async()=>{await addFiles(els.files.files);els.files.value='';});
+  ['dragenter','dragover'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('is-over');}));
+  ['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('is-over');}));
+  els.drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+  els.clear.addEventListener('click',clearQueue);
+  els.process.addEventListener('click',processQueue);
+  els.cancel.addEventListener('click',()=>{state.cancel=true;els.cancel.disabled=true;els.progressText.textContent='Cancellation requested…';});
+  els.downloadAll.addEventListener('click',downloadAll);
+  els.width.addEventListener('input',()=>{setDimensionsFromWidth();state.ratio=Number(els.width.value)/Math.max(1,Number(els.height.value));});
+  els.height.addEventListener('input',()=>{setDimensionsFromHeight();state.ratio=Number(els.width.value)/Math.max(1,Number(els.height.value));});
+  els.lock.addEventListener('change',()=>{state.ratio=Number(els.width.value)/Math.max(1,Number(els.height.value));});
+  document.querySelectorAll('.uh-chip').forEach(btn=>btn.addEventListener('click',()=>applyScale(Number(btn.dataset.scale))));
+  els.quality.addEventListener('input',()=>els.qualityValue.value=els.quality.value+'%');
+  els.format.addEventListener('change',updateFormatUI);
+  updateFormatUI();updateControls();
+})();
+</script>
+</body>
+</html>

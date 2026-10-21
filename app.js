@@ -25,12 +25,8 @@ const CONFIG = {
     theme: 'utilityhub:theme',
     favorites: 'utilityhub:favorites',
     recents: 'utilityhub:recents',
-    requests: 'utilityhub:requests',
   },
   maxRecents: 5,
-  // Swap this for a real inbox, or point buildRequestPayload() at a form
-  // endpoint (Formspree, Getform, your own API, etc.) instead of mailto:.
-  requestEmail: 'probro.offl@gmail.com',
   // Optional: force a specific 3-letter code for a category's coordinate
   // tag instead of the auto-generated one. Leave empty to auto-derive.
   categoryCodeOverrides: {},
@@ -280,7 +276,82 @@ const toolsData = [
     url: 'tools/quick-calculator.html',
     icon: 'calculator',
   },
+  {
+    id: 'code-diff-checker',
+    title: 'Code Diff Checker',
+    description: 'Compare code snippets side by side or as a unified diff.',
+    category: 'Developer',
+    url: 'tools/code-diff-checker.html',
+    icon: 'file-diff',
+  },
+  {
+    id: 'image-resizer',
+    title: 'Image Resizer',
+    description: 'Resize, convert, and batch-export images locally in your browser.',
+    category: 'Design',
+    url: 'tools/image-resizer.html',
+    icon: 'scaling',
+  },
+  {
+    id: 'password-generator',
+    title: 'Password Generator',
+    description: 'Generate strong passwords with cryptographically secure randomness.',
+    category: 'Utility',
+    url: 'tools/password-generator.html',
+    icon: 'key-round',
+  },
+  {
+    id: 'number-converter',
+    title: 'Number Converter',
+    description: 'Convert standard or custom-base integers and HEX/RGB color values.',
+    category: 'Convert',
+    url: 'tools/number-converter.html',
+    icon: 'binary',
+  },
+  {
+    id: 'countdown-timer',
+    title: 'Countdown Timer',
+    description: 'Run multiple named countdowns with presets, saved shortcuts, and accurate timing.',
+    category: 'Timers',
+    url: 'tools/countdown-timer.html',
+    icon: 'timer',
+  },
+  {
+    id: 'stopwatch',
+    title: 'Stopwatch',
+    description: 'Track precise elapsed time, lap splits, and exportable lap history.',
+    category: 'Time Tools',
+    url: 'tools/stopwatch.html',
+    icon: 'stopwatch',
+  },
+  {
+    id: 'pomodoro-focus-timer',
+    title: 'Pomodoro & Focus Timer',
+    description: 'Structure focus sessions and breaks with local preferences and daily stats.',
+    category: 'Timers',
+    url: 'tools/pomodoro-focus-timer.html',
+    icon: 'timer',
+  },
+  {
+    id: 'event-countdown',
+    title: 'Event Countdown',
+    description: 'Create and organize local countdowns for important dates and milestones.',
+    category: 'Time Tools',
+    url: 'tools/event-countdown.html',
+    icon: 'calendar-clock',
+  },
+  {
+    id: 'buzzer',
+    title: 'Buzzer',
+    description: 'A tactile, single-button stopwatch for games, quizzes, and quick timing.',
+    category: 'Interactive Tools',
+    url: 'tools/buzzer.html',
+    icon: 'circle-dot',
+  },
 ];
+
+window.UtilityHub = window.UtilityHub || {};
+window.UtilityHub.tools = toolsData;
 
 /* ============================================================================
    Everything below this line is generic engine code. It reads `toolsData`
@@ -288,6 +359,8 @@ const toolsData = [
    ============================================================================ */
 
 (function () {
+  if (!document.getElementById('tool-grid')) return;
+
   /* ------------------------------- State -------------------------------- */
 
   const state = {
@@ -307,8 +380,6 @@ const toolsData = [
     clearSearch: document.getElementById('clear-search'),
     resultsCount: document.getElementById('results-count'),
     tabs: document.getElementById('category-tabs'),
-    recentsSection: document.getElementById('recents-section'),
-    recentsTrack: document.getElementById('recents-track'),
     favoritesSection: document.getElementById('favorites-section'),
     favoritesGrid: document.getElementById('favorites-grid'),
     grid: document.getElementById('tool-grid'),
@@ -318,12 +389,6 @@ const toolsData = [
     footerToolCount: document.getElementById('footer-tool-count'),
     footerRev: document.getElementById('footer-rev-date'),
     footerYear: document.getElementById('footer-year'),
-    requestBtn: document.getElementById('request-tool-btn'),
-    requestModal: document.getElementById('request-modal'),
-    requestForm: document.getElementById('request-form'),
-    requestClose: document.getElementById('request-close'),
-    requestCancel: document.getElementById('request-cancel'),
-    requestSuccess: document.getElementById('request-success'),
     previewModal: document.getElementById('preview-modal'),
     previewIframe: document.getElementById('preview-iframe'),
     previewTitle: document.getElementById('preview-title'),
@@ -422,10 +487,6 @@ const toolsData = [
     return tagged.filter((t) => state.favorites.includes(t.id) && matchesQuery(t, state.query));
   }
 
-  function getRecentTools() {
-    return state.recents.map((id) => byId[id]).filter(Boolean);
-  }
-
   /* --------------------------------- Actions -------------------------------- */
 
   function toggleFavorite(id) {
@@ -458,7 +519,6 @@ const toolsData = [
     el.previewIframe.src = tool.url;
     el.previewOpenFull.href = tool.url;
     openModal(el.previewModal);
-    renderRecents(); // reflect the new recent immediately behind the modal
   }
 
   function closePreview() {
@@ -503,7 +563,7 @@ const toolsData = [
   }
 
   function anyModalOpen() {
-    return el.previewModal.classList.contains('is-open') || el.requestModal.classList.contains('is-open');
+    return el.previewModal.classList.contains('is-open');
   }
 
   /* --------------------------------- Templates -------------------------------- */
@@ -622,16 +682,6 @@ const toolsData = [
     el.footerToolCount.textContent = String(tagged.length).padStart(2, '0');
   }
 
-  function renderRecents() {
-    const recents = getRecentTools();
-    if (!recents.length) {
-      el.recentsSection.classList.add('hidden');
-      return;
-    }
-    el.recentsSection.classList.remove('hidden');
-    el.recentsTrack.innerHTML = recents.map((t) => cardTemplate(t, { compact: true })).join('');
-  }
-
   function renderFavorites() {
     const favs = getFavoriteTools();
     if (!favs.length) {
@@ -660,7 +710,6 @@ const toolsData = [
   function render() {
     renderTabs();
     renderFooterCategories();
-    renderRecents();
     renderFavorites();
     renderGrid();
     if (window.lucide) window.lucide.createIcons();
@@ -688,7 +737,7 @@ const toolsData = [
     }
   }
 
-  [el.grid, el.favoritesGrid, el.recentsTrack].forEach((container) => {
+  [el.grid, el.favoritesGrid].forEach((container) => {
     container.addEventListener('click', handleGridClick);
   });
 
@@ -749,49 +798,6 @@ const toolsData = [
     if (e.target.dataset.backdrop !== undefined) closePreview();
   });
 
-  /* -------------------------------- Request modal ------------------------------- */
-
-  function openRequestModal() {
-    el.requestForm.reset();
-    el.requestForm.classList.remove('hidden');
-    el.requestSuccess.classList.add('hidden');
-    openModal(el.requestModal);
-  }
-
-  function closeRequestModal() {
-    closeModal(el.requestModal);
-  }
-
-  el.requestBtn.addEventListener('click', openRequestModal);
-  el.requestClose.addEventListener('click', closeRequestModal);
-  el.requestCancel.addEventListener('click', closeRequestModal);
-  el.requestModal.addEventListener('click', (e) => {
-    if (e.target.dataset.backdrop !== undefined) closeRequestModal();
-  });
-
-  el.requestForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const formData = new FormData(el.requestForm);
-    const name = (formData.get('tool-name') || '').toString().trim();
-    const details = (formData.get('tool-details') || '').toString().trim();
-    if (!name) return;
-
-    // Persist locally so nothing is lost even without a backend wired up.
-    const requests = loadJSON(CONFIG.storageKeys.requests, []);
-    requests.unshift({ name, details, submittedAt: new Date().toISOString() });
-    saveJSON(CONFIG.storageKeys.requests, requests);
-
-    // Also offer a ready-to-send email as the zero-backend fallback.
-    // Replace this block with a fetch() to your form endpoint if you have one.
-    const subject = encodeURIComponent(`Utility Hub tool request: ${name}`);
-    const body = encodeURIComponent(`Tool idea: ${name}\n\nDetails:\n${details || '(none provided)'}`);
-    const mailtoLink = document.getElementById('request-mailto-fallback');
-    if (mailtoLink) mailtoLink.href = `mailto:${CONFIG.requestEmail}?subject=${subject}&body=${body}`;
-
-    el.requestForm.classList.add('hidden');
-    el.requestSuccess.classList.remove('hidden');
-  });
-
   /* ---------------------------------- Keyboard ---------------------------------- */
 
   function prefersReducedMotion() {
@@ -805,7 +811,6 @@ const toolsData = [
     // Escape closes whichever modal is open, or blurs the search field.
     if (e.key === 'Escape') {
       if (el.previewModal.classList.contains('is-open')) return closePreview();
-      if (el.requestModal.classList.contains('is-open')) return closeRequestModal();
       if (document.activeElement === el.searchInput) el.searchInput.blur();
       return;
     }

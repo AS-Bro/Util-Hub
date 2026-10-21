@@ -103,6 +103,11 @@
 
   body {
     background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    background-attachment: fixed;
     color: var(--text);
     font-family: 'Inter', sans-serif;
   }
@@ -145,11 +150,6 @@
   /* Focus visibility, kept crisp and on-theme */
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  /* Recents strip scroller */
-  #recents-track { scrollbar-width: thin; }
-  #recents-track::-webkit-scrollbar { height: 6px; }
-  #recents-track::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; }
-
   /* Modals */
   .modal-panel {
     opacity: 0;
@@ -182,28 +182,15 @@
     <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between gap-4">
         <!-- Brand, styled like a drawing title block -->
-        <div class="flex items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-md border border-line-strong text-accent">
-            <i data-lucide="layout-grid" class="h-5 w-5" aria-hidden="true"></i>
-          </div>
+        <a class="uh-dashboard-brand flex items-center gap-3" href="index.html" aria-label="Utility Hub home">
+          <img class="uh-brand-logo" src="images/UH.png" alt="" width="38" height="38" />
           <div class="leading-tight">
             <h1 class="font-display text-lg font-semibold tracking-tight text-ink">Utility Hub</h1>
             <p class="font-mono text-[11px] uppercase tracking-widest text-faint">Sheet 01 — Everyday Tools</p>
           </div>
-        </div>
+        </a>
 
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Request a Tool -->
-          <button
-            id="request-tool-btn"
-            type="button"
-            class="flex items-center gap-1.5 rounded-md border border-line-strong px-3 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent"
-          >
-            <i data-lucide="plus" class="h-3.5 w-3.5" aria-hidden="true"></i>
-            <span class="hidden sm:inline">Request a Tool</span>
-            <span class="sm:hidden">Request</span>
-          </button>
-
           <!-- Theme toggle: rocker switch -->
           <button
             id="theme-toggle"
@@ -251,15 +238,6 @@
 
   <!-- ============================== MAIN ============================== -->
   <main id="browse" class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-    <!-- Recently used -->
-    <section id="recents-section" class="mb-8 hidden">
-      <div class="mb-3 flex items-center gap-2">
-        <i data-lucide="history" class="h-4 w-4 text-faint" aria-hidden="true"></i>
-        <h2 class="font-mono text-xs uppercase tracking-widest text-faint">Recently Accessed</h2>
-      </div>
-      <div id="recents-track" class="flex gap-4 overflow-x-auto pb-2"></div>
-    </section>
-
     <!-- Favorites -->
     <section id="favorites-section" class="mb-10 hidden">
       <div class="mb-3 flex items-center gap-2">
@@ -361,73 +339,6 @@
     </div>
   </div>
 
-  <!-- ============================== REQUEST A TOOL MODAL ============================== -->
-  <div id="request-modal" class="fixed inset-0 z-50 hidden">
-    <div class="modal-backdrop absolute inset-0 bg-black/60" data-backdrop></div>
-    <div class="relative flex h-full items-center justify-center p-4">
-      <div
-        class="modal-panel w-full max-w-md rounded-card border border-line bg-elevated p-6 shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="request-title"
-      >
-        <div class="mb-4 flex items-center justify-between">
-          <h3 id="request-title" class="font-display text-base font-semibold text-ink" tabindex="-1" data-autofocus>Request a tool</h3>
-          <button id="request-close" type="button" class="rounded-md p-1.5 text-muted transition hover:text-ink" aria-label="Close">
-            <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <form id="request-form" class="space-y-4">
-          <div>
-            <label for="tool-name" class="mb-1 block font-mono text-[11px] uppercase tracking-wide text-faint">Tool idea</label>
-            <input
-              id="tool-name"
-              name="tool-name"
-              type="text"
-              required
-              placeholder="e.g. CSV to JSON converter"
-              class="w-full rounded-md border border-line bg-panel px-3 py-2 text-sm text-ink placeholder:text-faint outline-none focus:border-accent"
-            />
-          </div>
-          <div>
-            <label for="tool-details" class="mb-1 block font-mono text-[11px] uppercase tracking-wide text-faint">What should it do? (optional)</label>
-            <textarea
-              id="tool-details"
-              name="tool-details"
-              rows="3"
-              placeholder="A sentence or two is plenty."
-              class="w-full resize-none rounded-md border border-line bg-panel px-3 py-2 text-sm text-ink placeholder:text-faint outline-none focus:border-accent"
-            ></textarea>
-          </div>
-          <div class="flex items-center justify-end gap-2 pt-1">
-            <button id="request-cancel" type="button" class="rounded-md px-3 py-2 font-mono text-xs uppercase tracking-wide text-muted hover:text-ink">
-              Cancel
-            </button>
-            <button type="submit" class="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-wide text-bg transition hover:bg-accent-strong">
-              <i data-lucide="send" class="h-3.5 w-3.5" aria-hidden="true"></i>
-              Send
-            </button>
-          </div>
-        </form>
-
-        <div id="request-success" class="hidden text-center">
-          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-accent text-accent">
-            <i data-lucide="check" class="h-6 w-6" aria-hidden="true"></i>
-          </div>
-          <p class="font-display text-sm font-semibold text-ink">Logged. Thanks!</p>
-          <p class="mt-1 text-sm text-muted">
-            Saved locally for now — or
-            <a id="request-mailto-fallback" href="#" class="text-accent underline underline-offset-2">send it as an email</a> instead.
-          </p>
-          <button id="request-cancel-2" type="button" onclick="document.getElementById('request-close').click()" class="mt-4 rounded-md border border-line-strong px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Toast / live region -->
   <div
     id="toast-region"
@@ -437,5 +348,7 @@
   ></div>
 
   <script src="app.js"></script>
+  <script src="style.js" data-uh-page-type="dashboard"></script>
+  <script src="pwa.js"></script>
 </body>
 </html>

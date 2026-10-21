@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0b132b] text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utility Hub / Code Diff Checker</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            blueprint: {
+              900: '#0b132b',
+              800: '#1c2541',
+              700: '#2a3a5e',
+              600: '#3a506b',
+              500: '#5c768d',
+            },
+            cyanAccent: {
+              DEFAULT: '#4cc9f0',
+              hover: '#3aace0',
+              glow: '#00f5d4'
+            },
+            diffAdd: {
+              bg: 'rgba(16, 185, 129, 0.15)',
+              border: 'rgba(16, 185, 129, 0.4)',
+              text: '#34d399',
+              wordBg: 'rgba(16, 185, 129, 0.35)',
+            },
+            diffDel: {
+              bg: 'rgba(239, 68, 68, 0.15)',
+              border: 'rgba(239, 68, 68, 0.4)',
+              text: '#f87171',
+              wordBg: 'rgba(239, 68, 68, 0.35)',
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- FontAwesome for high quality technical icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom Scrollbars for Blueprint theme */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b132b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a3a5e;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3a506b;
+    }
+    .diff-font {
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.825rem;
+      line-height: 1.4;
+    }
+    /* Tab / space visual aid line */
+    .blueprint-grid {
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+  </style>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Code Diff Checker"></script>
+</head>
+<body class="h-full flex flex-col font-sans bg-[#0b132b] text-slate-200 antialiased overflow-x-hidden uh-code-diff-page">
+
+  <!-- ==================== UTILITY HUB HEADER ==================== -->
+  <header class="border-b border-blueprint-600/50 bg-[#0b132b]/95 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-blueprint-800 border border-cyanAccent/40 flex items-center justify-center text-cyanAccent shadow-[0_0_10px_rgba(76,201,240,0.2)]">
+          <i class="fa-solid fa-code-compare text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
+            <span>Utility Hub</span>
+            <span class="text-blueprint-500 font-normal">/</span>
+            <span class="text-cyanAccent font-semibold">Code Diff Checker</span>
+          </h1>
+          <p class="text-xs text-slate-400 hidden sm:block">Side-by-side & unified source code comparison engine</p>
+        </div>
+      </div>
+      
+      <!-- Header Actions / Menu Mock -->
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blueprint-800 text-cyanAccent border border-cyanAccent/30">
+          <i class="fa-solid fa-bolt text-xs mr-1.5"></i> Client-Side Processing
+        </span>
+        <button id="btnHelp" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-blueprint-800 transition" title="Keyboard Shortcuts & Info">
+          <i class="fa-solid fa-circle-question text-lg"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN TOOL WORKSPACE ==================== -->
+  <main class="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 sm:p-6 gap-4">
+
+    <!-- TOOLBAR & CONTROLS -->
+    <div class="bg-blueprint-800 border border-blueprint-600/60 rounded-xl p-3 sm:p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Primary Actions Group -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btnCompare" class="bg-cyanAccent hover:bg-cyanAccent-hover text-blueprint-900 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(76,201,240,0.3)] transition active:scale-95">
+          <i class="fa-solid fa-play"></i>
+          <span>Compare Code</span>
+        </button>
+
+        <button id="btnSample" class="bg-blueprint-700 hover:bg-blueprint-600 text-slate-200 border border-blueprint-600 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+          <i class="fa-solid fa-vial"></i>
+          <span class="hidden sm:inline">Load</span> Sample
+        </button>
+
+        <button id="btnSwap" class="bg-blueprint-700 hover:bg-blueprint-600 text-slate-200 border border-blueprint-600 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition" title="Swap Before & After">
+          <i class="fa-solid fa-right-left"></i>
+          <span class="hidden md:inline">Swap</span>
+        </button>
+
+        <button id="btnClear" class="bg-blueprint-700/60 hover:bg-red-500/20 hover:text-red-300 text-slate-400 border border-blueprint-600/60 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+          <i class="fa-solid fa-trash-can"></i>
+          <span class="hidden md:inline">Clear</span>
+        </button>
+      </div>
+
+      <!-- Comparison Toggles & Options -->
+      <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
+        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition">
+          <input type="checkbox" id="chkIgnoreWhitespace" class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+          <span>Ignore Whitespace</span>
+        </label>
+
+        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition">
+          <input type="checkbox" id="chkIgnoreCase" class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+          <span>Ignore Case</span>
+        </label>
+
+        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition" title="Keep both editor panels scrolled in sync">
+          <input type="checkbox" id="chkSyncScroll" checked class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+          <span>Sync Scroll</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- METRICS & CHANGE SUMMARY BAR (Hidden before comparison) -->
+    <div id="diffSummaryBar" class="hidden bg-blueprint-800/80 border border-blueprint-600/60 rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 text-sm">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xs uppercase font-semibold text-slate-400">View Mode:</span>
+          <div class="inline-flex p-1 bg-blueprint-900 rounded-lg border border-blueprint-600/80">
+            <button id="btnViewSide" class="px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition">Side-by-Side</button>
+            <button id="btnViewUnified" class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition">Unified Diff</button>
+          </div>
+        </div>
+
+        <!-- Jump Navigation -->
+        <div class="flex items-center gap-1 border-l border-blueprint-600/80 pl-4">
+          <span class="text-xs text-slate-400 mr-1 hidden sm:inline">Nav:</span>
+          <button id="btnPrevChange" class="p-1.5 bg-blueprint-700 hover:bg-blueprint-600 rounded text-slate-300 hover:text-white border border-blueprint-600 text-xs flex items-center gap-1" title="Previous Change (Alt+Up)">
+            <i class="fa-solid fa-chevron-up"></i>
+          </button>
+          <span id="changeCounter" class="text-xs font-mono px-2 text-cyanAccent font-medium">0 / 0</span>
+          <button id="btnNextChange" class="p-1.5 bg-blueprint-700 hover:bg-blueprint-600 rounded text-slate-300 hover:text-white border border-blueprint-600 text-xs flex items-center gap-1" title="Next Change (Alt+Down)">
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Diff Counters -->
+      <div class="flex items-center gap-3 text-xs font-mono">
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+          <i class="fa-solid fa-plus text-xs"></i> <strong id="countAdditions">0</strong> Added
+        </span>
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400">
+          <i class="fa-solid fa-minus text-xs"></i> <strong id="countDeletions">0</strong> Removed
+        </span>
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-blueprint-700/50 border border-blueprint-600 text-slate-400 hidden sm:inline-flex">
+          <strong id="countUnchanged">0</strong> Unchanged
+        </span>
+      </div>
+
+      <!-- Export Actions -->
+      <div class="flex items-center gap-2">
+        <button id="btnCopyDiff" class="bg-blueprint-700 hover:bg-blueprint-600 text-cyanAccent border border-cyanAccent/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-copy"></i> Copy Patch
+        </button>
+        <button id="btnDownloadDiff" class="bg-blueprint-700 hover:bg-blueprint-600 text-white border border-blueprint-600 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-download"></i> Export .diff
+        </button>
+      </div>
+    </div>
+
+    <!-- EDITORS & DIFF RESULT PANEL -->
+    <div class="flex-1 flex flex-col min-h-[480px]">
+      
+      <!-- INPUT EDITORS VIEW (Shown when editing or before compare) -->
+      <div id="inputEditorsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+        
+        <!-- ORIGINAL / BEFORE PANEL -->
+        <div class="flex flex-col bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg">
+          <div class="bg-blueprint-900/90 border-b border-blueprint-600/60 px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+              <span class="font-semibold text-xs tracking-wider uppercase text-slate-300">Original / Before</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+              <button id="btnPasteOriginal" class="hover:text-cyanAccent transition" title="Paste clipboard text"><i class="fa-solid fa-paste mr-1"></i>Paste</button>
+              <button id="btnClearOriginal" class="hover:text-rose-400 transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
+              <span id="statsOriginal" class="border-l border-blueprint-600 pl-3">0 lines | 0 chars</span>
+            </div>
+          </div>
+          <div class="flex-1 relative flex">
+            <textarea id="txtOriginal" spellcheck="false" placeholder="// Paste or type original code snippet here..."
+              class="w-full h-full min-h-[350px] p-4 bg-[#080d1e] text-slate-200 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
+          </div>
+        </div>
+
+        <!-- MODIFIED / AFTER PANEL -->
+        <div class="flex flex-col bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg">
+          <div class="bg-blueprint-900/90 border-b border-blueprint-600/60 px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+              <span class="font-semibold text-xs tracking-wider uppercase text-slate-300">Modified / After</span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+              <button id="btnPasteModified" class="hover:text-cyanAccent transition" title="Paste clipboard text"><i class="fa-solid fa-paste mr-1"></i>Paste</button>
+              <button id="btnClearModified" class="hover:text-rose-400 transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
+              <span id="statsModified" class="border-l border-blueprint-600 pl-3">0 lines | 0 chars</span>
+            </div>
+          </div>
+          <div class="flex-1 relative flex">
+            <textarea id="txtModified" spellcheck="false" placeholder="// Paste or type modified code snippet here..."
+              class="w-full h-full min-h-[350px] p-4 bg-[#080d1e] text-slate-200 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DIFF DISPLAY RENDERER (Shown after compare) -->
+      <div id="diffOutputContainer" class="hidden flex-1 bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg flex flex-col">
+        <!-- RENDERED OUTPUT GOES HERE dynamically -->
+        <div id="diffDisplayArea" class="flex-1 overflow-auto bg-[#080d1e] relative"></div>
+      </div>
+
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-blueprint-800 border border-cyanAccent text-white px-4 py-3 rounded-lg shadow-2xl flex items-center space-x-3">
+      <i id="toastIcon" class="fa-solid fa-circle-check text-cyanAccent text-lg"></i>
+      <span id="toastMsg" class="text-sm font-medium">Notification message</span>
+    </div>
+
+    <!-- HELP MODAL -->
+    <div id="helpModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-blueprint-800 border border-blueprint-600 rounded-xl max-w-lg w-full p-6 shadow-2xl text-slate-200">
+        <div class="flex items-center justify-between border-b border-blueprint-600 pb-3 mb-4">
+          <h3 class="text-lg font-bold text-cyanAccent flex items-center gap-2">
+            <i class="fa-solid fa-keyboard"></i> Shortcuts & Information
+          </h3>
+          <button id="btnCloseHelp" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="space-y-4 text-sm">
+          <div>
+            <h4 class="font-semibold text-white mb-1">Keyboard Shortcuts</h4>
+            <ul class="space-y-1 text-slate-300 font-mono text-xs">
+              <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + C</span> : Trigger Compare</li>
+              <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + Down</span> : Next Difference</li>
+              <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + Up</span> : Previous Difference</li>
+              <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Esc</span> : Toggle Edit / Diff View</li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-1">Privacy & Processing</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              All code comparisons take place directly within your web browser using client-side JavaScript. No snippets or text data are transmitted over the network.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== UTILITY HUB FOOTER ==================== -->
+  <footer class="border-t border-blueprint-600/40 bg-[#080d1e] py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>Utility Hub &copy; 2026 &bull; Professional Developer Utilities</div>
+      <div class="flex items-center space-x-4">
+        <span>Line-based & Word Diff Algorithm</span>
+        <span>&bull;</span>
+        <span class="text-cyanAccent font-mono">v2.4.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== JSDIFF & CLIENT LOGIC ==================== -->
+  <script>
+    /**
+     * Light-weight embedded Myers line diff & word diff implementation
+     * to eliminate external dependency failures.
+     */
+    const DiffEngine = (function() {
+      // Standard escaping for HTML safety
+      function escapeHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Myers Diff algorithm for lines
+      function diffLines(text1, text2, options = {}) {
+        let lines1 = text1.split(/\r\n|\r|\n/);
+        let lines2 = text2.split(/\r\n|\r|\n/);
+
+        // Handle case/whitespace ignore pre-transforms for comparison keys
+        const prep = (line) => {
+          let res = line;
+          if (options.ignoreWhitespace) res = res.replace(/\s+/g, ' ').trim();
+          if (options.ignoreCase) res = res.toLowerCase();
+          return res;
+        };
+
+        const key1 = lines1.map(prep);
+        const key2 = lines2.map(prep);
+
+        const N = key1.length;
+        const M = key2.length;
+        const MAX = N + M;
+        const V = {};
+        V[1] = 0;
+        const trace = [];
+
+        for (let D = 0; D <= MAX; D++) {
+          const vCopy = Object.assign({}, V);
+          trace.push(vCopy);
+
+          for (let k = -D; k <= D; k += 2) {
+            let x;
+            if (k === -D || (k !== D && V[k - 1] < V[k + 1])) {
+              x = V[k + 1];
+            } else {
+              x = V[k - 1] + 1;
+            }
+            let y = x - k;
+
+            while (x < N && y < M && key1[x] === key2[y]) {
+              x++;
+              y++;
+            }
+            V[k] = x;
+
+            if (x >= N && y >= M) {
+              return buildPath(trace, lines1, lines2, key1, key2);
+            }
+          }
+        }
+        return [];
+      }
+
+      function buildPath(trace, lines1, lines2, key1, key2) {
+        let x = lines1.length;
+        let y = lines2.length;
+        const diffs = [];
+
+        for (let D = trace.length - 1; D >= 0; D--) {
+          const V = trace[D];
+          const k = x - y;
+          let prevK;
+
+          if (k === -D || (k !== D && V[k - 1] < V[k + 1])) {
+            prevK = k + 1;
+          } else {
+            prevK = k - 1;
+          }
+
+          const prevX = V[prevK];
+          const prevY = prevX - prevK;
+
+          while (x > prevX && y > prevY) {
+            diffs.push({ type: 'unchanged', val1: lines1[x - 1], val2: lines2[y - 1] });
+            x--;
+            y--;
+          }
+
+          if (D > 0) {
+            if (x === prevX) {
+              diffs.push({ type: 'added', val2: lines2[y - 1] });
+            } else if (y === prevY) {
+              diffs.push({ type: 'removed', val1: lines1[x - 1] });
+            }
+          }
+          x = prevX;
+          y = prevY;
+        }
+
+        return diffs.reverse();
+      }
+
+      // Word / Character level diffing for modified line regions
+      function diffWords(str1, str2) {
+        const words1 = str1.match(/\s+|\w+|[^\w\s]+/g) || [];
+        const words2 = str2.match(/\s+|\w+|[^\w\s]+/g) || [];
+
+        const N = words1.length;
+        const M = words2.length;
+        const MAX = N + M;
+        const V = { 1: 0 };
+        const trace = [];
+
+        for (let D = 0; D <= MAX; D++) {
+          trace.push(Object.assign({}, V));
+          for (let k = -D; k <= D; k += 2) {
+            let x = (k === -D || (k !== D && V[k - 1] < V[k + 1])) ? V[k + 1] : V[k - 1] + 1;
+            let y = x - k;
+            while (x < N && y < M && words1[x] === words2[y]) {
+              x++; y++;
+            }
+            V[k] = x;
+            if (x >= N && y >= M) {
+              return renderWordDiff(trace, words1, words2);
+            }
+          }
+        }
+        return { html1: escapeHtml(str1), html2: escapeHtml(str2) };
+      }
+
+      function renderWordDiff(trace, w1, w2) {
+        let x = w1.length, y = w2.length;
+        let res1 = [], res2 = [];
+
+        for (let D = trace.length - 1; D >= 0; D--) {
+          const V = trace[D];
+          const k = x - y;
+          const prevK = (k === -D || (k !== D && V[k - 1] < V[k + 1])) ? k + 1 : k - 1;
+          const prevX = V[prevK];
+          const prevY = prevX - prevK;
+
+          while (x > prevX && y > prevY) {
+            const escaped = escapeHtml(w1[x - 1]);
+            res1.push(escaped);
+            res2.push(escaped);
+            x--; y--;
+          }
+
+          if (D > 0) {
+            if (x === prevX) {
+              res2.push(`<mark class="bg-emerald-500/40 text-emerald-100 rounded px-0.5">${escapeHtml(w2[y - 1])}</mark>`);
+            } else if (y === prevY) {
+              res1.push(`<mark class="bg-rose-500/40 text-rose-100 rounded px-0.5">${escapeHtml(w1[x - 1])}</mark>`);
+            }
+          }
+          x = prevX; y = prevY;
+        }
+
+        return {
+          html1: res1.reverse().join(''),
+          html2: res2.reverse().join('')
+        };
+      }
+
+      return {
+        diffLines,
+        diffWords,
+        escapeHtml
+      };
+    })();
+
+    // Application State
+    const state = {
+      viewMode: 'side', // 'side' or 'unified'
+      diffResults: [],
+      changeIndices: [],
+      currentChangeIdx: -1,
+      isComparing: false
+    };
+
+    // DOM Elements
+    const txtOriginal = document.getElementById('txtOriginal');
+    const txtModified = document.getElementById('txtModified');
+    const statsOriginal = document.getElementById('statsOriginal');
+    const statsModified = document.getElementById('statsModified');
+    
+    const btnCompare = document.getElementById('btnCompare');
+    const btnSample = document.getElementById('btnSample');
+    const btnSwap = document.getElementById('btnSwap');
+    const btnClear = document.getElementById('btnClear');
+    
+    const btnPasteOriginal = document.getElementById('btnPasteOriginal');
+    const btnClearOriginal = document.getElementById('btnClearOriginal');
+    const btnPasteModified = document.getElementById('btnPasteModified');
+    const btnClearModified = document.getElementById('btnClearModified');
+
+    const chkIgnoreWhitespace = document.getElementById('chkIgnoreWhitespace');
+    const chkIgnoreCase = document.getElementById('chkIgnoreCase');
+    const chkSyncScroll = document.getElementById('chkSyncScroll');
+
+    const inputEditorsContainer = document.getElementById('inputEditorsContainer');
+    const diffOutputContainer = document.getElementById('diffOutputContainer');
+    const diffDisplayArea = document.getElementById('diffDisplayArea');
+    const diffSummaryBar = document.getElementById('diffSummaryBar');
+
+    const countAdditions = document.getElementById('countAdditions');
+    const countDeletions = document.getElementById('countDeletions');
+    const countUnchanged = document.getElementById('countUnchanged');
+
+    const btnViewSide = document.getElementById('btnViewSide');
+    const btnViewUnified = document.getElementById('btnViewUnified');
+    const btnPrevChange = document.getElementById('btnPrevChange');
+    const btnNextChange = document.getElementById('btnNextChange');
+    const changeCounter = document.getElementById('changeCounter');
+
+    const btnCopyDiff = document.getElementById('btnCopyDiff');
+    const btnDownloadDiff = document.getElementById('btnDownloadDiff');
+
+    const helpModal = document.getElementById('helpModal');
+    const btnHelp = document.getElementById('btnHelp');
+    const btnCloseHelp = document.getElementById('btnCloseHelp');
+
+    // Sample Snippets
+    const SAMPLE_BEFORE = `function calculateTotal(items) {
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    let item = items[i];
+    if (item.price > 0) {
+      total += item.price;
+    }
+  }
+  return total;
+}`;
+
+    const SAMPLE_AFTER = `/**
+ * Calculates sum total of valid item prices
+ */
+function calculateTotal(items = []) {
+  if (!Array.isArray(items)) return 0;
+  
+  return items.reduce((sum, item) => {
+    return item.price && item.price > 0 ? sum + item.price : sum;
+  }, 0);
+}`;
+
+    // --- EVENT LISTENERS ---
+    window.addEventListener('DOMContentLoaded', () => {
+      updateInputStats();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      txtOriginal.addEventListener('input', updateInputStats);
+      txtModified.addEventListener('input', updateInputStats);
+
+      btnCompare.addEventListener('click', performComparison);
+      btnSample.addEventListener('click', loadSampleData);
+      btnSwap.addEventListener('click', swapInputs);
+      btnClear.addEventListener('click', clearAll);
+
+      btnPasteOriginal.addEventListener('click', () => pasteTo(txtOriginal));
+      btnClearOriginal.addEventListener('click', () => { txtOriginal.value = ''; updateInputStats(); });
+      btnPasteModified.addEventListener('click', () => pasteTo(txtModified));
+      btnClearModified.addEventListener('click', () => { txtModified.value = ''; updateInputStats(); });
+
+      btnViewSide.addEventListener('click', () => setViewMode('side'));
+      btnViewUnified.addEventListener('click', () => setViewMode('unified'));
+
+      btnPrevChange.addEventListener('click', () => navigateChange(-1));
+      btnNextChange.addEventListener('click', () => navigateChange(1));
+
+      btnCopyDiff.addEventListener('click', copyUnifiedDiff);
+      btnDownloadDiff.addEventListener('click', downloadDiffFile);
+
+      btnHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
+      btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
+
+      // Keyboard shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+          e.preventDefault();
+          performComparison();
+        } else if (e.altKey && e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateChange(1);
+        } else if (e.altKey && e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateChange(-1);
+        } else if (e.key === 'Escape') {
+          if (!helpModal.classList.contains('hidden')) {
+            helpModal.classList.add('hidden');
+          }
+        }
+      });
+    }
+
+    // --- HELPER FUNCTIONS ---
+    function updateInputStats() {
+      const getStats = (str) => {
+        const lines = str ? str.split('\n').length : 0;
+        const chars = str ? str.length : 0;
+        return `${lines} lines | ${chars} chars`;
+      };
+      statsOriginal.textContent = getStats(txtOriginal.value);
+      statsModified.textContent = getStats(txtModified.value);
+    }
+
+    async function pasteTo(textarea) {
+      try {
+        const text = await navigator.clipboard.readText();
+        textarea.value = text;
+        updateInputStats();
+        showToast('Pasted content from clipboard');
+      } catch (err) {
+        showToast('Clipboard access denied or unsupported', true);
+      }
+    }
+
+    function loadSampleData() {
+      txtOriginal.value = SAMPLE_BEFORE;
+      txtModified.value = SAMPLE_AFTER;
+      updateInputStats();
+      showToast('Sample code loaded');
+      performComparison();
+    }
+
+    function swapInputs() {
+      const temp = txtOriginal.value;
+      txtOriginal.value = txtModified.value;
+      txtModified.value = temp;
+      updateInputStats();
+      showToast('Inputs swapped');
+      if (state.isComparing) {
+        performComparison();
+      }
+    }
+
+    function clearAll() {
+      txtOriginal.value = '';
+      txtModified.value = '';
+      updateInputStats();
+      diffSummaryBar.classList.add('hidden');
+      diffOutputContainer.classList.add('hidden');
+      inputEditorsContainer.classList.remove('hidden');
+      state.isComparing = false;
+      showToast('Inputs cleared');
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = message;
+      if (isError) {
+        toast.classList.remove('border-cyanAccent');
+        toast.classList.add('border-rose-500');
+        toastIcon.className = 'fa-solid fa-triangle-exclamation text-rose-500 text-lg';
+      } else {
+        toast.classList.remove('border-rose-500');
+        toast.classList.add('border-cyanAccent');
+        toastIcon.className = 'fa-solid fa-circle-check text-cyanAccent text-lg';
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // --- MAIN COMPARISON LOGIC ---
+    function performComparison() {
+      const val1 = txtOriginal.value;
+      const val2 = txtModified.value;
+
+      if (!val1 && !val2) {
+        showToast('Please enter code in at least one editor panel', true);
+        return;
+      }
+
+      const options = {
+        ignoreWhitespace: chkIgnoreWhitespace.checked,
+        ignoreCase: chkIgnoreCase.checked
+      };
+
+      // Generate raw diff items
+      const rawDiff = DiffEngine.diffLines(val1, val2, options);
+
+      // Structure pairs for rendering
+      state.diffResults = processDiffPairs(rawDiff);
+      state.isComparing = true;
+
+      // Update counters
+      let additions = 0;
+      let deletions = 0;
+      let unchanged = 0;
+
+      rawDiff.forEach(item => {
+        if (item.type === 'added') additions++;
+        else if (item.type === 'removed') deletions++;
+        else unchanged++;
+      });
+
+      countAdditions.textContent = additions;
+      countDeletions.textContent = deletions;
+      countUnchanged.textContent = unchanged;
+
+      diffSummaryBar.classList.remove('hidden');
+      diffOutputContainer.classList.remove('hidden');
+
+      renderDiffView();
+
+      if (additions === 0 && deletions === 0) {
+        showToast('Identical content - No changes detected');
+      } else {
+        showToast(`Diff generated: +${additions} -${deletions}`);
+      }
+    }
+
+    /**
+     * Pair up removed & added lines into modified blocks for cleaner side-by-side view
+     */
+    function processDiffPairs(diffs) {
+      const paired = [];
+      let i = 0;
+      let lineNum1 = 1;
+      let lineNum2 = 1;
+
+      while (i < diffs.length) {
+        const item = diffs[i];
+
+        if (item.type === 'unchanged') {
+          paired.push({
+            type: 'unchanged',
+            line1: lineNum1++,
+            line2: lineNum2++,
+            val1: item.val1,
+            val2: item.val2
+          });
+          i++;
+        } else if (item.type === 'removed') {
+          // Check if followed by added line to mark as inline modified
+          let addedItems = [];
+          let j = i + 1;
+          let removedItems = [item];
+
+          while (j < diffs.length && diffs[j].type === 'removed') {
+            removedItems.push(diffs[j]);
+            j++;
+          }
+          while (j < diffs.length && diffs[j].type === 'added') {
+            addedItems.push(diffs[j]);
+            j++;
+          }
+
+          if (addedItems.length > 0) {
+            // Pair them as modified block
+            const maxLen = Math.max(removedItems.length, addedItems.length);
+            for (let k = 0; k < maxLen; k++) {
+              const rem = removedItems[k];
+              const add = addedItems[k];
+
+              if (rem && add) {
+                const wordDiff = DiffEngine.diffWords(rem.val1, add.val2);
+                paired.push({
+                  type: 'modified',
+                  line1: lineNum1++,
+                  line2: lineNum2++,
+                  val1: rem.val1,
+                  val2: add.val2,
+                  html1: wordDiff.html1,
+                  html2: wordDiff.html2
+                });
+              } else if (rem) {
+                paired.push({
+                  type: 'removed',
+                  line1: lineNum1++,
+                  line2: null,
+                  val1: rem.val1,
+                  val2: null
+                });
+              } else if (add) {
+                paired.push({
+                  type: 'added',
+                  line1: null,
+                  line2: lineNum2++,
+                  val1: null,
+                  val2: add.val2
+                });
+              }
+            }
+            i = j;
+          } else {
+            paired.push({
+              type: 'removed',
+              line1: lineNum1++,
+              line2: null,
+              val1: item.val1,
+              val2: null
+            });
+            i++;
+          }
+        } else if (item.type === 'added') {
+          paired.push({
+            type: 'added',
+            line1: null,
+            line2: lineNum2++,
+            val1: null,
+            val2: item.val2
+          });
+          i++;
+        }
+      }
+
+      return paired;
+    }
+
+    function setViewMode(mode) {
+      state.viewMode = mode;
+      if (mode === 'side') {
+        btnViewSide.className = "px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition";
+        btnViewUnified.className = "px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition";
+      } else {
+        btnViewUnified.className = "px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition";
+        btnViewSide.className = "px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition";
+      }
+      if (state.isComparing) {
+        renderDiffView();
+      }
+    }
+
+    // RENDERER
+    function renderDiffView() {
+      diffDisplayArea.innerHTML = '';
+      state.changeIndices = [];
+      state.currentChangeIdx = -1;
+
+      if (state.viewMode === 'side') {
+        renderSideBySide();
+      } else {
+        renderUnified();
+      }
+
+      updateChangeCounter();
+      setupScrollSync();
+    }
+
+    function renderSideBySide() {
+      const container = document.createElement('div');
+      container.className = "grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-blueprint-600/60 font-mono text-xs leading-relaxed min-w-full";
+
+      const leftCol = document.createElement('div');
+      leftCol.id = "leftScrollPanel";
+      leftCol.className = "overflow-x-auto select-text";
+
+      const rightCol = document.createElement('div');
+      rightCol.id = "rightScrollPanel";
+      rightCol.className = "overflow-x-auto select-text";
+
+      let domIdx = 0;
+
+      state.diffResults.forEach((row, index) => {
+        const leftRow = document.createElement('div');
+        const rightRow = document.createElement('div');
+        leftRow.className = "flex items-stretch min-w-full hover:bg-blueprint-700/30";
+        rightRow.className = "flex items-stretch min-w-full hover:bg-blueprint-700/30";
+
+        const isChange = row.type !== 'unchanged';
+        if (isChange) {
+          state.changeIndices.push(index);
+          leftRow.dataset.changeIdx = state.changeIndices.length - 1;
+          rightRow.dataset.changeIdx = state.changeIndices.length - 1;
+          leftRow.id = `diff-row-left-${state.changeIndices.length - 1}`;
+          rightRow.id = `diff-row-right-${state.changeIndices.length - 1}`;
+        }
+
+        // Left Cell (Original)
+        const line1Num = row.line1 !== null ? row.line1 : '';
+        const line1Content = row.html1 ? row.html1 : (row.val1 !== null ? DiffEngine.escapeHtml(row.val1) : '');
+
+        let leftBgClass = "bg-[#080d1e]";
+        let leftMarker = "";
+        if (row.type === 'removed') {
+          leftBgClass = "bg-rose-500/15 text-rose-200 border-l-2 border-rose-500";
+          leftMarker = "-";
+        } else if (row.type === 'modified') {
+          leftBgClass = "bg-amber-500/10 text-amber-200 border-l-2 border-amber-500";
+          leftMarker = "~";
+        } else if (row.type === 'added') {
+          leftBgClass = "bg-blueprint-900/40 opacity-40";
+        }
+
+        leftRow.innerHTML = `
+          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
+            ${line1Num}
+          </div>
+          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'removed' ? 'text-rose-400' : 'text-slate-600'}">
+            ${leftMarker}
+          </div>
+          <div class="flex-1 px-2 py-0.5 whitespace-pre ${leftBgClass}">
+            ${line1Content || '&nbsp;'}
+          </div>
+        `;
+
+        // Right Cell (Modified)
+        const line2Num = row.line2 !== null ? row.line2 : '';
+        const line2Content = row.html2 ? row.html2 : (row.val2 !== null ? DiffEngine.escapeHtml(row.val2) : '');
+
+        let rightBgClass = "bg-[#080d1e]";
+        let rightMarker = "";
+        if (row.type === 'added') {
+          rightBgClass = "bg-emerald-500/15 text-emerald-200 border-l-2 border-emerald-500";
+          rightMarker = "+";
+        } else if (row.type === 'modified') {
+          rightBgClass = "bg-amber-500/10 text-amber-200 border-l-2 border-amber-500";
+          rightMarker = "~";
+        } else if (row.type === 'removed') {
+          rightBgClass = "bg-blueprint-900/40 opacity-40";
+        }
+
+        rightRow.innerHTML = `
+          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
+            ${line2Num}
+          </div>
+          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'added' ? 'text-emerald-400' : 'text-slate-600'}">
+            ${rightMarker}
+          </div>
+          <div class="flex-1 px-2 py-0.5 whitespace-pre ${rightBgClass}">
+            ${line2Content || '&nbsp;'}
+          </div>
+        `;
+
+        leftCol.appendChild(leftRow);
+        rightCol.appendChild(rightRow);
+      });
+
+      container.appendChild(leftCol);
+      container.appendChild(rightCol);
+      diffDisplayArea.appendChild(container);
+    }
+
+    function renderUnified() {
+      const container = document.createElement('div');
+      container.id = "unifiedScrollPanel";
+      container.className = "font-mono text-xs leading-relaxed min-w-full overflow-x-auto select-text";
+
+      state.diffResults.forEach((row, index) => {
+        const isChange = row.type !== 'unchanged';
+
+        if (row.type === 'modified') {
+          // In unified view, render removed first then added
+          appendUnifiedRow(container, row.line1, '', '-', row.val1, 'removed', index);
+          appendUnifiedRow(container, '', row.line2, '+', row.val2, 'added', index);
+        } else if (row.type === 'removed') {
+          appendUnifiedRow(container, row.line1, '', '-', row.val1, 'removed', index);
+        } else if (row.type === 'added') {
+          appendUnifiedRow(container, '', row.line2, '+', row.val2, 'added', index);
+        } else {
+          appendUnifiedRow(container, row.line1, row.line2, ' ', row.val1, 'unchanged', index);
+        }
+      });
+
+      diffDisplayArea.appendChild(container);
+    }
+
+    function appendUnifiedRow(container, l1, l2, symbol, text, type, origIdx) {
+      const row = document.createElement('div');
+      row.className = "flex items-stretch min-w-full hover:bg-blueprint-700/30";
+
+      if (type !== 'unchanged') {
+        const cIdx = state.changeIndices.indexOf(origIdx) !== -1 
+          ? state.changeIndices.indexOf(origIdx) 
+          : state.changeIndices.push(origIdx) - 1;
+        
+        row.dataset.changeIdx = cIdx;
+        row.id = `diff-row-unified-${cIdx}`;
+      }
+
+      let bgClass = "bg-[#080d1e]";
+      let textClass = "text-slate-300";
+      if (type === 'added') {
+        bgClass = "bg-emerald-500/15 border-l-2 border-emerald-500";
+        textClass = "text-emerald-300";
+      } else if (type === 'removed') {
+        bgClass = "bg-rose-500/15 border-l-2 border-rose-500";
+        textClass = "text-rose-300";
+      }
+
+      row.innerHTML = `
+        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
+          ${l1 || ''}
+        </div>
+        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
+          ${l2 || ''}
+        </div>
+        <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${type === 'added' ? 'text-emerald-400' : (type === 'removed' ? 'text-rose-400' : 'text-slate-600')}">
+          ${symbol}
+        </div>
+        <div class="flex-1 px-2 py-0.5 whitespace-pre ${bgClass} ${textClass}">
+          ${DiffEngine.escapeHtml(text || '')}
+        </div>
+      `;
+
+      container.appendChild(row);
+    }
+
+    // JUMP NAVIGATION
+    function navigateChange(direction) {
+      if (state.changeIndices.length === 0) return;
+
+      state.currentChangeIdx += direction;
+      if (state.currentChangeIdx < 0) state.currentChangeIdx = state.changeIndices.length - 1;
+      if (state.currentChangeIdx >= state.changeIndices.length) state.currentChangeIdx = 0;
+
+      updateChangeCounter();
+
+      // Clear previous highlights
+      document.querySelectorAll('.diff-active-target').forEach(el => {
+        el.classList.remove('diff-active-target', 'ring-2', 'ring-cyanAccent');
+      });
+
+      // Highlight target
+      const idx = state.currentChangeIdx;
+      if (state.viewMode === 'side') {
+        const leftTarget = document.getElementById(`diff-row-left-${idx}`);
+        const rightTarget = document.getElementById(`diff-row-right-${idx}`);
+        if (leftTarget) {
+          leftTarget.classList.add('diff-active-target', 'ring-2', 'ring-cyanAccent');
+          leftTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        if (rightTarget) {
+          rightTarget.classList.add('diff-active-target', 'ring-2', 'ring-cyanAccent');
+          rightTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        const target = document.getElementById(`diff-row-unified-${idx}`);
+        if (target) {
+          target.classList.add('diff-active-target', 'ring-2', 'ring-cyanAccent');
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+
+    function updateChangeCounter() {
+      const total = state.changeIndices.length;
+      const current = total === 0 ? 0 : state.currentChangeIdx + 1;
+      changeCounter.textContent = `${current} / ${total}`;
+    }
+
+    // SYNCHRONIZED SCROLLING
+    function setupScrollSync() {
+      if (state.viewMode !== 'side') return;
+      const left = document.getElementById('leftScrollPanel');
+      const right = document.getElementById('rightScrollPanel');
+
+      if (!left || !right) return;
+
+      let isSyncing = false;
+
+      left.onscroll = () => {
+        if (!chkSyncScroll.checked) return;
+        if (!isSyncing) {
+          isSyncing = true;
+          right.scrollTop = left.scrollTop;
+          right.scrollLeft = left.scrollLeft;
+        }
+        isSyncing = false;
+      };
+
+      right.onscroll = () => {
+        if (!chkSyncScroll.checked) return;
+        if (!isSyncing) {
+          isSyncing = true;
+          left.scrollTop = right.scrollTop;
+          left.scrollLeft = right.scrollLeft;
+        }
+        isSyncing = false;
+      };
+    }
+
+    // EXPORT FUNCTIONS
+    function generateUnifiedPatchText() {
+      let patch = `--- Original\n+++ Modified\n@@ -1,${txtOriginal.value.split('\n').length} +1,${txtModified.value.split('\n').length} @@\n`;
+
+      state.diffResults.forEach(row => {
+        if (row.type === 'unchanged') {
+          patch += ` ${row.val1}\n`;
+        } else if (row.type === 'removed') {
+          patch += `-${row.val1}\n`;
+        } else if (row.type === 'added') {
+          patch += `+${row.val2}\n`;
+        } else if (row.type === 'modified') {
+          patch += `-${row.val1}\n`;
+          patch += `+${row.val2}\n`;
+        }
+      });
+
+      return patch;
+    }
+
+    function copyUnifiedDiff() {
+      if (!state.isComparing) return;
+      const patch = generateUnifiedPatchText();
+      
+      const textarea = document.createElement('textarea');
+      textarea.value = patch;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Unified diff patch copied to clipboard');
+      } catch (e) {
+        showToast('Failed to copy diff patch', true);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function downloadDiffFile() {
+      if (!state.isComparing) return;
+      const patch = generateUnifiedPatchText();
+      const blob = new Blob([patch], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `changes_${new Date().toISOString().slice(0, 10)}.diff`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported patch file successfully');
+    }
+  </script>
+</body>
+</html>

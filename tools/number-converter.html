@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility Hub / Number Converter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#0b132b',
+                            800: '#1c2541',
+                            700: '#232d4d',
+                            600: '#3a506b',
+                        },
+                        cyan: {
+                            accent: '#4cc9f0',
+                            glow: 'rgba(76, 201, 240, 0.15)',
+                        },
+                        mint: {
+                            accent: '#06d6a0',
+                        }
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b132b;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(rgba(58, 80, 107, 0.25) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b132b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3a506b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4cc9f0;
+        }
+        .blueprint-card {
+            background: #1c2541;
+            border: 1px solid #3a506b;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+        }
+        .blueprint-card:focus-within {
+            border-color: #4cc9f0;
+            box-shadow: 0 0 15px rgba(76, 201, 240, 0.2);
+        }
+        .tech-corner {
+            position: relative;
+        }
+        .tech-corner::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            width: 6px;
+            height: 6px;
+            border-top: 2px solid #4cc9f0;
+            border-left: 2px solid #4cc9f0;
+        }
+        .tech-corner::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: -1px;
+            width: 6px;
+            height: 6px;
+            border-bottom: 2px solid #4cc9f0;
+            border-right: 2px solid #4cc9f0;
+        }
+    </style>
+    <script src="../style.js" data-uh-page-type="tool" data-uh-title="Number Converter"></script>
+</head>
+<body class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 uh-number-converter-page">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div class="max-w-6xl w-full mx-auto space-y-6">
+        
+        <!-- Header Console Bar -->
+        <header class="blueprint-card rounded-lg p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 tech-corner border-l-4 border-l-[#4cc9f0]">
+            <div>
+                <div class="flex items-center gap-2 text-xs font-mono text-cyan-accent tracking-widest uppercase mb-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-mint-accent animate-pulse"></span>
+                    System Console v2.5 // Base Engine
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-3">
+                    Utility Hub <span class="text-navy-600 font-normal">/</span> <span class="text-cyan-accent">Number Converter</span>
+                </h1>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-center">
+                <button id="btn-formatted-toggle" onclick="toggleFormatting()" class="px-3 py-1.5 rounded text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 text-slate-200 transition flex items-center gap-2">
+                    <svg class="w-4 h-4 text-cyan-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    Formatting: <span id="formatting-status" class="text-mint-accent font-bold">ON</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Quick Actions & Presets Toolbar -->
+        <div class="blueprint-card rounded-lg p-4 flex flex-wrap items-center justify-between gap-4" data-number-mode="standard">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-mono text-slate-400 uppercase tracking-wider mr-1">Presets:</span>
+                <button onclick="applyPreset('255')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">255 (8-bit max)</button>
+                <button onclick="applyPreset('1024')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">1024 (1 KiB)</button>
+                <button onclick="applyPreset('65535')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">65535 (16-bit max)</button>
+                <button onclick="applyPreset('16777215')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">16777215 (24-bit RGB)</button>
+                <button onclick="applyPreset('18446744073709551615')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">64-bit Max</button>
+                <button onclick="applyPreset('-42')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-amber-400 hover:border-amber-400 transition">-42 (Negative)</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="clearAll()" class="px-3 py-1.5 text-xs font-mono bg-red-950/40 hover:bg-red-900/60 border border-red-700/60 text-red-300 rounded transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <nav class="uh-number-modes" aria-label="Conversion mode">
+            <button type="button" class="uh-number-mode is-active" data-mode="standard" aria-pressed="true">Standard bases</button>
+            <button type="button" class="uh-number-mode" data-mode="custom" aria-pressed="false">Custom base</button>
+            <button type="button" class="uh-number-mode" data-mode="color" aria-pressed="false">HEX / RGB</button>
+        </nav>
+
+        <section class="blueprint-card uh-number-panel hidden" data-number-mode="custom" aria-labelledby="custom-base-title">
+            <div class="uh-number-panel-head">
+                <div>
+                    <h2 id="custom-base-title">Custom base conversion</h2>
+                    <p>Convert signed integers between any bases from 2 through 36.</p>
+                </div>
+                <button type="button" id="custom-swap" class="uh-number-action">Swap bases</button>
+            </div>
+            <div class="uh-number-conversion-grid">
+                <label class="uh-number-field" for="custom-input">Value
+                    <input type="text" id="custom-input" autocomplete="off" spellcheck="false" placeholder="e.g. 101101">
+                </label>
+                <label class="uh-number-field" for="custom-from">From base
+                    <input type="number" id="custom-from" min="2" max="36" value="2" inputmode="numeric">
+                </label>
+                <label class="uh-number-field" for="custom-to">To base
+                    <input type="number" id="custom-to" min="2" max="36" value="10" inputmode="numeric">
+                </label>
+                <label class="uh-number-field" for="custom-output">Result
+                    <span class="uh-number-output-row">
+                        <input type="text" id="custom-output" readonly aria-live="polite" placeholder="Converted value">
+                        <button type="button" id="custom-copy" class="uh-number-action">Copy</button>
+                    </span>
+                </label>
+            </div>
+            <p id="custom-error" class="uh-number-error" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="blueprint-card uh-number-panel hidden" data-number-mode="color" aria-labelledby="color-conversion-title">
+            <div class="uh-number-panel-head">
+                <div>
+                    <h2 id="color-conversion-title">HEX / RGB conversion</h2>
+                    <p>Enter a six-digit HEX color or RGB channel values (0–255).</p>
+                </div>
+                <span id="color-preview" class="uh-color-preview" role="img" aria-label="Color preview"></span>
+            </div>
+            <div class="uh-number-color-grid">
+                <label class="uh-number-field" for="color-hex">HEX
+                    <span class="uh-number-output-row">
+                        <input type="text" id="color-hex" value="#6FD8CB" autocomplete="off" spellcheck="false" placeholder="#6FD8CB" maxlength="7">
+                        <button type="button" id="color-copy-hex" class="uh-number-action">Copy</button>
+                    </span>
+                </label>
+                <fieldset class="uh-number-rgb">
+                    <legend>RGB</legend>
+                    <label class="uh-number-field" for="color-red">Red
+                        <input type="number" id="color-red" min="0" max="255" value="111" inputmode="numeric">
+                    </label>
+                    <label class="uh-number-field" for="color-green">Green
+                        <input type="number" id="color-green" min="0" max="255" value="216" inputmode="numeric">
+                    </label>
+                    <label class="uh-number-field" for="color-blue">Blue
+                        <input type="number" id="color-blue" min="0" max="255" value="203" inputmode="numeric">
+                    </label>
+                </fieldset>
+                <button type="button" id="color-copy-rgb" class="uh-number-action uh-number-rgb-copy">Copy RGB</button>
+            </div>
+            <p id="color-error" class="uh-number-error" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- Multi-Base Live Converter Matrix -->
+        <div class="grid grid-cols-1 gap-5" data-number-mode="standard">
+            
+            <!-- BINARY (Base 2) -->
+            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-bin">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-cyan-accent/20 text-cyan-accent border border-cyan-accent/40 rounded">BASE 2</span>
+                        <label for="input-bin" class="text-sm font-semibold font-mono text-slate-200">BINARY</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="badge-bin" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-1)</span>
+                        <button onclick="copyToClipboard('bin')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="input-bin" oninput="handleInput('bin')" placeholder="e.g. 11111111" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-cyan-accent focus:outline-none focus:border-cyan-accent transition tracking-wider">
+                </div>
+                <div id="formatted-bin" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="text-slate-500 uppercase mr-2">Formatted (4-bit nibbles):</span>
+                    <span id="formatted-bin-val" class="text-slate-200"></span>
+                </div>
+            </div>
+
+            <!-- OCTAL (Base 8) -->
+            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-oct">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded">BASE 8</span>
+                        <label for="input-oct" class="text-sm font-semibold font-mono text-slate-200">OCTAL</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="badge-oct" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-7)</span>
+                        <button onclick="copyToClipboard('oct')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="input-oct" oninput="handleInput('oct')" placeholder="e.g. 377" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-purple-300 focus:outline-none focus:border-purple-400 transition tracking-wider">
+                </div>
+                <div id="formatted-oct" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="text-slate-500 uppercase mr-2">Formatted (3-digit groups):</span>
+                    <span id="formatted-oct-val" class="text-slate-200"></span>
+                </div>
+            </div>
+
+            <!-- DECIMAL (Base 10) -->
+            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-dec">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-mint-accent/20 text-mint-accent border border-mint-accent/40 rounded">BASE 10</span>
+                        <label for="input-dec" class="text-sm font-semibold font-mono text-slate-200">DECIMAL</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="badge-dec" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-9)</span>
+                        <button onclick="copyToClipboard('dec')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="input-dec" oninput="handleInput('dec')" placeholder="e.g. 255" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-mint-accent focus:outline-none focus:border-mint-accent transition tracking-wider">
+                </div>
+                <div id="formatted-dec" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="text-slate-500 uppercase mr-2">Formatted (Thousands separators):</span>
+                    <span id="formatted-dec-val" class="text-slate-200"></span>
+                </div>
+            </div>
+
+            <!-- HEXADECIMAL (Base 16) -->
+            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-hex">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded">BASE 16</span>
+                        <label for="input-hex" class="text-sm font-semibold font-mono text-slate-200">HEXADECIMAL</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="badge-hex" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-9, A-F)</span>
+                        <button onclick="copyToClipboard('hex')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <input type="text" id="input-hex" oninput="handleInput('hex')" placeholder="e.g. FF" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-amber-300 focus:outline-none focus:border-amber-400 transition tracking-wider uppercase">
+                </div>
+                <div id="formatted-hex" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="text-slate-500 uppercase mr-2">Formatted (Byte pairs):</span>
+                    <span id="formatted-hex-val" class="text-slate-200"></span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bitwise & Representation Telemetry Info -->
+        <div class="blueprint-card rounded-lg p-5 space-y-4" data-number-mode="standard">
+            <h2 class="text-xs font-mono text-cyan-accent uppercase tracking-widest flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                Bitwise & Architecture Specs
+            </h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+                <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
+                    <span class="text-slate-400 block mb-1">Bit Count (Magnitude):</span>
+                    <span id="meta-bits" class="text-slate-100 font-bold text-sm">0 bits</span>
+                </div>
+                <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
+                    <span class="text-slate-400 block mb-1">Byte Count:</span>
+                    <span id="meta-bytes" class="text-slate-100 font-bold text-sm">0 bytes</span>
+                </div>
+                <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
+                    <span class="text-slate-400 block mb-1">Min Boundary Width:</span>
+                    <span id="meta-width" class="text-slate-100 font-bold text-sm">8-bit</span>
+                </div>
+                <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
+                    <span class="text-slate-400 block mb-1">Sign State:</span>
+                    <span id="meta-sign" class="text-mint-accent font-bold text-sm">Positive (+)</span>
+                </div>
+            </div>
+            <div class="bg-navy-900/80 p-3 rounded border border-navy-700 text-xs font-mono space-y-1">
+                <div class="text-slate-400 flex justify-between">
+                    <span>2's Complement Representation (8/16/32-bit padded):</span>
+                    <button onclick="copy2sComp()" class="text-cyan-accent hover:underline lowercase">copy</button>
+                </div>
+                <div id="meta-twos-comp" class="text-slate-200 break-all font-bold">00000000</div>
+            </div>
+        </div>
+
+        <!-- Step-by-Step Educational Explanation Accordion -->
+        <div class="blueprint-card rounded-lg overflow-hidden" data-number-mode="standard">
+            <button onclick="toggleAccordion()" class="w-full p-4 text-left flex justify-between items-center hover:bg-navy-700/50 transition">
+                <span class="text-sm font-mono font-bold text-slate-200 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-cyan-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Step-by-Step Math Breakdown
+                </span>
+                <span id="accordion-icon" class="text-slate-400 font-mono text-xs">▼ Expand</span>
+            </button>
+            <div id="accordion-content" class="hidden p-5 border-t border-navy-600 bg-navy-900/40 space-y-4 text-xs font-mono">
+                <div>
+                    <h3 class="text-cyan-accent font-bold mb-2 uppercase">1. Evaluation to Decimal (Base 10)</h3>
+                    <div id="step-to-dec" class="text-slate-300 space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
+                        Enter a valid value above to see the calculation steps.
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-mint-accent font-bold mb-2 uppercase">2. Conversion to Binary (Base 2 Place Values)</h3>
+                    <div id="step-to-bin" class="text-slate-300 space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
+                        Enter a valid value above to see the calculation steps.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-6xl w-full mx-auto mt-8 text-center text-xs font-mono text-slate-500">
+        Utility Hub Console • High-Precision BigInt Base Engine
+    </footer>
+
+    <!-- Logic Engine JS -->
+    <script>
+        // State
+        let isFormatted = true;
+        let currentBigInt = 0n;
+        let activeBase = 'dec';
+
+        // Regex per base
+        const PATTERNS = {
+            bin: /^-?[01]+$/,
+            oct: /^-?[0-7]+$/,
+            dec: /^-?\d+$/,
+            hex: /^-?[0-9a-fA-F]+$/
+        };
+
+        // Window load initialization
+        window.onload = function() {
+            applyPreset('255');
+            initializeNumberModes();
+            updateColorFromHex();
+        };
+
+        // Formatting Toggle
+        function toggleFormatting() {
+            isFormatted = !isFormatted;
+            document.getElementById('formatting-status').textContent = isFormatted ? 'ON' : 'OFF';
+            document.getElementById('formatting-status').className = isFormatted ? 'text-mint-accent font-bold' : 'text-red-400 font-bold';
+            
+            const containers = ['formatted-bin', 'formatted-oct', 'formatted-dec', 'formatted-hex'];
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (isFormatted && currentBigInt !== null) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            if (currentBigInt !== null) updateAllFields(activeBase);
+        }
+
+        // Accordion Toggle
+        function toggleAccordion() {
+            const content = document.getElementById('accordion-content');
+            const icon = document.getElementById('accordion-icon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = '▲ Collapse';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = '▼ Expand';
+            }
+        }
+
+        // Handle Input from any field
+        function handleInput(sourceBase) {
+            activeBase = sourceBase;
+            const rawVal = document.getElementById(`input-${sourceBase}`).value.trim();
+            
+            // Clear errors
+            clearBadges();
+
+            if (rawVal === '' || rawVal === '-') {
+                currentBigInt = 0n;
+                clearOtherFields(sourceBase);
+                updateTelemetry(0n);
+                updateSteps(0n, sourceBase);
+                return;
+            }
+
+            // Validate pattern
+            if (!PATTERNS[sourceBase].test(rawVal)) {
+                showBadge(sourceBase);
+                invalidateConversion(sourceBase);
+                return;
+            }
+
+            try {
+                // Parse to BigInt
+                if (sourceBase === 'bin') {
+                    const isNeg = rawVal.startsWith('-');
+                    const clean = isNeg ? rawVal.slice(1) : rawVal;
+                    currentBigInt = BigInt('0b' + clean) * (isNeg ? -1n : 1n);
+                } else if (sourceBase === 'oct') {
+                    const isNeg = rawVal.startsWith('-');
+                    const clean = isNeg ? rawVal.slice(1) : rawVal;
+                    currentBigInt = BigInt('0o' + clean) * (isNeg ? -1n : 1n);
+                } else if (sourceBase === 'dec') {
+                    currentBigInt = BigInt(rawVal);
+                } else if (sourceBase === 'hex') {
+                    const isNeg = rawVal.startsWith('-');
+                    const clean = isNeg ? rawVal.slice(1) : rawVal;
+                    currentBigInt = BigInt('0x' + clean) * (isNeg ? -1n : 1n);
+                }
+
+                updateAllFields(sourceBase);
+                updateTelemetry(currentBigInt);
+                updateSteps(currentBigInt, sourceBase);
+            } catch (e) {
+                showBadge(sourceBase);
+                invalidateConversion(sourceBase);
+            }
+        }
+
+        function invalidateConversion(sourceBase) {
+            currentBigInt = null;
+            clearOtherFields(sourceBase);
+            document.getElementById(`formatted-${sourceBase}-val`).textContent = '';
+            ['formatted-bin', 'formatted-oct', 'formatted-dec', 'formatted-hex'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            ['meta-bits', 'meta-bytes', 'meta-width', 'meta-sign'].forEach(id => {
+                document.getElementById(id).textContent = '—';
+            });
+            document.getElementById('meta-twos-comp').textContent = 'Invalid input';
+            document.getElementById('step-to-dec').textContent = 'Correct the invalid value to see the conversion steps.';
+            document.getElementById('step-to-bin').textContent = 'Correct the invalid value to see the conversion steps.';
+        }
+
+        // Update all other 3 fields
+        function updateAllFields(skipBase) {
+            const val = currentBigInt;
+            const isNeg = val < 0n;
+            const absVal = isNeg ? -val : val;
+
+            // Raw strings
+            const binStr = (isNeg ? '-' : '') + absVal.toString(2);
+            const octStr = (isNeg ? '-' : '') + absVal.toString(8);
+            const decStr = val.toString(10);
+            const hexStr = (isNeg ? '-' : '') + absVal.toString(16).toUpperCase();
+
+            if (skipBase !== 'bin') document.getElementById('input-bin').value = binStr;
+            if (skipBase !== 'oct') document.getElementById('input-oct').value = octStr;
+            if (skipBase !== 'dec') document.getElementById('input-dec').value = decStr;
+            if (skipBase !== 'hex') document.getElementById('input-hex').value = hexStr;
+
+            // Formatted Strings
+            document.getElementById('formatted-bin-val').textContent = formatBinary(binStr);
+            document.getElementById('formatted-oct-val').textContent = formatGrouped(octStr, 3);
+            document.getElementById('formatted-dec-val').textContent = formatDecimal(decStr);
+            document.getElementById('formatted-hex-val').textContent = formatGrouped(hexStr, 2);
+
+            // Toggle formatted visibility
+            const containers = ['formatted-bin', 'formatted-oct', 'formatted-dec', 'formatted-hex'];
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (isFormatted && val !== null) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
+
+        function clearOtherFields(skipBase) {
+            ['bin', 'oct', 'dec', 'hex'].forEach(b => {
+                if (b !== skipBase) document.getElementById(`input-${b}`).value = '';
+                document.getElementById(`formatted-${b}-val`).textContent = '';
+            });
+        }
+
+        function clearAll() {
+            ['bin', 'oct', 'dec', 'hex'].forEach(b => {
+                document.getElementById(`input-${b}`).value = '';
+                document.getElementById(`formatted-${b}-val`).textContent = '';
+            });
+            clearBadges();
+            currentBigInt = 0n;
+            updateTelemetry(0n);
+            updateSteps(0n, 'dec');
+            showToast('All fields cleared');
+        }
+
+        function applyPreset(numStr) {
+            document.getElementById('input-dec').value = numStr;
+            handleInput('dec');
+            showToast(`Preset loaded: ${numStr}`);
+        }
+
+        // Formatting Helpers
+        function formatBinary(binStr) {
+            const isNeg = binStr.startsWith('-');
+            const clean = isNeg ? binStr.slice(1) : binStr;
+            // Pad to multiple of 4
+            const remainder = clean.length % 4;
+            const padded = remainder === 0 ? clean : '0'.repeat(4 - remainder) + clean;
+            const chunks = padded.match(/.{1,4}/g) || [clean];
+            return (isNeg ? '-' : '') + chunks.join(' ');
+        }
+
+        function formatGrouped(str, groupSize) {
+            const isNeg = str.startsWith('-');
+            const clean = isNeg ? str.slice(1) : str;
+            const remainder = clean.length % groupSize;
+            const padded = remainder === 0 ? clean : '0'.repeat(groupSize - remainder) + clean;
+            const regex = new RegExp(`.{1,${groupSize}}`, 'g');
+            const chunks = padded.match(regex) || [clean];
+            return (isNeg ? '-' : '') + chunks.join(' ');
+        }
+
+        function formatDecimal(decStr) {
+            const isNeg = decStr.startsWith('-');
+            const clean = isNeg ? decStr.slice(1) : decStr;
+            return (isNeg ? '-' : '') + clean.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // Telemetry & Bitwise specs
+        function updateTelemetry(val) {
+            const isNeg = val < 0n;
+            const absVal = isNeg ? -val : val;
+            const binLen = absVal.toString(2).length;
+
+            document.getElementById('meta-bits').textContent = `${binLen} bit${binLen === 1 ? '' : 's'}`;
+            
+            const bytes = Math.ceil(binLen / 8) || 1;
+            document.getElementById('meta-bytes').textContent = `${bytes} byte${bytes === 1 ? '' : 's'}`;
+
+            let boundary = 8;
+            if (binLen > 32) boundary = 64;
+            else if (binLen > 16) boundary = 32;
+            else if (binLen > 8) boundary = 16;
+            document.getElementById('meta-width').textContent = `${boundary}-bit architecture`;
+
+            const signEl = document.getElementById('meta-sign');
+            if (isNeg) {
+                signEl.textContent = 'Negative (-)';
+                signEl.className = 'text-amber-400 font-bold text-sm';
+            } else {
+                signEl.textContent = 'Positive (+)';
+                signEl.className = 'text-mint-accent font-bold text-sm';
+            }
+
+            // Calculate 2's complement representation
+            document.getElementById('meta-twos-comp').textContent = computeTwosComplement(val, boundary);
+        }
+
+        function computeTwosComplement(val, bits) {
+            if (val >= 0n) {
+                let bin = val.toString(2);
+                if (bin.length < bits) bin = bin.padStart(bits, '0');
+                return formatBinary(bin);
+            } else {
+                // For negative numbers: 2^bits + val
+                const maxVal = 1n << BigInt(bits);
+                const comp = maxVal + val;
+                if (comp < 0n) return "Overflow (Requires higher bit width)";
+                let bin = comp.toString(2);
+                if (bin.length < bits) bin = bin.padStart(bits, '1');
+                return formatBinary(bin);
+            }
+        }
+
+        // Educational Steps Generator
+        function updateSteps(val, sourceBase) {
+            const stepDec = document.getElementById('step-to-dec');
+            const stepBin = document.getElementById('step-to-bin');
+
+            const isNeg = val < 0n;
+            const absVal = isNeg ? -val : val;
+
+            // Step 1: Base to Decimal breakdown
+            let decHtml = '';
+            if (sourceBase === 'dec') {
+                decHtml = `<div>Number is already in Base 10: <span class="text-mint-accent font-bold">${val.toString()}</span></div>`;
+            } else {
+                const baseMap = { bin: 2, oct: 8, hex: 16 };
+                const base = baseMap[sourceBase];
+                const rawStr = absVal.toString(base).toUpperCase();
+                let terms = [];
+                let sumCheck = 0n;
+
+                for (let i = 0; i < rawStr.length; i++) {
+                    const char = rawStr[rawStr.length - 1 - i];
+                    const digitVal = BigInt(parseInt(char, base));
+                    const power = BigInt(i);
+                    const termVal = digitVal * (BigInt(base) ** power);
+                    terms.unshift(`(${digitVal} × ${base}<sup>${i}</sup>)`);
+                }
+
+                decHtml = `<div>Formula: Sum of (Digit × Base<sup>position</sup>)</div>`;
+                decHtml += `<div class="text-cyan-accent mt-1">${terms.join(' + ')}</div>`;
+                decHtml += `<div class="mt-1">Result: ${isNeg ? '-' : ''}${absVal.toString(10)} (Decimal)</div>`;
+            }
+            stepDec.innerHTML = decHtml;
+
+            // Step 2: Decimal to Binary Place Value Breakdown
+            let binHtml = '';
+            const binStr = absVal.toString(2);
+            let placeValues = [];
+            for (let i = 0; i < binStr.length; i++) {
+                if (binStr[binStr.length - 1 - i] === '1') {
+                    placeValues.unshift(`2<sup>${i}</sup> (${1n << BigInt(i)})`);
+                }
+            }
+            binHtml = `<div>Binary Representation: <span class="text-cyan-accent">${(isNeg ? '-' : '') + binStr}</span></div>`;
+            binHtml += `<div>Active Place Values (Powers of 2): ${placeValues.length ? placeValues.join(' + ') : '0'}</div>`;
+            stepBin.innerHTML = binHtml;
+        }
+
+        // Error Badges
+        function showBadge(base) {
+            document.getElementById(`badge-${base}`).classList.remove('hidden');
+            document.getElementById(`card-${base}`).classList.add('border-red-500');
+        }
+
+        function clearBadges() {
+            ['bin', 'oct', 'dec', 'hex'].forEach(b => {
+                document.getElementById(`badge-${b}`).classList.add('hidden');
+                document.getElementById(`card-${b}`).classList.remove('border-red-500');
+            });
+        }
+
+        // Copy Actions
+        function copyToClipboard(base) {
+            const input = document.getElementById(`input-${base}`);
+            if (!input.value) {
+                showToast('Nothing to copy', 'error');
+                return;
+            }
+            
+            // Clipboard fallback logic
+            const text = input.value;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                input.select();
+                document.execCommand('copy');
+            }
+            
+            const labels = { bin: 'Binary', oct: 'Octal', dec: 'Decimal', hex: 'Hexadecimal' };
+            showToast(`Copied ${labels[base]} value!`);
+        }
+
+        function copy2sComp() {
+            const text = document.getElementById('meta-twos-comp').textContent;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+            showToast("Copied 2's complement representation!");
+        }
+
+        // Toast Notifications
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-2.5 rounded shadow-lg text-xs font-mono border transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2 ${
+                type === 'error' 
+                    ? 'bg-red-950 text-red-200 border-red-700' 
+                    : 'bg-navy-800 text-cyan-accent border-cyan-accent/50'
+            }`;
+            
+            toast.innerHTML = `
+                <svg class="w-4 h-4 text-mint-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>${msg}</span>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        function initializeNumberModes() {
+            document.querySelectorAll('.uh-number-mode').forEach(button => {
+                button.addEventListener('click', () => {
+                    const selectedMode = button.dataset.mode;
+                    document.querySelectorAll('.uh-number-mode').forEach(modeButton => {
+                        const isActive = modeButton === button;
+                        modeButton.classList.toggle('is-active', isActive);
+                        modeButton.setAttribute('aria-pressed', String(isActive));
+                    });
+                    document.querySelectorAll('[data-number-mode]').forEach(panel => {
+                        panel.classList.toggle('hidden', panel.dataset.numberMode !== selectedMode);
+                    });
+                });
+            });
+
+            ['custom-input', 'custom-from', 'custom-to'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateCustomBase);
+            });
+            document.getElementById('custom-swap').addEventListener('click', () => {
+                const from = document.getElementById('custom-from');
+                const to = document.getElementById('custom-to');
+                [from.value, to.value] = [to.value, from.value];
+                updateCustomBase();
+            });
+            document.getElementById('custom-copy').addEventListener('click', () => copyExtraValue('custom-output', 'Custom-base result'));
+
+            document.getElementById('color-hex').addEventListener('input', updateColorFromHex);
+            ['color-red', 'color-green', 'color-blue'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateColorFromRgb);
+            });
+            document.getElementById('color-copy-hex').addEventListener('click', () => copyExtraValue('color-hex', 'HEX color'));
+            document.getElementById('color-copy-rgb').addEventListener('click', copyRgbValue);
+        }
+
+        function parseIntegerInBase(value, base) {
+            const normalized = value.trim().toUpperCase();
+            if (!/^-?[0-9A-Z]+$/.test(normalized)) throw new Error('Enter a whole number using digits valid for the selected base.');
+            const negative = normalized.startsWith('-');
+            const digits = negative ? normalized.slice(1) : normalized;
+            let parsed = 0n;
+            for (const character of digits) {
+                const digit = character >= '0' && character <= '9'
+                    ? character.charCodeAt(0) - 48
+                    : character.charCodeAt(0) - 55;
+                if (digit >= base) throw new Error(`The value contains a digit that is invalid for base ${base}.`);
+                parsed = parsed * BigInt(base) + BigInt(digit);
+            }
+            return negative ? -parsed : parsed;
+        }
+
+        function updateCustomBase() {
+            const value = document.getElementById('custom-input').value;
+            const fromBase = Number(document.getElementById('custom-from').value);
+            const toBase = Number(document.getElementById('custom-to').value);
+            const output = document.getElementById('custom-output');
+            const error = document.getElementById('custom-error');
+            output.value = '';
+            error.textContent = '';
+            if (!value.trim()) return;
+
+            if (!Number.isInteger(fromBase) || fromBase < 2 || fromBase > 36 ||
+                !Number.isInteger(toBase) || toBase < 2 || toBase > 36) {
+                error.textContent = 'Both bases must be whole numbers from 2 to 36.';
+                return;
+            }
+            try {
+                output.value = parseIntegerInBase(value, fromBase).toString(toBase).toUpperCase();
+            } catch (conversionError) {
+                error.textContent = conversionError.message;
+            }
+        }
+
+        function updateColorFromHex() {
+            const hexInput = document.getElementById('color-hex');
+            const error = document.getElementById('color-error');
+            const value = hexInput.value.trim();
+            if (!value) {
+                error.textContent = '';
+                clearColorResult();
+                return;
+            }
+            const match = value.match(/^#?([0-9a-f]{6})$/i);
+            if (!match) {
+                error.textContent = 'Enter a six-digit HEX color, for example #6FD8CB.';
+                clearColorResult();
+                return;
+            }
+            error.textContent = '';
+            const hex = match[1].toUpperCase();
+            hexInput.value = `#${hex}`;
+            ['red', 'green', 'blue'].forEach((channel, index) => {
+                document.getElementById(`color-${channel}`).value = parseInt(hex.slice(index * 2, index * 2 + 2), 16);
+            });
+            document.getElementById('color-preview').style.backgroundColor = `#${hex}`;
+        }
+
+        function updateColorFromRgb() {
+            const channels = ['red', 'green', 'blue'].map(channel => document.getElementById(`color-${channel}`).value);
+            const error = document.getElementById('color-error');
+            if (channels.some(value => value === '')) {
+                error.textContent = 'Enter a value for each RGB channel.';
+                clearColorResult();
+                return;
+            }
+            const values = channels.map(Number);
+            if (values.some(value => !Number.isInteger(value) || value < 0 || value > 255)) {
+                error.textContent = 'RGB channels must be whole numbers from 0 to 255.';
+                clearColorResult();
+                return;
+            }
+            error.textContent = '';
+            const hex = values.map(value => value.toString(16).padStart(2, '0')).join('').toUpperCase();
+            document.getElementById('color-hex').value = `#${hex}`;
+            document.getElementById('color-preview').style.backgroundColor = `#${hex}`;
+        }
+
+        function clearColorResult() {
+            document.getElementById('color-hex').value = '';
+            ['color-red', 'color-green', 'color-blue'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('color-preview').style.backgroundColor = 'transparent';
+        }
+
+        async function copyExtraValue(inputId, label) {
+            const value = document.getElementById(inputId).value;
+            if (!value) {
+                showToast('Nothing to copy', 'error');
+                return;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(value);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = value;
+                    temp.style.position = 'fixed';
+                    temp.style.opacity = '0';
+                    document.body.appendChild(temp);
+                    temp.select();
+                    const copied = document.execCommand('copy');
+                    temp.remove();
+                    if (!copied) throw new Error('Clipboard access is unavailable.');
+                }
+                showToast(`Copied ${label}!`);
+            } catch (error) {
+                showToast(`Unable to copy ${label.toLowerCase()}.`, 'error');
+            }
+        }
+
+        function copyRgbValue() {
+            const value = `rgb(${['red', 'green', 'blue'].map(channel => document.getElementById(`color-${channel}`).value).join(', ')})`;
+            if (document.getElementById('color-error').textContent) {
+                showToast('Enter valid RGB values first', 'error');
+                return;
+            }
+            const tempId = 'color-rgb-copy-value';
+            let temp = document.getElementById(tempId);
+            if (!temp) {
+                temp = document.createElement('input');
+                temp.id = tempId;
+                temp.type = 'text';
+                temp.className = 'hidden';
+                document.body.appendChild(temp);
+            }
+            temp.value = value;
+            copyExtraValue(tempId, 'RGB color');
+        }
+    </script>
+</body>
+</html>
