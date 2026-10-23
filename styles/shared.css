@@ -874,6 +874,788 @@ html body.uh-tool a {
   }
 }
 
+/* Shared timer-tool components. */
+html body.uh-time-tool {
+  color: var(--uh-text);
+  font-family: var(--uh-font-body);
+}
+
+html body.uh-time-tool .uh-time-shell {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3.5rem) 0 2.5rem;
+}
+
+html body.uh-time-tool .uh-time-heading {
+  max-width: 760px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+html body.uh-time-tool .uh-time-heading h1 {
+  margin: 0.55rem 0;
+  color: var(--uh-text);
+  font: 600 clamp(2rem, 5vw, 3.15rem)/1.08 var(--uh-font-display);
+  letter-spacing: -0.045em;
+}
+
+html body.uh-time-tool .uh-time-heading p {
+  margin: 0 auto;
+  max-width: 640px;
+  color: var(--uh-muted);
+  line-height: 1.7;
+}
+
+html body.uh-time-tool .uh-time-kicker,
+html body.uh-time-tool .uh-time-label,
+html body.uh-time-tool .uh-time-footer,
+html body.uh-time-tool .uh-buzzer-clock-label {
+  color: var(--uh-accent);
+  font: 500 0.68rem/1.4 var(--uh-font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+html body.uh-time-tool .uh-time-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+html body.uh-time-tool .uh-time-card {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--uh-line);
+  border-radius: var(--uh-radius-md);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--uh-accent) 3%, transparent), transparent 44%),
+    var(--uh-panel);
+  box-shadow: 0 14px 38px color-mix(in srgb, var(--uh-bg) 24%, transparent);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+html body.uh-time-tool .uh-time-card::before,
+html body.uh-time-tool .uh-time-card::after {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: color-mix(in srgb, var(--uh-accent) 52%, transparent);
+  border-style: solid;
+  content: "";
+  pointer-events: none;
+}
+
+html body.uh-time-tool .uh-time-card::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+html body.uh-time-tool .uh-time-card::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+html body.uh-time-tool .uh-time-card h2,
+html body.uh-time-tool .uh-time-section-head h2 {
+  margin: 0.28rem 0 0;
+  color: var(--uh-text);
+  font: 600 1.25rem/1.3 var(--uh-font-display);
+}
+
+html body.uh-time-tool .uh-time-card-head,
+html body.uh-time-tool .uh-time-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+html body.uh-time-tool .uh-time-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+html body.uh-time-tool .uh-time-field {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  color: var(--uh-muted);
+  font-size: 0.78rem;
+  font-weight: 550;
+}
+
+html body.uh-time-tool .uh-time-field-wide {
+  grid-column: 1 / -1;
+}
+
+html body.uh-time-tool :is(.uh-time-field input, .uh-time-field textarea, .uh-time-field select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid var(--uh-line-strong);
+  border-radius: 7px;
+  background: var(--uh-bg);
+  color: var(--uh-text);
+  padding: 0.65rem 0.75rem;
+  font: 400 0.9rem var(--uh-font-body);
+}
+
+html body.uh-time-tool .uh-time-field textarea {
+  resize: vertical;
+}
+
+html body.uh-time-tool .uh-time-field :is(input, textarea, select):focus-visible,
+html body.uh-time-tool .uh-time-button:focus-visible,
+html body.uh-time-tool .uh-time-chip-row button:focus-visible {
+  outline: 2px solid var(--uh-accent);
+  outline-offset: 2px;
+}
+
+html body.uh-time-tool .uh-time-button {
+  min-height: 40px;
+  border: 1px solid var(--uh-line-strong);
+  border-radius: 7px;
+  background: var(--uh-elevated);
+  color: var(--uh-text);
+  padding: 0.58rem 0.9rem;
+  font: 550 0.82rem var(--uh-font-body);
+  cursor: pointer;
+  transition: border-color var(--uh-transition), background-color var(--uh-transition), color var(--uh-transition), transform var(--uh-transition);
+}
+
+html body.uh-time-tool .uh-time-button:hover:not(:disabled) {
+  border-color: var(--uh-accent);
+  color: var(--uh-accent);
+}
+
+html body.uh-time-tool .uh-time-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+html body.uh-time-tool .uh-time-button.primary {
+  border-color: var(--uh-accent);
+  background: var(--uh-accent);
+  color: var(--uh-bg);
+  font-weight: 650;
+}
+
+html body.uh-time-tool .uh-time-button.primary:hover:not(:disabled) {
+  background: var(--uh-accent-strong);
+  color: var(--uh-bg);
+}
+
+html body.uh-time-tool .uh-time-button.quiet {
+  background: transparent;
+}
+
+html body.uh-time-tool .uh-time-button.danger {
+  border-color: color-mix(in srgb, var(--uh-danger) 45%, transparent);
+  color: var(--uh-danger);
+}
+
+html body.uh-time-tool .uh-time-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+html body.uh-time-tool .uh-time-actions,
+html body.uh-time-tool .uh-time-form-actions,
+html body.uh-time-tool .uh-time-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+html body.uh-time-tool .uh-time-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--uh-muted);
+  font-size: 0.83rem;
+}
+
+html body.uh-time-tool .uh-time-hint,
+html body.uh-time-tool .uh-time-optional {
+  color: var(--uh-faint);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+html body.uh-time-tool .uh-time-error {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--uh-danger) 35%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--uh-danger) 9%, var(--uh-panel));
+  color: var(--uh-danger);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.82rem;
+}
+
+html body.uh-time-tool .uh-time-section {
+  margin-top: 1.5rem;
+}
+
+html body.uh-time-tool .uh-time-section-head {
+  margin-bottom: 0.85rem;
+}
+
+html body.uh-time-tool .uh-time-count {
+  display: inline-grid;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  place-items: center;
+  border: 1px solid var(--uh-line-strong);
+  border-radius: 50%;
+  color: var(--uh-accent);
+  font: 500 0.7rem var(--uh-font-mono);
+  vertical-align: 0.12em;
+}
+
+html body.uh-time-tool .uh-time-footer {
+  margin-top: 2rem;
+  border-top: 1px solid var(--uh-line);
+  padding-top: 0.85rem;
+  text-align: center;
+  color: var(--uh-faint);
+  font-size: 0.62rem;
+}
+
+html body.uh-time-tool .uh-time-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed var(--uh-line-strong);
+  border-radius: var(--uh-radius-md);
+  color: var(--uh-muted);
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+html body.uh-time-tool .uh-time-presets {
+  margin-top: 1.1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+html body.uh-time-tool .uh-time-chip-row button {
+  border: 1px solid var(--uh-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--uh-muted);
+  padding: 0.42rem 0.7rem;
+  font: 500 0.72rem var(--uh-font-mono);
+  cursor: pointer;
+}
+
+html body.uh-time-tool .uh-time-chip-row button:hover {
+  border-color: var(--uh-accent);
+  color: var(--uh-accent);
+}
+
+html body.uh-time-tool .uh-time-save-preset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+html body.uh-time-tool .uh-time-save-preset input {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+html body.uh-time-tool .uh-time-saved-preset {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--uh-line);
+  border-radius: 999px;
+}
+
+html body.uh-time-tool .uh-time-saved-preset button {
+  border: 0;
+  background: transparent;
+  color: var(--uh-muted);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+
+html body.uh-time-tool .uh-time-saved-preset button + button {
+  border-left: 1px solid var(--uh-line);
+  color: var(--uh-danger);
+}
+
+html body.uh-time-tool .uh-time-timer-grid,
+html body.uh-time-tool .uh-time-event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  gap: 0.9rem;
+}
+
+html body.uh-time-tool .uh-timer-card {
+  display: grid;
+  gap: 0.9rem;
+}
+
+html body.uh-time-tool .uh-timer-card h3,
+html body.uh-time-tool .uh-event-card h3 {
+  margin: 0 0 0.3rem;
+  color: var(--uh-text);
+  font: 600 1.05rem var(--uh-font-display);
+  overflow-wrap: anywhere;
+}
+
+html body.uh-time-tool .uh-timer-card.is-done {
+  border-color: color-mix(in srgb, var(--uh-success) 38%, var(--uh-line));
+}
+
+html body.uh-time-tool .uh-timer-display-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+html body.uh-time-tool .uh-timer-digital,
+html body.uh-time-tool .uh-stopwatch-display,
+html body.uh-time-tool .uh-pomodoro-display {
+  color: var(--uh-text);
+  font: 500 clamp(2.2rem, 7vw, 3.4rem)/1 var(--uh-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.055em;
+}
+
+html body.uh-time-tool .uh-timer-ring,
+html body.uh-time-tool .uh-pomodoro-ring {
+  display: grid;
+  width: 70px;
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--uh-accent) var(--timer-progress, var(--pomodoro-progress, 0deg)), color-mix(in srgb, var(--uh-line-strong) 45%, transparent) 0);
+}
+
+html body.uh-time-tool .uh-timer-ring::after {
+  width: 56px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--uh-panel);
+  content: "";
+}
+
+html body.uh-time-tool .uh-time-progress {
+  overflow: hidden;
+  height: 4px;
+  border-radius: 9px;
+  background: var(--uh-line);
+}
+
+html body.uh-time-tool .uh-time-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--uh-accent);
+  transition: width 200ms linear;
+}
+
+html body.uh-time-tool .uh-time-table-wrap {
+  overflow-x: auto;
+}
+
+html body.uh-time-tool .uh-time-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+html body.uh-time-tool .uh-time-table th {
+  color: var(--uh-faint);
+  font: 500 0.66rem var(--uh-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html body.uh-time-tool .uh-time-table :is(th, td) {
+  border-bottom: 1px solid var(--uh-line);
+  padding: 0.75rem 0.6rem;
+  white-space: nowrap;
+}
+
+html body.uh-time-tool .uh-time-table td {
+  color: var(--uh-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+html body.uh-time-tool .uh-time-table tr.is-latest td {
+  color: var(--uh-accent);
+}
+
+html body.uh-time-tool .uh-time-empty-cell {
+  padding: 1.5rem !important;
+  text-align: center;
+  white-space: normal !important;
+}
+
+html body.uh-time-tool .uh-stopwatch-console,
+html body.uh-time-tool .uh-pomodoro-console {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  text-align: center;
+}
+
+html body.uh-time-tool .uh-stopwatch-state,
+html body.uh-time-tool .uh-buzzer-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--uh-muted);
+  font: 500 0.68rem var(--uh-font-mono);
+  letter-spacing: 0.1em;
+}
+
+html body.uh-time-tool .uh-stopwatch-state #stopwatch-indicator,
+html body.uh-time-tool .uh-buzzer-status > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--uh-faint);
+}
+
+html body.uh-time-tool .uh-stopwatch-state #stopwatch-indicator.is-running,
+html body.uh-time-tool .uh-buzzer-status > span.is-running {
+  background: var(--uh-success);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--uh-success) 55%, transparent);
+}
+
+html body.uh-time-tool .uh-stopwatch-actions {
+  justify-content: center;
+}
+
+html body.uh-time-tool .uh-time-hint kbd {
+  border: 1px solid var(--uh-line-strong);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  color: var(--uh-text);
+  font: 0.7rem var(--uh-font-mono);
+}
+
+html body.uh-time-tool .uh-lap-summary,
+html body.uh-time-tool .uh-pomodoro-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+html body.uh-time-tool .uh-lap-summary > div,
+html body.uh-time-tool .uh-pomodoro-stat-grid > div {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid var(--uh-line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--uh-elevated) 65%, transparent);
+  padding: 0.9rem;
+}
+
+html body.uh-time-tool .uh-lap-summary span,
+html body.uh-time-tool .uh-pomodoro-stat-grid span {
+  color: var(--uh-faint);
+  font-size: 0.7rem;
+}
+
+html body.uh-time-tool .uh-lap-summary strong,
+html body.uh-time-tool .uh-pomodoro-stat-grid strong {
+  color: var(--uh-text);
+  font: 500 1.05rem var(--uh-font-mono);
+}
+
+html body.uh-time-tool .uh-pomodoro-ring {
+  width: clamp(205px, 55vw, 270px);
+  background: conic-gradient(var(--uh-accent) var(--pomodoro-progress, 0deg), color-mix(in srgb, var(--uh-line-strong) 45%, transparent) 0);
+  padding: 10px;
+}
+
+html body.uh-time-tool .uh-pomodoro-ring-inner {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-content: center;
+  justify-items: center;
+  gap: 0.5rem;
+  border-radius: 50%;
+  background: var(--uh-panel);
+}
+
+html body.uh-time-tool .uh-pomodoro-ring-inner > span {
+  color: var(--uh-muted);
+  font-size: 0.75rem;
+}
+
+html body.uh-time-tool .uh-pomodoro-status {
+  color: var(--uh-accent);
+  font: 500 0.68rem var(--uh-font-mono);
+  letter-spacing: 0.13em;
+}
+
+html body.uh-time-tool .uh-pomodoro-actions,
+html body.uh-time-tool .uh-pomodoro-tools {
+  justify-content: center;
+}
+
+html body.uh-time-tool .uh-pomodoro-lower {
+  margin-top: 1rem;
+}
+
+html body.uh-time-tool .uh-pomodoro-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+html body.uh-pomodoro-page.uh-focus-mode .uh-pomodoro-lower,
+html body.uh-pomodoro-page.uh-focus-mode .uh-time-footer {
+  display: none;
+}
+
+html body.uh-time-tool .uh-event-card {
+  display: grid;
+  gap: 0.8rem;
+}
+
+html body.uh-time-tool .uh-event-card.is-past {
+  opacity: 0.75;
+}
+
+html body.uh-time-tool .uh-event-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+html body.uh-time-tool .uh-event-date,
+html body.uh-time-tool .uh-event-description {
+  margin: 0;
+  color: var(--uh-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+html body.uh-time-tool .uh-event-time-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+html body.uh-time-tool .uh-event-time-unit {
+  display: grid;
+  min-width: 64px;
+  gap: 0.25rem;
+  border: 1px solid var(--uh-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--uh-elevated) 70%, transparent);
+  padding: 0.55rem;
+  text-align: center;
+}
+
+html body.uh-time-tool .uh-event-time-unit strong {
+  color: var(--uh-accent);
+  font: 500 1.2rem var(--uh-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+html body.uh-time-tool .uh-event-time-unit small {
+  color: var(--uh-faint);
+  font-size: 0.6rem;
+}
+
+html body.uh-time-tool .uh-event-past-label {
+  color: var(--uh-signal);
+  font: 500 0.76rem var(--uh-font-mono);
+}
+
+html body.uh-time-tool .uh-event-favorite {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0.35rem 0.55rem;
+  color: var(--uh-signal);
+}
+
+html body.uh-time-tool .uh-buzzer-shell {
+  max-width: 800px;
+}
+
+html body.uh-time-tool .uh-buzzer-console {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 1.1rem;
+  overflow: hidden;
+  border: 1px solid var(--uh-line);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--uh-accent) 7%, transparent), transparent 55%),
+    var(--uh-panel);
+  box-shadow: var(--uh-shadow);
+  padding: clamp(1.5rem, 5vw, 3rem);
+}
+
+html body.uh-time-tool .uh-buzzer-display {
+  color: var(--uh-text);
+  font: 500 clamp(3rem, 12vw, 5.5rem)/1 var(--uh-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.07em;
+  transition: color 220ms ease, text-shadow 220ms ease;
+}
+
+html body.uh-time-tool .uh-buzzer-display.is-final {
+  color: var(--uh-accent-strong);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--uh-accent) 35%, transparent);
+}
+
+html body.uh-time-tool .uh-physical-buzzer {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--uh-muted);
+  padding: 0.25rem 1rem 0.5rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html body.uh-time-tool .uh-physical-buzzer:focus-visible {
+  outline: 2px solid var(--uh-accent);
+  outline-offset: 8px;
+  border-radius: 50%;
+}
+
+html body.uh-time-tool .uh-buzzer-bezel {
+  display: grid;
+  width: clamp(190px, 54vw, 270px);
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid #09111a;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #334658, #111c27 56%, #263647);
+  box-shadow: 0 20px 0 #09111a, 0 26px 34px rgba(0, 0, 0, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.2);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+html body.uh-time-tool .uh-buzzer-cap {
+  position: relative;
+  display: block;
+  width: 76%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #7d1f25;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 34% 21%, #ffb0a6 0%, #f4514a 13%, #d3222c 46%, #8e101b 78%, #550b13 100%);
+  box-shadow: inset 0 9px 13px rgba(255, 240, 235, 0.35), inset 0 -19px 22px rgba(52, 0, 8, 0.48), 0 7px 0 #5d1118, 0 12px 15px rgba(0, 0, 0, 0.38);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+html body.uh-time-tool .uh-buzzer-glint {
+  position: absolute;
+  top: 11%;
+  left: 23%;
+  width: 42%;
+  height: 14%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.5), rgba(255,255,255,0.04));
+  filter: blur(3px);
+  transform: rotate(-32deg);
+}
+
+html body.uh-time-tool .uh-buzzer-button-caption {
+  color: var(--uh-faint);
+  font: 500 0.64rem var(--uh-font-mono);
+  letter-spacing: 0.22em;
+}
+
+html body.uh-time-tool .uh-physical-buzzer:hover .uh-buzzer-cap {
+  filter: brightness(1.08);
+}
+
+html body.uh-time-tool .uh-physical-buzzer:active .uh-buzzer-bezel,
+html body.uh-time-tool .uh-physical-buzzer.is-pressed .uh-buzzer-bezel {
+  transform: translateY(8px);
+  box-shadow: 0 12px 0 #09111a, 0 17px 25px rgba(0, 0, 0, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.15);
+}
+
+html body.uh-time-tool .uh-physical-buzzer:active .uh-buzzer-cap,
+html body.uh-time-tool .uh-physical-buzzer.is-pressed .uh-buzzer-cap {
+  transform: translateY(5px) scale(0.985);
+  box-shadow: inset 0 7px 12px rgba(255, 240, 235, 0.28), inset 0 -13px 18px rgba(52, 0, 8, 0.48), 0 2px 0 #5d1118;
+}
+
+html body.uh-time-tool .uh-buzzer-instruction {
+  margin: 0;
+  color: var(--uh-text);
+  font: 500 0.82rem var(--uh-font-mono);
+}
+
+html body.uh-time-tool .uh-buzzer-reset {
+  min-width: 136px;
+}
+
+html body.uh-time-tool .uh-buzzer-hint {
+  margin: 0;
+  text-align: center;
+}
+
+html body.uh-time-tool :focus-visible {
+  scroll-margin-block: 1rem;
+}
+
+@media (max-width: 700px) {
+  html body.uh-time-tool .uh-time-columns {
+    grid-template-columns: 1fr;
+  }
+
+  html body.uh-time-tool .uh-time-shell {
+    width: min(100% - 1.25rem, 620px);
+  }
+}
+
+@media (max-width: 480px) {
+  html body.uh-time-tool .uh-time-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html body.uh-time-tool .uh-lap-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html body.uh-time-tool .uh-pomodoro-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  html body.uh-time-tool .uh-time-section-head,
+  html body.uh-time-tool .uh-time-card-head {
+    align-items: start;
+  }
+
+  html body.uh-time-tool .uh-buzzer-console {
+    padding-inline: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.uh-time-tool .uh-time-button,
+  html body.uh-time-tool .uh-time-progress span,
+  html body.uh-time-tool .uh-buzzer-display,
+  html body.uh-time-tool .uh-buzzer-bezel,
+  html body.uh-time-tool .uh-buzzer-cap {
+    transition-duration: 0.01ms;
+  }
+}
+
 /* Shared integration polish for the four registered utility pages. */
 html body.uh-image-resizer-page,
 html body.uh-password-generator-page,

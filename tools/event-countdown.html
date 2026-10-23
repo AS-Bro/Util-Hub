@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Event Countdown Pro</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Event Countdown"></script>
+  <style>
+    .uh-event-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; margin-left: 8px; display: inline-block; vertical-align: middle; }
+    .badge-birthday { background: rgba(236, 72, 153, 0.2); color: #f472b6; border: 1px solid #ec4899; }
+    .badge-work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+    .badge-holiday { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+    .badge-exam { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-personal { background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid #8b5cf6; }
+  </style>
+</head>
+<body class="uh-time-tool uh-event-page">
+  <main class="uh-time-shell" id="event-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Time tools / Milestones Pro</span>
+      <h1>Event Countdown Pro</h1>
+      <p>Keep the moments that matter in view with categories, presets, search, and backup options[cite: 4].</p>
+    </section>
+
+    <div class="uh-time-columns uh-event-columns">
+      <!-- Add/Edit Form Section -->
+      <section class="uh-time-card" aria-labelledby="event-form-title">
+        <div class="uh-time-card-head">
+          <div><span class="uh-time-label">01 / Event details</span><h2 id="event-form-title">Add an event</h2></div>
+        </div>
+        <form id="event-form" class="uh-time-form">
+          <label class="uh-time-field uh-time-field-wide">Event title
+            <input id="event-title" type="text" maxlength="72" placeholder="e.g. Final exam" required[cite: 4]>
+          </label>
+          <label class="uh-time-field">Date
+            <input id="event-date" type="date" required[cite: 4]>
+          </label>
+          <label class="uh-time-field">Time
+            <input id="event-time" type="time" value="09:00" required[cite: 4]>
+          </label>
+          <label class="uh-time-field uh-time-field-wide">Category
+            <select id="event-category">
+              <option value="personal">Personal</option>
+              <option value="birthday">Birthday</option>
+              <option value="work">Work / Meeting</option>
+              <option value="holiday">Holiday / Trip</option>
+              <option value="exam">Exam / Deadline</option>
+            </select>
+          </label>
+          <div class="uh-time-field uh-time-field-wide">
+            <span class="uh-time-label" style="font-size:0.75rem;">Quick Presets</span>
+            <div class="uh-time-form-actions" style="margin-top: 6px;">
+              <button type="button" class="uh-time-button quiet" data-preset="tomorrow" style="flex:1; font-size:0.8rem;">Tomorrow</button>
+              <button type="button" class="uh-time-button quiet" data-preset="nextweek" style="flex:1; font-size:0.8rem;">In 1 Week</button>
+              <button type="button" class="uh-time-button quiet" data-preset="newyear" style="flex:1; font-size:0.8rem;">New Year</button>
+            </div>
+          </div>
+          <label class="uh-time-field uh-time-field-wide">Description <span class="uh-time-optional">(optional)</span>
+            <textarea id="event-description" maxlength="240" rows="3" placeholder="Add a note for this milestone"[cite: 4]></textarea>
+          </label>
+          <div class="uh-time-form-actions uh-time-field-wide">
+            <button class="uh-time-button primary" id="event-submit" type="submit">Add countdown[cite: 4]</button>
+            <button class="uh-time-button quiet" id="event-cancel" type="button" hidden[cite: 4]>Cancel edit</button>
+          </div>
+          <p id="event-error" class="uh-time-error uh-time-field-wide" role="alert" hidden[cite: 4]></p>
+        </form>
+      </section>
+
+      <!-- Controls & Backup Section -->
+      <section class="uh-time-card uh-event-controls" aria-label="Event display settings">
+        <div class="uh-time-card-head">
+          <div><span class="uh-time-label">02 / Display & Settings</span><h2>Timeline controls</h2></div>
+        </div>
+        <label class="uh-time-switch"><input id="favorites-only" type="checkbox"><span>Show favorites only[cite: 4]</span></label>
+        <label class="uh-time-field">Sort events
+          <select id="event-sort">
+            <option value="upcoming">Upcoming first[cite: 4]</option>
+            <option value="latest">Latest first[cite: 4]</option>
+          </select>
+        </label>
+        <label class="uh-time-field">Filter category
+          <select id="category-filter">
+            <option value="all">All Categories</option>
+            <option value="personal">Personal</option>
+            <option value="birthday">Birthday</option>
+            <option value="work">Work / Meeting</option>
+            <option value="holiday">Holiday / Trip</option>
+            <option value="exam">Exam / Deadline</option>
+          </select>
+        </label>
+        <label class="uh-time-field uh-time-field-wide">Search events
+          <input type="text" id="search-query" placeholder="Search by title or note...">
+        </label>
+        <div class="uh-time-form-actions uh-time-field-wide" style="margin-top: 12px;">
+          <button type="button" id="export-json" class="uh-time-button quiet" style="flex:1;">Export JSON</button>
+          <button type="button" id="import-trigger" class="uh-time-button quiet" style="flex:1;">Import JSON</button>
+          <input type="file" id="import-file" accept=".json" style="display:none;">
+        </div>
+        <p class="uh-time-hint" style="margin-top: 12px;">Past events remain available and are marked as completed milestones[cite: 4].</p>
+      </section>
+    </div>
+
+    <!-- Saved Events List Section -->
+    <section class="uh-time-section" aria-labelledby="events-title">
+      <div class="uh-time-section-head">
+        <div>
+          <span class="uh-time-label">Live / Local schedule</span>
+          <h2 id="events-title">Saved events <span id="event-count" class="uh-time-count">0</span>[cite: 4]</h2>
+        </div>
+      </div>
+      <div id="event-list" class="uh-time-event-grid"><div class="uh-time-empty">No events yet. Add a date above to start your timeline[cite: 4].</div></div>
+    </section>
+    <footer class="uh-time-footer">EVENT COUNTDOWN PRO / LOCAL TIME · EVENTS SAVED ONLY IN THIS BROWSER[cite: 4]</footer>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+    var KEY = 'utilityhub:event-countdowns:v2';
+    var events = loadEvents();
+    var editingId = null;
+    var idSequence = 0;
+    var timerId = null;
+
+    function readEvents() {
+      try { return JSON.parse(localStorage.getItem(KEY)); } catch (error) { return []; }
+    }
+    function persist() {
+      try { localStorage.setItem(KEY, JSON.stringify(events)); }
+      catch (error) { showError('Browser storage is unavailable. Events will not survive a page refresh[cite: 4].'); }
+    }
+    function loadEvents() {
+      var saved = readEvents();
+      if (!Array.isArray(saved)) return [];
+      return saved.filter(function (item) {
+        return item && typeof item.id === 'string' && typeof item.title === 'string' &&
+          Number.isFinite(item.timestamp) && typeof item.date === 'string' && typeof item.time === 'string';
+      }).slice(0, 100);
+    }
+    function showError(message) {
+      var node = document.getElementById('event-error');
+      node.textContent = message;
+      node.hidden = false;
+    }
+    function clearError() {
+      var node = document.getElementById('event-error');
+      node.textContent = '';
+      node.hidden = true;
+    }
+    function getTimestamp(dateValue, timeValue) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || !/^\d{2}:\d{2}$/.test(timeValue)) {
+        throw new Error('Choose a valid event date and time[cite: 4].');
+      }
+      var dateParts = dateValue.split('-').map(Number);
+      var timeParts = timeValue.split(':').map(Number);
+      var date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0], timeParts[1], 0, 0);
+      return date.getTime();
+    }
+    function id() {
+      idSequence += 1;
+      return Date.now().toString(36) + '-' + idSequence.toString(36);
+    }
+    function formatRemaining(timestamp, now) {
+      var delta = Math.abs(timestamp - now);
+      var days = Math.floor(delta / 86400000);
+      var hours = Math.floor(delta % 86400000 / 3600000);
+      var minutes = Math.floor(delta % 3600000 / 60000);
+      var seconds = Math.floor(delta % 60000 / 1000);
+      return [
+        [days, 'days'], [hours, 'hours'], [minutes, 'minutes'], [seconds, 'seconds']
+      ].map(function (part) {
+        var unit = document.createElement('span');
+        unit.className = 'uh-event-time-unit';
+        var value = document.createElement('strong');
+        value.textContent = String(part[0]).padStart(2, '0');
+        var label = document.createElement('small');
+        label.textContent = part[1];
+        unit.append(value, label);
+        return unit;
+      });
+    }
+    function makeButton(label, action, eventId, extraClass) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'uh-time-button quiet' + (extraClass ? ' ' + extraClass : '');
+      button.dataset.action = action;
+      button.dataset.id = eventId;
+      button.textContent = label;
+      return button;
+    }
+
+    function render() {
+      var list = document.getElementById('event-list');
+      var now = Date.now();
+      var favoritesOnly = document.getElementById('favorites-only').checked;
+      var direction = document.getElementById('event-sort').value === 'latest' ? -1 : 1;
+      var catFilter = document.getElementById('category-filter').value;
+      var searchQuery = document.getElementById('search-query').value.toLowerCase().trim();
+
+      var visible = events.filter(function (item) {
+        if (favoritesOnly && !item.favorite) return false;
+        if (catFilter !== 'all' && item.category !== catFilter) return false;
+        if (searchQuery && item.title.toLowerCase().indexOf(searchQuery) === -1 && (!item.description || item.description.toLowerCase().indexOf(searchQuery) === -1)) return false;
+        return true;
+      }).sort(function (a, b) {
+        var aPast = a.timestamp < now;
+        var bPast = b.timestamp < now;
+        if (aPast !== bPast) return aPast ? 1 : -1;
+        return direction * (a.timestamp - b.timestamp);
+      });
+
+      document.getElementById('event-count').textContent = String(events.length);
+      list.textContent = '';
+      if (!visible.length) {
+        var empty = document.createElement('div');
+        empty.className = 'uh-time-empty';
+        empty.textContent = favoritesOnly ? 'No favorite events yet. Mark an event with the star to keep it here[cite: 4].' : 'No matching events found.';
+        list.appendChild(empty);
+        return;
+      }
+
+      visible.forEach(function (item) {
+        var past = item.timestamp < now;
+        var card = document.createElement('article');
+        card.className = 'uh-time-card uh-event-card' + (past ? ' is-past' : '');
+
+        var heading = document.createElement('div');
+        heading.className = 'uh-event-card-heading';
+        var titleBlock = document.createElement('div');
+        var title = document.createElement('h3');
+        title.textContent = item.title;
+
+        var badge = document.createElement('span');
+        badge.className = 'uh-event-badge badge-' + (item.category || 'personal');
+        badge.textContent = item.category || 'personal';
+        title.appendChild(badge);
+
+        var status = document.createElement('span');
+        status.className = 'uh-time-label';
+        status.textContent = past ? 'PAST EVENT' : 'COUNTING DOWN';
+        titleBlock.append(title, status);
+
+        var favorite = makeButton(item.favorite ? '★ Favorite' : '☆ Favorite', 'favorite', item.id, 'uh-event-favorite');
+        heading.append(titleBlock, favorite);
+
+        var when = document.createElement('p');
+        when.className = 'uh-event-date';
+        when.textContent = new Date(item.timestamp).toLocaleString([], { dateStyle: 'full', timeStyle: 'short' });
+
+        var countdown = document.createElement('div');
+        countdown.className = 'uh-event-time-values';
+        if (past) {
+          var pastLabel = document.createElement('span');
+          pastLabel.className = 'uh-event-past-label';
+          pastLabel.textContent = 'Occurred ' + formatDistance(item.timestamp, now) + ' ago[cite: 4]';
+          countdown.appendChild(pastLabel);
+        } else {
+          var units = formatRemaining(item.timestamp, now);
+          units.forEach(function(u) { countdown.appendChild(u); });
+        }
+
+        card.append(heading, when, countdown);
+        if (item.description) {
+          var description = document.createElement('p');
+          description.className = 'uh-event-description';
+          description.textContent = item.description;
+          card.appendChild(description);
+        }
+
+        var actions = document.createElement('div');
+        actions.className = 'uh-time-actions';
+        actions.append(makeButton('Edit', 'edit', item.id), makeButton('Delete', 'delete', item.id, 'danger'));
+        card.appendChild(actions);
+        list.appendChild(card);
+      });
+    }
+
+    function formatDistance(timestamp, now) {
+      var seconds = Math.floor(Math.abs(now - timestamp) / 1000);
+      var days = Math.floor(seconds / 86400);
+      if (days) return days + (days === 1 ? ' day' : ' days');
+      var hours = Math.floor(seconds / 3600);
+      if (hours) return hours + (hours === 1 ? ' hour' : ' hours');
+      var minutes = Math.floor(seconds / 60);
+      return minutes + (minutes === 1 ? ' minute' : ' minutes');
+    }
+
+    // Quick Presets Handler
+    document.querySelectorAll('[data-preset]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var preset = this.dataset.preset;
+        var d = new Date();
+        if (preset === 'tomorrow') d.setDate(d.getDate() + 1);
+        else if (preset === 'nextweek') d.setDate(d.getDate() + 7);
+        else if (preset === 'newyear') {
+          d.setFullYear(d.getFullYear() + 1, 0, 1);
+          d.setHours(0, 0, 0, 0);
+        }
+        document.getElementById('event-date').value = d.toISOString().split('T')[0];
+        document.getElementById('event-time').value = '09:00';
+      });
+    });
+
+    document.getElementById('event-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      clearError();
+      var title = document.getElementById('event-title').value.trim();
+      if (!title) return showError('Enter a title for the event[cite: 4].');
+      var date = document.getElementById('event-date').value;
+      var time = document.getElementById('event-time').value;
+      var category = document.getElementById('event-category').value;
+      var timestamp;
+      try { timestamp = getTimestamp(date, time); } catch (error) { return showError(error.message); }
+      var description = document.getElementById('event-description').value.trim();
+
+      if (editingId) {
+        var current = events.find(function (item) { return item.id === editingId; });
+        if (current) Object.assign(current, { title: title, date: date, time: time, category: category, timestamp: timestamp, description: description });
+        editingId = null;
+        document.getElementById('event-submit').textContent = 'Add countdown[cite: 4]';
+        document.getElementById('event-cancel').hidden = true;
+      } else {
+        if (events.length >= 100) return showError('You can save up to 100 events[cite: 4].');
+        events.push({ id: id(), title: title, date: date, time: time, category: category, description: description, timestamp: timestamp, favorite: false });
+      }
+      this.reset();
+      document.getElementById('event-time').value = '09:00';
+      persist();
+      render();
+    });
+
+    document.getElementById('event-cancel').addEventListener('click', function () {
+      editingId = null;
+      document.getElementById('event-form').reset();
+      document.getElementById('event-time').value = '09:00';
+      document.getElementById('event-submit').textContent = 'Add countdown[cite: 4]';
+      this.hidden = true;
+      clearError();
+    });
+
+    document.getElementById('event-list').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-action]');
+      if (!button) return;
+      var item = events.find(function (record) { return record.id === button.dataset.id; });
+      if (!item) return;
+      if (button.dataset.action === 'favorite') item.favorite = !item.favorite;
+      if (button.dataset.action === 'delete') events = events.filter(function (record) { return record.id !== item.id; });
+      if (button.dataset.action === 'edit') {
+        editingId = item.id;
+        document.getElementById('event-title').value = item.title;
+        document.getElementById('event-date').value = item.date;
+        document.getElementById('event-time').value = item.time;
+        document.getElementById('event-category').value = item.category || 'personal';
+        document.getElementById('event-description').value = item.description || '';
+        document.getElementById('event-submit').textContent = 'Save changes';
+        document.getElementById('event-cancel').hidden = false;
+        document.getElementById('event-title').focus();
+        return;
+      }
+      persist();
+      render();
+    });
+
+    // Export & Import Handlers
+    document.getElementById('export-json').addEventListener('click', function() {
+      var blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = 'utility-hub-events-backup.json';
+      link.click();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    });
+
+    document.getElementById('import-trigger').addEventListener('click', function() {
+      document.getElementById('import-file').click();
+    });
+
+    document.getElementById('import-file').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          var imported = JSON.parse(evt.target.result);
+          if (Array.isArray(imported)) {
+            events = imported;
+            persist();
+            render();
+          } else {
+            alert('Invalid backup file format.');
+          }
+        } catch(err) {
+          alert('Failed to parse JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('favorites-only').addEventListener('change', render);
+    document.getElementById('event-sort').addEventListener('change', render);
+    document.getElementById('category-filter').addEventListener('change', render);
+    document.getElementById('search-query').addEventListener('input', render);
+
+    window.addEventListener('storage', function (event) {
+      if (event.key === KEY) { events = loadEvents(); render();[cite: 4] }
+    });
+    window.addEventListener('pagehide', function () { if (timerId) window.clearInterval(timerId);[cite: 4] });
+    render();
+    timerId = window.setInterval(render, 1000);
+  })();
+  </script>
+</body>
+</html>

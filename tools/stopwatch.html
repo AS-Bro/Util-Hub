@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Pro Stopwatch</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Stopwatch"></script>
+  <style>
+    .uh-time-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; margin-left: 6px; }
+    .badge-fastest { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+    .badge-slowest { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    .lap-note-input { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: inherit; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; width: 100%; max-width: 180px; }
+    .uh-time-settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 15px; }
+    .uh-setting-item { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; }
+    .uh-setting-item label { opacity: 0.8; }
+    .uh-setting-item input, .uh-setting-item select { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 6px; border-radius: 4px; }
+    .uh-subtimer-box { display: flex; justify-content: space-around; align-items: center; margin: 16px 0; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.15); border-radius: 6px; }
+    .uh-subtimer-display { font-family: monospace; font-size: 1.5rem; font-weight: bold; color: #38bdf8; }
+  </style>
+</head>
+<body class="uh-time-tool uh-stopwatch-page">
+  <main class="uh-time-shell" id="stopwatch-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Time tools / Precision chronograph</span>
+      <h1>Stopwatch Pro</h1>
+      <p>Measure elapsed time, live current-lap sub-timer, target pace tracking, audio cues, and export options.</p>
+    </section>
+
+    <section class="uh-time-card uh-stopwatch-console" aria-labelledby="stopwatch-title">
+      <div class="uh-time-label" id="stopwatch-title">TOTAL ELAPSED TIME</div>
+      <output id="stopwatch-display" class="uh-stopwatch-display" aria-live="off">00:00.000</output>
+
+      <!-- Current Lap Sub-Timer Panel -->
+      <div class="uh-subtimer-box">
+        <div>
+          <div class="uh-time-label" style="font-size: 0.7rem; opacity: 0.7;">CURRENT LAP SUB-TIMER</div>
+          <output id="current-lap-display" class="uh-subtimer-display">00:00.000</output>
+        </div>
+      </div>
+
+      <div class="uh-stopwatch-state">
+        <span id="stopwatch-indicator"></span>
+        <span id="stopwatch-status">READY</span>
+        <span id="current-lap-label">LAP 1</span>
+      </div>
+      <div class="uh-time-actions uh-stopwatch-actions">
+        <button type="button" class="uh-time-button primary" id="start-pause">Start</button>
+        <button type="button" class="uh-time-button" id="lap-button" disabled>Lap</button>
+        <button type="button" class="uh-time-button quiet" id="reset-button">Reset</button>
+        <button type="button" class="uh-time-button quiet" id="fullscreen-button">Fullscreen</button>
+      </div>
+      <p class="uh-time-hint">Keyboard: <kbd>Space</kbd> start/pause · <kbd>L</kbd> lap · <kbd>R</kbd> reset</p>
+
+      <!-- Advanced Settings Panel -->
+      <div class="uh-time-settings-grid">
+        <div class="uh-setting-item">
+          <label for="target-pace">Target Lap Pace (sec):</label>
+          <input type="number" id="target-pace" placeholder="e.g. 60" step="0.5" min="0">
+        </div>
+        <div class="uh-setting-item">
+          <label for="countdown-delay">Start Delay:</label>
+          <select id="countdown-delay">
+            <option value="0">None (Instant)</option>
+            <option value="3">3 Seconds</option>
+            <option value="5">5 Seconds</option>
+          </select>
+        </div>
+        <div class="uh-setting-item">
+          <label for="audio-toggle">Audio Feedback:</label>
+          <select id="audio-toggle">
+            <option value="on">Sound Enabled</option>
+            <option value="off">Muted</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="uh-time-card uh-lap-summary" aria-label="Lap summary">
+      <div><span>Fastest lap</span><strong id="fastest-lap">—</strong></div>
+      <div><span>Slowest lap</span><strong id="slowest-lap">—</strong></div>
+      <div><span>Average lap</span><strong id="average-lap">—</strong></div>
+      <div><span>Total laps</span><strong id="lap-count">0</strong></div>
+    </section>
+
+    <section class="uh-time-section uh-time-card" aria-labelledby="lap-title">
+      <div class="uh-time-section-head">
+        <div>
+          <span class="uh-time-label">Session / Splits</span>
+          <h2 id="lap-title">Lap history & Notes</h2>
+        </div>
+        <div class="uh-time-actions">
+          <button type="button" id="copy-laps" class="uh-time-button quiet" disabled>Copy</button>
+          <button type="button" id="export-txt" class="uh-time-button quiet" disabled>TXT</button>
+          <button type="button" id="export-csv" class="uh-time-button quiet" disabled>CSV</button>
+          <button type="button" id="export-json" class="uh-time-button quiet" disabled>JSON</button>
+        </div>
+      </div>
+      <div class="uh-time-table-wrap">
+        <table class="uh-time-table">
+          <thead>
+            <tr>
+              <th scope="col">Lap</th>
+              <th scope="col">Split</th>
+              <th scope="col">Total elapsed</th>
+              <th scope="col">Note / Tag</th>
+              <th scope="col">Recorded</th>
+            </tr>
+          </thead>
+          <tbody id="lap-rows">
+            <tr><td colspan="5" class="uh-time-empty-cell">No laps recorded yet. Start the stopwatch and press Lap.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <footer class="uh-time-footer">STOPWATCH PRO / MONOTONIC ELAPSED TIME · SESSION SAVED LOCALLY</footer>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+    var KEY = 'utilityhub:stopwatch:v3';
+    var elapsedBase = 0;
+    var startedAt = 0;
+    var running = false;
+    var laps = [];
+    var countdownTimer = null;
+
+    // Web Audio Synthesizer for UI Cues
+    var audioCtx = null;
+    function playBeep(freq, type, duration) {
+      if (document.getElementById('audio-toggle').value === 'off') return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq || 800;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + (duration || 0.08));
+      } catch (e) {}
+    }
+
+    function safeRead() {
+      try {
+        var saved = JSON.parse(localStorage.getItem(KEY));
+        if (!saved || !Number.isFinite(saved.elapsed) || !Array.isArray(saved.laps)) return null;
+        return saved;
+      } catch (error) { return null; }
+    }
+
+    function elapsedNow() { return running ? elapsedBase + performance.now() - startedAt : elapsedBase; }
+
+    function persist() {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          elapsed: elapsedNow(),
+          running: running,
+          savedAt: Date.now(),
+          laps: laps
+        }));
+      } catch (error) { setStatus('Storage unavailable'); }
+    }
+
+    function format(ms, precision) {
+      var value = Math.max(0, ms);
+      var minutes = Math.floor(value / 60000);
+      var seconds = Math.floor(value % 60000 / 1000);
+      var remainder = Math.floor(value % 1000);
+      return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') +
+        (precision === 2 ? '.' + String(Math.floor(remainder / 10)).padStart(2, '0') : '.' + String(remainder).padStart(3, '0'));
+    }
+
+    function setStatus(value) {
+      document.getElementById('stopwatch-status').textContent = value.toUpperCase();
+      document.getElementById('stopwatch-indicator').classList.toggle('is-running', running);
+    }
+
+    function render() {
+      var elapsed = elapsedNow();
+      var lastLapTotal = laps.length ? laps[laps.length - 1].total : 0;
+      var currentLapElapsed = elapsed - lastLapTotal;
+
+      document.getElementById('stopwatch-display').textContent = format(elapsed, 3);
+      document.getElementById('current-lap-display').textContent = format(currentLapElapsed, 3);
+      document.getElementById('start-pause').textContent = running ? 'Pause' : elapsedBase ? 'Resume' : 'Start';
+      document.getElementById('lap-button').disabled = !running;
+      document.getElementById('current-lap-label').textContent = 'LAP ' + (laps.length + 1);
+      if (!running && !countdownTimer) setStatus(elapsedBase ? 'Paused' : 'Ready');
+    }
+
+    function renderLaps() {
+      var rows = document.getElementById('lap-rows');
+      var count = laps.length;
+      document.getElementById('lap-count').textContent = String(count);
+      document.getElementById('copy-laps').disabled = !count;
+      document.getElementById('export-txt').disabled = !count;
+      document.getElementById('export-csv').disabled = !count;
+      document.getElementById('export-json').disabled = !count;
+
+      if (!count) {
+        rows.innerHTML = '<tr><td colspan="5" class="uh-time-empty-cell">No laps recorded yet. Start the stopwatch and press Lap.</td></tr>';
+        ['fastest-lap','slowest-lap','average-lap'].forEach(function (id) { document.getElementById(id).textContent = '—'; });
+        return;
+      }
+
+      var splits = laps.map(function (lap) { return lap.split; });
+      var fastest = Math.min.apply(null, splits);
+      var slowest = Math.max.apply(null, splits);
+      var targetPaceMs = parseFloat(document.getElementById('target-pace').value) * 1000;
+
+      document.getElementById('fastest-lap').textContent = format(fastest, 3);
+      document.getElementById('slowest-lap').textContent = format(slowest, 3);
+      document.getElementById('average-lap').textContent = format(splits.reduce(function (sum, item) { return sum + item; }, 0) / count, 3);
+
+      rows.textContent = '';
+      laps.slice().reverse().forEach(function (lap) {
+        var row = document.createElement('tr');
+
+        // Lap Number Cell with Badges
+        var lapCell = document.createElement('td');
+        lapCell.textContent = '#' + lap.number;
+        if (count > 1 && lap.split === fastest) {
+          lapCell.innerHTML += ' <span class="uh-time-badge badge-fastest">Fastest</span>';
+        } else if (count > 1 && lap.split === slowest) {
+          lapCell.innerHTML += ' <span class="uh-time-badge badge-slowest">Slowest</span>';
+        }
+        row.appendChild(lapCell);
+
+        // Split Cell
+        var splitCell = document.createElement('td');
+        splitCell.textContent = format(lap.split, 3);
+        if (targetPaceMs > 0) {
+          splitCell.style.color = lap.split <= targetPaceMs ? '#4ade80' : '#f87171';
+        }
+        row.appendChild(splitCell);
+
+        // Total Elapsed
+        var totalCell = document.createElement('td');
+        totalCell.textContent = format(lap.total, 3);
+        row.appendChild(totalCell);
+
+        // Interactive Note Input Cell
+        var noteCell = document.createElement('td');
+        var noteInput = document.createElement('input');
+        noteInput.type = 'text';
+        noteInput.className = 'lap-note-input';
+        noteInput.placeholder = 'Add note...';
+        noteInput.value = lap.note || '';
+        noteInput.addEventListener('input', function () {
+          lap.note = noteInput.value;
+          persist();
+        });
+        noteCell.appendChild(noteInput);
+        row.appendChild(noteCell);
+
+        // Recorded Time
+        var timeCell = document.createElement('td');
+        timeCell.textContent = new Date(lap.recordedAt).toLocaleTimeString();
+        row.appendChild(timeCell);
+
+        rows.appendChild(row);
+      });
+    }
+
+    function startTiming() {
+      startedAt = performance.now();
+      running = true;
+      setStatus('Running');
+      playBeep(800, 'sine');
+      persist();
+      render();
+    }
+
+    function toggle() {
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        setStatus('Cancelled');
+        return;
+      }
+
+      if (running) {
+        elapsedBase = elapsedNow();
+        running = false;
+        setStatus('Paused');
+        playBeep(400, 'sine');
+      } else {
+        var delaySec = parseInt(document.getElementById('countdown-delay').value, 10);
+        if (delaySec > 0 && elapsedBase === 0) {
+          var remaining = delaySec;
+          setStatus('Starting in ' + remaining + 's');
+          playBeep(600, 'triangle');
+          countdownTimer = setInterval(function () {
+            remaining--;
+            if (remaining > 0) {
+              setStatus('Starting in ' + remaining + 's');
+              playBeep(600, 'triangle');
+            } else {
+              clearInterval(countdownTimer);
+              countdownTimer = null;
+              startTiming();
+            }
+          }, 1000);
+          return;
+        }
+        startTiming();
+      }
+      persist();
+      render();
+    }
+
+    function recordLap() {
+      if (!running) return;
+      var total = elapsedNow();
+      var previous = laps.length ? laps[laps.length - 1].total : 0;
+      laps.push({ number: laps.length + 1, split: total - previous, total: total, note: '', recordedAt: Date.now() });
+      playBeep(1000, 'square', 0.05);
+      persist();
+      render();
+      renderLaps();
+    }
+
+    function reset() {
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+      running = false;
+      elapsedBase = 0;
+      startedAt = 0;
+      laps = [];
+      playBeep(300, 'sawtooth');
+      persist();
+      setStatus('Ready');
+      render();
+      renderLaps();
+    }
+
+    function downloadFile(content, fileName, contentType) {
+      var blob = new Blob([content], { type: contentType });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }
+
+    function getFormattedTxt() {
+      var header = "Utility Hub / Stopwatch Session Report\n" +
+                   "Generated: " + new Date().toLocaleString() + "\n" +
+                   "Total Laps: " + laps.length + "\n" +
+                   "Total Elapsed: " + format(elapsedNow(), 3) + "\n\n" +
+                   "LAP DETAILS:\n" +
+                   "--------------------------------------------------\n";
+      var body = laps.map(function (lap) {
+        return "Lap #" + lap.number + "\tSplit: " + format(lap.split, 3) + "\tTotal: " + format(lap.total, 3) +
+               (lap.note ? "\tNote: " + lap.note : "") + "\tTime: " + new Date(lap.recordedAt).toLocaleTimeString();
+      }).join('\n');
+      return header + body;
+    }
+
+    // Bind Controls
+    document.getElementById('start-pause').addEventListener('click', toggle);
+    document.getElementById('lap-button').addEventListener('click', recordLap);
+    document.getElementById('reset-button').addEventListener('click', reset);
+    document.getElementById('target-pace').addEventListener('input', renderLaps);
+
+    document.getElementById('copy-laps').addEventListener('click', function () {
+      navigator.clipboard.writeText(getFormattedTxt());
+    });
+
+    document.getElementById('export-txt').addEventListener('click', function () {
+      downloadFile(getFormattedTxt(), 'stopwatch-laps.txt', 'text/plain;charset=utf-8');
+    });
+
+    document.getElementById('export-csv').addEventListener('click', function () {
+      var csv = ['Lap,Split (ms),Total (ms),Split,Total,Note,Recorded'].concat(laps.map(function (l) {
+        return [l.number, Math.round(l.split), Math.round(l.total), format(l.split,3), format(l.total,3), '"' + (l.note || '') + '"', new Date(l.recordedAt).toISOString()].join(',');
+      })).join('\r\n');
+      downloadFile('\ufeff' + csv, 'stopwatch-laps.csv', 'text/csv;charset=utf-8');
+    });
+
+    document.getElementById('export-json').addEventListener('click', function () {
+      downloadFile(JSON.stringify(laps, null, 2), 'stopwatch-laps.json', 'application/json');
+    });
+
+    document.getElementById('fullscreen-button').addEventListener('click', function () {
+      var target = document.getElementById('stopwatch-app');
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (target.requestFullscreen) target.requestFullscreen();
+    });
+
+    // Alert user when attempting to leave page while stopwatch is running
+    window.addEventListener('beforeunload', function (e) {
+      if (running) {
+        e.preventDefault();
+        e.returnValue = 'Stopwatch is currently running. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      var active = document.activeElement;
+      if (document.visibilityState === 'hidden' || active.tagName === 'INPUT' || active.tagName === 'SELECT' || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.code === 'Space') { event.preventDefault(); toggle(); }
+      else if (event.key.toLowerCase() === 'l') recordLap();
+      else if (event.key.toLowerCase() === 'r') reset();
+    });
+
+    var saved = safeRead();
+    if (saved) {
+      elapsedBase = saved.elapsed;
+      laps = saved.laps || [];
+      if (saved.running) {
+        elapsedBase += Math.max(0, Date.now() - (saved.savedAt || Date.now()));
+        startedAt = performance.now();
+        running = true;
+        setStatus('Running');
+      }
+    }
+
+    render();
+    renderLaps();
+    window.setInterval(render, 30);
+    window.setInterval(persist, 1000);
+  })();
+  </script>
+</body>
+</html>

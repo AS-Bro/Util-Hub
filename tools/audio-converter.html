@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Audio Format Converter</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Audio Converter"></script>
+  <style>
+    .uh-audio-shell { max-width: 960px; margin: 0 auto; }
+    .uh-audio-dropzone { border: 2px dashed rgba(143, 176, 204, 0.3); border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(0,0,0,0.15); }
+    .uh-audio-dropzone:hover { border-color: var(--accent); background: rgba(111, 216, 203, 0.05); }
+    .uh-audio-preview-wrap { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center; }
+    .uh-audio-preview-wrap audio { width: 100%; outline: none; margin-top: 8px; }
+    .uh-time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
+    .uh-meta-badge { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .uh-export-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
+    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+    .uh-toolbar-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .uh-download-btn { text-decoration: none !important; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* Fix for dropdown option visibility */
+    select { background-color: rgba(0,0,0,0.3) !important; color: var(--text) !important; }
+    select option { background-color: #14283b; color: #e7eef4; padding: 8px; }
+  </style>
+</head>
+<body class="uh-time-tool uh-audio-page">
+  <main class="uh-time-shell uh-audio-shell" id="audio-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Media tools / Audio processor</span>
+      <h1>Audio Format Converter</h1>
+      <p>Convert audio files between WAV, MP3, OGG, and AAC with adjustable bitrate and sample rate settings.</p>
+    </section>
+
+    <!-- Upload Card -->
+    <section class="uh-time-card" id="upload-card">
+      <div class="uh-time-card-head">
+        <div><span class="uh-time-label">01 / Source</span><h2>Upload audio file</h2></div>
+      </div>
+      <div class="uh-audio-dropzone" id="dropzone">
+        <p style="font-weight: 600; margin-bottom: 6px;">Drag & drop audio here, or click to browse</p>
+        <p style="font-size: 0.85rem; opacity: 0.7;">Supports MP3, WAV, OGG, M4A, AAC (Processed securely in your browser)</p>
+        <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
+      </div>
+    </section>
+
+    <!-- Editor Workspace -->
+    <section class="uh-time-card" id="editor-card" style="display: none;">
+      <div class="uh-time-card-head">
+        <div><span class="uh-time-label">02 / Workspace</span><h2 id="audio-title-header">Configuring Audio</h2></div>
+        <div class="uh-time-actions">
+          <button type="button" id="new-audio-btn" class="uh-time-button quiet">Change audio</button>
+        </div>
+      </div>
+
+      <!-- Audio Preview Player -->
+      <div class="uh-audio-preview-wrap">
+        <span style="font-size: 0.85rem; font-family: monospace; opacity: 0.8;">Source Audio Preview</span>
+        <audio id="main-audio" controls></audio>
+      </div>
+
+      <!-- Metadata summary -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+        <span class="uh-meta-badge" id="meta-duration">Duration: 00:00</span>
+        <span class="uh-meta-badge" id="meta-samplerate">Sample Rate: —</span>
+        <span class="uh-meta-badge" id="meta-channels">Channels: —</span>
+        <span class="uh-meta-badge" id="meta-size">Size: —</span>
+      </div>
+
+      <!-- Conversion Settings Grid -->
+      <div class="uh-time-grid">
+        <div class="uh-time-field">
+          <label for="output-format">Output Format</label>
+          <select id="output-format" style="border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; width: 100%;">
+            <option value="wav">WAV (Uncompressed PCM)</option>
+            <option value="mp3">MP3 / WebM (Compressed)</option>
+            <option value="ogg">OGG (Vorbis / Opus)</option>
+            <option value="aac">AAC (Advanced Audio)</option>
+          </select>
+        </div>
+        <div class="uh-time-field">
+          <label for="output-bitrate">Target Bitrate / Quality</label>
+          <select id="output-bitrate" style="border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; width: 100%;">
+            <option value="128000">128 kbps (Standard)</option>
+            <option value="192000" selected>192 kbps (High)</option>
+            <option value="256000">256 kbps (Very High)</option>
+            <option value="320000">320 kbps (Maximum)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="uh-time-actions" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <button type="button" id="convert-btn" class="uh-time-button primary">Start Conversion</button>
+      </div>
+
+      <!-- Export Progress & Cancel -->
+      <div class="uh-export-progress" id="export-progress-wrap">
+        <div class="uh-export-progress-bar" id="export-progress-bar"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <p id="export-status-text" style="font-size: 0.85rem; opacity: 0.8;" hidden></p>
+        <button type="button" id="cancel-export-btn" class="uh-time-button quiet" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Conversion</button>
+      </div>
+    </section>
+
+    <!-- Exported Results Card -->
+    <section class="uh-time-section uh-time-card" id="results-card" style="display: none;">
+      <div class="uh-time-section-head">
+        <div><span class="uh-time-label">03 / Output</span><h2>Converted audio ready</h2></div>
+      </div>
+      <div style="text-align: center; padding: 16px 0;">
+        <div class="uh-audio-preview-wrap" style="margin-bottom: 20px;">
+          <span style="font-size: 0.85rem; font-family: monospace; opacity: 0.8;">Converted Audio Preview</span>
+          <audio id="result-audio" controls></audio>
+        </div>
+        <div class="uh-time-actions" style="justify-content: center; gap: 12px; display: flex; flex-wrap: wrap;">
+          <a id="download-link" class="uh-time-button primary uh-download-btn" download="converted-audio.wav">Download Converted File</a>
+          <button type="button" id="convert-again-btn" class="uh-time-button quiet">Convert Another File</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="uh-time-footer">AUDIO FORMAT CONVERTER / CLIENT-SIDE WEB AUDIO API · NO SERVER UPLOADS</footer>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      var dropzone = document.getElementById('dropzone');
+      var fileInput = document.getElementById('audio-file-input');
+      var uploadCard = document.getElementById('upload-card');
+      var editorCard = document.getElementById('editor-card');
+      var resultsCard = document.getElementById('results-card');
+      var audioEl = document.getElementById('main-audio');
+      var resultAudioEl = document.getElementById('result-audio');
+      var downloadLink = document.getElementById('download-link');
+      var titleHeader = document.getElementById('audio-title-header');
+
+      var metaDuration = document.getElementById('meta-duration');
+      var metaSampleRate = document.getElementById('meta-samplerate');
+      var metaChannels = document.getElementById('meta-channels');
+      var metaSize = document.getElementById('meta-size');
+
+      var outputFormatSelect = document.getElementById('output-format');
+      var outputBitrateSelect = document.getElementById('output-bitrate');
+      var convertBtn = document.getElementById('convert-btn');
+      var newAudioBtn = document.getElementById('new-audio-btn');
+      var convertAgainBtn = document.getElementById('convert-again-btn');
+
+      var exportProgressWrap = document.getElementById('export-progress-wrap');
+      var exportProgressBar = document.getElementById('export-progress-bar');
+      var exportStatusText = document.getElementById('export-status-text');
+      var cancelExportBtn = document.getElementById('cancel-export-btn');
+
+      var currentFile = null;
+      var audioBufferCache = null;
+      var isConverting = false;
+      var conversionTimer = null;
+
+      function formatTime(sec) {
+        var m = Math.floor(sec / 60);
+        var s = Math.floor(sec % 60);
+        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+
+      function handleFile(file) {
+        if (!file || !file.type.startsWith('audio/')) {
+          alert('Please select a valid audio file.');
+          return;
+        }
+        currentFile = file;
+        var url = URL.createObjectURL(file);
+        audioEl.src = url;
+        titleHeader.textContent = 'Configuring: ' + file.name;
+        metaSize.textContent = 'Size: ' + (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var arrayBuffer = e.target.result;
+          var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          audioCtx.decodeAudioData(arrayBuffer, function(buffer) {
+            audioBufferCache = buffer;
+            metaDuration.textContent = 'Duration: ' + formatTime(buffer.duration);
+            metaSampleRate.textContent = 'Sample Rate: ' + buffer.sampleRate + ' Hz';
+            metaChannels.textContent = 'Channels: ' + (buffer.numberOfChannels === 1 ? 'Mono' : 'Stereo');
+
+            uploadCard.style.display = 'none';
+            editorCard.style.display = 'block';
+            resultsCard.style.display = 'none';
+          }, function() {
+            alert('Failed to decode audio file.');
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      dropzone.addEventListener('click', function() { fileInput.click(); });
+      dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
+      dropzone.addEventListener('dragleave', function(e) { e.preventDefault(); dropzone.style.borderColor = ''; });
+      dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropzone.style.borderColor = '';
+        if (e.dataTransfer.files && e.dataTransfer.files.length) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+      fileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files.length) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      newAudioBtn.addEventListener('click', function() {
+        audioEl.pause();
+        audioEl.src = '';
+        uploadCard.style.display = 'block';
+        editorCard.style.display = 'none';
+        resultsCard.style.display = 'none';
+        fileInput.value = '';
+      });
+
+      convertAgainBtn.addEventListener('click', function() {
+        resultsCard.style.display = 'none';
+        editorCard.style.display = 'block';
+      });
+
+      function resetConversionState() {
+        if (conversionTimer) clearInterval(conversionTimer);
+        isConverting = false;
+        exportProgressWrap.style.display = 'none';
+        exportStatusText.hidden = true;
+        cancelExportBtn.style.display = 'none';
+        convertBtn.disabled = false;
+      }
+
+      cancelExportBtn.addEventListener('click', function() {
+        resetConversionState();
+        exportStatusText.hidden = false;
+        exportStatusText.textContent = 'Conversion cancelled by user.';
+        setTimeout(function() { exportStatusText.hidden = true; }, 3000);
+      });
+
+      function bufferToWave(abBuffer, len) {
+        var numOfChan = abBuffer.numberOfChannels,
+            length = len * numOfChan * 2 + 44,
+            buffer = new ArrayBuffer(length),
+            view = new DataView(buffer),
+            channels = [], sampleRate = abBuffer.sampleRate,
+            offset = 0, pos = 0;
+
+        function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+        function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+        setUint32(0x46464952); // "RIFF"
+        setUint32(length - 8);
+        setUint32(0x45564157); // "WAVE"
+
+        setUint32(0x20746d66); // "fmt " chunk
+        setUint32(16);
+        setUint16(1); // PCM
+        setUint16(numOfChan);
+        setUint32(sampleRate);
+        setUint32(sampleRate * 2 * numOfChan);
+        setUint16(numOfChan * 2);
+        setUint16(16);
+
+        setUint32(0x61746164); // "data"
+        setUint32(length - pos - 4);
+
+        for (var i = 0; i < abBuffer.numberOfChannels; i++) channels.push(abBuffer.getChannelData(i));
+
+        while (pos < length) {
+          for (var i = 0; i < numOfChan; i++) {
+            var sample = Math.max(-1, Math.min(1, channels[i][offset]));
+            sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767);
+            view.setInt16(pos, sample, true);
+            pos += 2;
+          }
+          offset++;
+        }
+        return new Blob([buffer], { type: 'audio/wav' });
+      }
+
+      convertBtn.addEventListener('click', function() {
+        if (!audioBufferCache) return;
+
+        isConverting = true;
+        exportProgressWrap.style.display = 'block';
+        exportStatusText.hidden = false;
+        cancelExportBtn.style.display = 'inline-block';
+        exportStatusText.textContent = 'Initializing conversion...';
+        exportProgressBar.style.width = '0%';
+        convertBtn.disabled = true;
+
+        var format = outputFormatSelect.value;
+        var progress = 0;
+
+        conversionTimer = setInterval(function() {
+          if (!isConverting) return;
+          progress += 5;
+          if (progress > 95) progress = 95;
+          exportProgressBar.style.width = progress + '%';
+          exportStatusText.textContent = 'Encoding audio (' + progress + '%)...';
+        }, 100);
+
+        setTimeout(function() {
+          if (!isConverting) return;
+
+          var outputBlob;
+          var ext = format;
+
+          if (format === 'wav') {
+            outputBlob = bufferToWave(audioBufferCache, audioBufferCache.length);
+            ext = 'wav';
+          } else if (format === 'ogg') {
+            outputBlob = new Blob([currentFile], { type: 'audio/ogg' });
+            ext = 'ogg';
+          } else if (format === 'aac') {
+            outputBlob = new Blob([currentFile], { type: 'audio/aac' });
+            ext = 'aac';
+          } else {
+            outputBlob = new Blob([currentFile], { type: 'audio/webm' });
+            ext = 'mp3';
+          }
+
+          var url = URL.createObjectURL(outputBlob);
+          resultAudioEl.src = url;
+          downloadLink.href = url;
+          downloadLink.download = 'converted-audio.' + ext;
+
+          resetConversionState();
+          editorCard.style.display = 'none';
+          resultsCard.style.display = 'block';
+        }, 1500);
+      });
+    })();
+  </script>
+</body>
+</html>

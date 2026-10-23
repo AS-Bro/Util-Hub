@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Pomodoro &amp; Focus Timer</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Pomodoro & Focus Timer"></script>
+</head>
+<body class="uh-time-tool uh-pomodoro-page">
+  <main class="uh-time-shell" id="pomodoro-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Timers / Structured focus</span>
+      <h1>Pomodoro &amp; Focus Timer</h1>
+      <p>Make space for focused work and restorative breaks, one session at a time.</p>
+    </section>
+    <section class="uh-time-card uh-pomodoro-console" aria-labelledby="phase-title">
+      <div class="uh-time-label" id="phase-title">FOCUS SESSION</div>
+      <div class="uh-pomodoro-ring" id="pomodoro-ring" role="img" aria-label="Session progress">
+        <div class="uh-pomodoro-ring-inner">
+          <output id="pomodoro-display" class="uh-pomodoro-display" aria-live="off">25:00</output>
+          <span id="pomodoro-session-label">Session 1</span>
+        </div>
+      </div>
+      <div id="pomodoro-status" class="uh-pomodoro-status">READY</div>
+      <div class="uh-time-actions uh-pomodoro-actions">
+        <button type="button" class="uh-time-button primary" id="pomodoro-start">Start focus</button>
+        <button type="button" class="uh-time-button" id="pomodoro-skip">Skip session</button>
+        <button type="button" class="uh-time-button quiet" id="pomodoro-reset">Reset session</button>
+      </div>
+      <div class="uh-time-actions uh-pomodoro-tools">
+        <label class="uh-time-switch"><input type="checkbox" id="pomodoro-sound"><span>Completion sound</span></label>
+        <button type="button" class="uh-time-button quiet" id="pomodoro-distraction">Distraction-free mode</button>
+        <button type="button" class="uh-time-button quiet" id="pomodoro-fullscreen">Fullscreen</button>
+      </div>
+    </section>
+    <div class="uh-time-columns uh-pomodoro-lower">
+      <section class="uh-time-card uh-pomodoro-config" aria-labelledby="pomodoro-settings-title">
+        <div class="uh-time-card-head"><div><span class="uh-time-label">01 / Preferences</span><h2 id="pomodoro-settings-title">Session lengths</h2></div></div>
+        <form id="pomodoro-settings" class="uh-time-form uh-pomodoro-form">
+          <label class="uh-time-field">Focus minutes<input type="number" id="focus-minutes" min="1" max="180" value="25" required></label>
+          <label class="uh-time-field">Short break<input type="number" id="short-minutes" min="1" max="60" value="5" required></label>
+          <label class="uh-time-field">Long break<input type="number" id="long-minutes" min="1" max="90" value="15" required></label>
+          <label class="uh-time-field">Focus sessions before long break<input type="number" id="cycle-count" min="2" max="12" value="4" required></label>
+          <button type="submit" class="uh-time-button uh-time-field-wide">Save preferences</button>
+          <p class="uh-time-error uh-time-field-wide" id="pomodoro-error" role="alert" hidden></p>
+        </form>
+        <p class="uh-time-hint">Changes apply to the next session. Preferences are saved on this device.</p>
+      </section>
+      <section class="uh-time-card uh-pomodoro-stats" aria-labelledby="pomodoro-stats-title">
+        <div class="uh-time-card-head"><div><span class="uh-time-label">Today / Local record</span><h2 id="pomodoro-stats-title">Focus statistics</h2></div></div>
+        <div class="uh-pomodoro-stat-grid">
+          <div><span>Completed focus sessions</span><strong id="focus-completed">0</strong></div>
+          <div><span>Total focus time</span><strong id="focus-total">0 min</strong></div>
+          <div><span>Current cycle</span><strong id="focus-cycle">1 / 4</strong></div>
+        </div>
+      </section>
+    </div>
+    <footer class="uh-time-footer">POMODORO ENGINE / DEADLINE-BASED TIMING · PREFERENCES AND DAILY STATS STORED LOCALLY</footer>
+  </main>
+  <script>
+  (function () {
+    'use strict';
+    var PREFS_KEY = 'utilityhub:pomodoro-preferences:v1';
+    var STATE_KEY = 'utilityhub:pomodoro-state:v1';
+    var today = new Date().toLocaleDateString('en-CA');
+    var prefs = read(PREFS_KEY, { focus: 25, short: 5, long: 15, cycle: 4, sound: false });
+    var stats = read(STATE_KEY, { day: today, completed: 0, focusMs: 0 });
+    if (!stats || stats.day !== today || !Number.isInteger(stats.completed) || stats.completed < 0 || !Number.isFinite(stats.focusMs) || stats.focusMs < 0) stats = { day: today, completed: 0, focusMs: 0 };
+    var session = read('utilityhub:pomodoro-session:v1', null);
+    var intervalId = null;
+    var validPrefs = validatePrefs(prefs);
+    if (!validPrefs) prefs = { focus: 25, short: 5, long: 15, cycle: 4, sound: false };
+    if (!session || !['focus','short','long'].includes(session.phase) || !Number.isFinite(session.duration) || session.duration <= 0 ||
+        !Number.isFinite(session.remaining) || session.remaining < 0 || session.remaining > session.duration ||
+        !['running','paused'].includes(session.status) || !Number.isInteger(session.sequence) || session.sequence < 1 || !Number.isFinite(session.deadline) && session.status === 'running') {
+      session = { phase: 'focus', duration: prefs.focus * 60000, remaining: prefs.focus * 60000, status: 'paused', deadline: null, sequence: stats.completed % prefs.cycle + 1 };
+    } else if (session.status === 'running') {
+      session.remaining = Math.max(0, session.deadline - Date.now());
+      if (session.remaining <= 0) advanceExpired(Date.now());
+    }
+
+    function read(key, fallback) { try { var value = JSON.parse(localStorage.getItem(key)); return value === null ? fallback : value; } catch (error) { return fallback; } }
+    function store(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); }
+      catch (error) { showError('Local storage is unavailable; this change may not survive a page refresh.'); }
+    }
+    function validatePrefs(value) {
+      return value && ['focus','short','long','cycle'].every(function (key) { return Number.isInteger(value[key]); }) &&
+        value.focus >= 1 && value.focus <= 180 && value.short >= 1 && value.short <= 60 &&
+        value.long >= 1 && value.long <= 90 && value.cycle >= 2 && value.cycle <= 12;
+    }
+    function durationFor(phase) { return (phase === 'focus' ? prefs.focus : phase === 'short' ? prefs.short : prefs.long) * 60000; }
+    function persist() {
+      if (session.status === 'running') session.remaining = Math.max(0, session.deadline - Date.now());
+      store('utilityhub:pomodoro-session:v1', session);
+      store(STATE_KEY, stats);
+    }
+    function format(ms) {
+      var total = Math.ceil(Math.max(0, ms) / 1000);
+      return String(Math.floor(total / 60)).padStart(2,'0') + ':' + String(total % 60).padStart(2,'0');
+    }
+    function showError(message) {
+      var node = document.getElementById('pomodoro-error');
+      node.textContent = message;
+      node.hidden = false;
+    }
+    function clearError() {
+      var node = document.getElementById('pomodoro-error');
+      node.textContent = '';
+      node.hidden = true;
+    }
+    function phaseName(phase) { return phase === 'focus' ? 'Focus session' : phase === 'short' ? 'Short break' : 'Long break'; }
+    function setPhase(phase, deadline) {
+      session.phase = phase;
+      session.duration = durationFor(phase);
+      session.remaining = session.duration;
+      session.status = 'paused';
+      session.deadline = null;
+      if (deadline) {
+        session.status = 'running';
+        session.deadline = deadline + session.duration;
+      }
+    }
+    function advanceCompleted(deadline) {
+      if (session.phase === 'focus') {
+        stats.completed += 1;
+        stats.focusMs += session.duration;
+        session.sequence = (session.sequence % prefs.cycle) + 1;
+        setPhase(stats.completed % prefs.cycle === 0 ? 'long' : 'short', deadline);
+      } else {
+        setPhase('focus', deadline);
+        session.sequence = stats.completed % prefs.cycle + 1;
+      }
+    }
+    function advanceExpired(now) {
+      var guard = 0;
+      while (session.status === 'running' && session.deadline <= now && guard < 1000) {
+        var deadline = session.deadline;
+        advanceCompleted(deadline);
+        guard += 1;
+      }
+      if (session.status === 'running') session.remaining = Math.max(0, session.deadline - now);
+      if (guard === 1) playSound();
+      persist();
+    }
+    function render() {
+      var now = Date.now();
+      var currentDay = new Date(now).toLocaleDateString('en-CA');
+      if (stats.day !== currentDay) {
+        stats = { day: currentDay, completed: 0, focusMs: 0 };
+        store(STATE_KEY, stats);
+      }
+      if (session.status === 'running' && session.deadline <= now) advanceExpired(now);
+      var remaining = session.status === 'running' ? Math.max(0, session.deadline - Date.now()) : session.remaining;
+      var phase = phaseName(session.phase);
+      document.getElementById('phase-title').textContent = phase.toUpperCase();
+      document.getElementById('pomodoro-display').textContent = format(remaining);
+      document.getElementById('pomodoro-session-label').textContent = 'Focus ' + session.sequence + ' of ' + prefs.cycle;
+      document.getElementById('pomodoro-status').textContent = session.status === 'running' ? 'IN PROGRESS' : 'READY';
+      document.getElementById('pomodoro-start').textContent = session.status === 'running' ? 'Pause' : session.remaining < session.duration ? 'Resume' : 'Start ' + (session.phase === 'focus' ? 'focus' : 'break');
+      var progress = session.duration ? Math.max(0, Math.min(1, remaining / session.duration)) : 0;
+      document.getElementById('pomodoro-ring').style.setProperty('--pomodoro-progress', (progress * 360) + 'deg');
+      document.getElementById('pomodoro-ring').setAttribute('aria-label', phase + ', ' + Math.round(progress * 100) + '% remaining');
+      document.getElementById('pomodoro-sound').checked = prefs.sound;
+      document.getElementById('focus-completed').textContent = String(stats.completed);
+      document.getElementById('focus-total').textContent = (stats.focusMs / 60000).toFixed(0) + ' min';
+      document.getElementById('focus-cycle').textContent = session.sequence + ' / ' + prefs.cycle;
+      if (!intervalId) intervalId = window.setInterval(render, 200);
+    }
+    function playSound() {
+      if (!prefs.sound) return;
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      var context;
+      try {
+        context = new AudioContext();
+        var oscillator = context.createOscillator();
+        var gain = context.createGain();
+        oscillator.frequency.value = 660;
+        gain.gain.setValueAtTime(0.055, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.32);
+        oscillator.connect(gain); gain.connect(context.destination);
+        oscillator.start(); oscillator.stop(context.currentTime + 0.32);
+        oscillator.addEventListener('ended', function () { context.close(); }, { once: true });
+      } catch (error) { if (context) context.close(); }
+    }
+    document.getElementById('pomodoro-start').addEventListener('click', function () {
+      clearError();
+      if (session.status === 'running') {
+        session.remaining = Math.max(0, session.deadline - Date.now());
+        session.status = 'paused';
+        session.deadline = null;
+      } else {
+        session.deadline = Date.now() + session.remaining;
+        session.status = 'running';
+      }
+      persist(); render();
+    });
+    document.getElementById('pomodoro-skip').addEventListener('click', function () {
+      if (session.phase === 'focus') {
+        setPhase(stats.completed % prefs.cycle === prefs.cycle - 1 ? 'long' : 'short');
+      } else {
+        setPhase('focus');
+        session.sequence = stats.completed % prefs.cycle + 1;
+      }
+      persist(); render();
+    });
+    document.getElementById('pomodoro-reset').addEventListener('click', function () {
+      session.duration = durationFor(session.phase);
+      session.remaining = session.duration;
+      session.status = 'paused';
+      session.deadline = null;
+      persist(); render();
+    });
+    document.getElementById('pomodoro-settings').addEventListener('submit', function (event) {
+      event.preventDefault();
+      var next = {
+        focus: Number(document.getElementById('focus-minutes').value),
+        short: Number(document.getElementById('short-minutes').value),
+        long: Number(document.getElementById('long-minutes').value),
+        cycle: Number(document.getElementById('cycle-count').value),
+        sound: prefs.sound
+      };
+      if (!validatePrefs(next)) return showError('Use whole minutes within each field’s displayed limits.');
+      prefs = next;
+      store(PREFS_KEY, prefs);
+      if (session.status !== 'running' && session.remaining === session.duration) {
+        session.duration = durationFor(session.phase);
+        session.remaining = session.duration;
+      }
+      session.sequence = session.phase === 'focus' ? stats.completed % prefs.cycle + 1 : session.sequence;
+      clearError(); persist(); render();
+    });
+    document.getElementById('pomodoro-sound').addEventListener('change', function () {
+      prefs.sound = this.checked;
+      store(PREFS_KEY, prefs); render();
+    });
+    document.getElementById('pomodoro-distraction').addEventListener('click', function () {
+      document.body.classList.toggle('uh-focus-mode');
+      this.textContent = document.body.classList.contains('uh-focus-mode') ? 'Exit distraction-free mode' : 'Distraction-free mode';
+    });
+    document.getElementById('pomodoro-fullscreen').addEventListener('click', function () {
+      var target = document.getElementById('pomodoro-app');
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (target.requestFullscreen) target.requestFullscreen();
+    });
+    document.addEventListener('fullscreenchange', function () {
+      document.getElementById('pomodoro-fullscreen').textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) render(); });
+    window.addEventListener('pagehide', persist);
+
+    document.getElementById('focus-minutes').value = prefs.focus;
+    document.getElementById('short-minutes').value = prefs.short;
+    document.getElementById('long-minutes').value = prefs.long;
+    document.getElementById('cycle-count').value = prefs.cycle;
+    render();
+    persist();
+  })();
+  </script>
+</body>
+</html>

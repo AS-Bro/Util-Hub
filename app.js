@@ -117,6 +117,22 @@ const toolsData = [
     icon: 'music',
   },
   {
+    id: 'audio-converter',
+    title: 'Audio Converter',
+    description: 'Preview audio files, adjust output options, and download a browser-generated result.',
+    category: 'Audio',
+    url: 'tools/audio-converter.html',
+    icon: 'music',
+  },
+  {
+    id: 'video-trimmer',
+    title: 'Video Trimmer',
+    description: 'Preview videos, set clip start and end points, and export a trimmed segment locally.',
+    category: 'Design',
+    url: 'tools/video-trimmer.html',
+    icon: 'scissors',
+  },
+  {
     id: 'basic-pdf-tool',
     title: 'Basic PDF Tool',
     description: 'Split pdf files with ease.',

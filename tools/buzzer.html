@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Game Show & Reaction Buzzer</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Buzzer Pro"></script>
+  <style>
+    .uh-buzzer-controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .uh-buzzer-mode-select {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: inherit;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .uh-player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .uh-player-card {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      transition: transform 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+    }
+    .uh-player-card.is-winner {
+      border-color: #22c55e;
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+      transform: scale(1.03);
+    }
+    .uh-player-card.is-locked {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .uh-player-card.is-penalty {
+      border-color: #ef4444;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+    }
+    .uh-player-name {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+    .uh-player-key {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .uh-player-key kbd {
+      background: rgba(255,255,255,0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .uh-player-score {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: monospace;
+      margin: 8px 0;
+    }
+    .uh-score-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: inherit;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+    .uh-score-btn:hover { background: rgba(255,255,255,0.25); }
+    .uh-hit-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    }
+    .uh-hit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
+    .p1-color { background: #e11d48; }
+    .p2-color { background: #0284c7; }
+    .p3-color { background: #16a34a; }
+    .p4-color { background: #d97706; }
+    .uh-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+    .uh-history-table th, .uh-history-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body class="uh-time-tool uh-buzzer-page">
+  <main class="uh-time-shell uh-buzzer-shell" id="buzzer-app">
+    <section class="uh-time-heading uh-buzzer-heading">
+      <span class="uh-time-kicker">Interactive tools / Multi-player arena</span>
+      <h1>Game Show & Reaction Buzzer Pro</h1>
+      <p>Lockout quiz mode, false-start penalty detection, audio cues, reaction timers, and integrated scoreboard.</p>
+    </section>
+
+    <section class="uh-buzzer-console" aria-label="Buzzer console">
+      <div class="uh-buzzer-controls-bar">
+        <select id="mode-select" class="uh-buzzer-mode-select">
+          <option value="lockout">Quiz Lockout Mode (First to Buzz)</option>
+          <option value="reaction">Reaction Speed Challenge</option>
+          <option value="countdown">30s Trivia Countdown Timer</option>
+        </select>
+        <select id="players-select" class="uh-buzzer-mode-select">
+          <option value="1">1 Player</option>
+          <option value="2" selected>2 Players</option>
+          <option value="3">3 Players</option>
+          <option value="4">4 Players</option>
+        </select>
+        <button type="button" id="audio-toggle" class="uh-time-button quiet">Sound: ON</button>
+      </div>
+
+      <div class="uh-buzzer-clock-label" id="clock-label">ELAPSED / REACTION TIME</div>
+      <output class="uh-buzzer-display" id="buzzer-display">00:00.00</output>
+      <div class="uh-buzzer-status"><span id="buzzer-indicator" aria-hidden="true"></span><strong id="buzzer-status">READY</strong></div>
+
+      <!-- Player Buzzer Cards -->
+      <div class="uh-player-grid" id="player-grid"></div>
+
+      <div class="uh-time-actions" style="margin-top: 15px;">
+        <button type="button" id="host-ready" class="uh-time-button primary">Host: Next Round / Ready</button>
+        <button type="button" id="buzzer-reset" class="uh-time-button quiet">Reset Session</button>
+      </div>
+    </section>
+
+    <!-- Session History -->
+    <section class="uh-time-section uh-time-card" style="margin-top:20px;">
+      <div class="uh-time-section-head">
+        <div>
+          <span class="uh-time-label">Session Log</span>
+          <h2>Round History</h2>
+        </div>
+        <button type="button" id="clear-history" class="uh-time-button quiet">Clear History</button>
+      </div>
+      <table class="uh-history-table">
+        <thead>
+          <tr>
+            <th>Round</th>
+            <th>First Responder</th>
+            <th>Time</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="history-rows">
+          <tr><td colspan="4" style="text-align:center; opacity: 0.6;">No rounds played yet.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="uh-time-footer">BUZZER PRO / MONOTONIC LOCKOUT ENGINE</footer>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var playersData = [
+      { id: 1, name: 'Player 1', key: 'Space / A', code: ['Space', 'KeyA'], colorClass: 'p1-color', score: 0 },
+      { id: 2, name: 'Player 2', key: 'Enter / L', code: ['Enter', 'KeyL'], colorClass: 'p2-color', score: 0 },
+      { id: 3, name: 'Player 3', key: 'Z', code: ['KeyZ'], colorClass: 'p3-color', score: 0 },
+      { id: 4, name: 'Player 4', key: 'M', code: ['KeyM'], colorClass: 'p4-color', score: 0 }
+    ];
+
+    var activePlayers = 2;
+    var mode = 'lockout'; // lockout, reaction, countdown
+    var soundEnabled = true;
+    var roundState = 'IDLE'; // IDLE, ARMED, LOCKED, FINISHED
+    var roundStartTime = 0;
+    var timerId = null;
+    var roundsHistory = [];
+    var currentWinner = null;
+
+    // Audio Synthesizer
+    var audioCtx = null;
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'buzz') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        } else if (type === 'win') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+          osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'error') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.25);
+        }
+      } catch (e) {}
+    }
+
+    function formatTime(ms) {
+      var sec = Math.floor(ms / 1000);
+      var fraction = Math.floor((ms % 1000) / 10);
+      var mins = Math.floor(sec / 60);
+      sec = sec % 60;
+      return String(mins).padStart(2, '0') + ':' + String(sec).padStart(2, '0') + '.' + String(fraction).padStart(2, '0');
+    }
+
+    function renderPlayers() {
+      var grid = document.getElementById('player-grid');
+      grid.innerHTML = '';
+
+      for (var i = 0; i < activePlayers; i++) {
+        (function (p) {
+          var card = document.createElement('div');
+          card.className = 'uh-player-card';
+          card.id = 'player-card-' + p.id;
+
+          card.innerHTML =
+            '<div class="uh-player-name">' + p.name + '</div>' +
+            '<div class="uh-player-key">Key: <kbd>' + p.key + '</kbd></div>' +
+            '<div class="uh-player-score" id="score-' + p.id + '">' + p.score + '</div>' +
+            '<div>' +
+              '<button type="button" class="uh-score-btn btn-plus">+100</button>' +
+              '<button type="button" class="uh-score-btn btn-minus">-50</button>' +
+            '</div>' +
+            '<button type="button" class="uh-hit-btn ' + p.colorClass + '">BUZZ</button>';
+
+          card.querySelector('.btn-plus').addEventListener('click', function () { updateScore(p.id, 100); });
+          card.querySelector('.btn-minus').addEventListener('click', function () { updateScore(p.id, -50); });
+          card.querySelector('.uh-hit-btn').addEventListener('click', function () { playerBuzz(p.id); });
+
+          grid.appendChild(card);
+        })(playersData[i]);
+      }
+    }
+
+    function updateScore(id, delta) {
+      var p = playersData.find(function (item) { return item.id === id; });
+      if (p) {
+        p.score = Math.max(0, p.score + delta);
+        document.getElementById('score-' + id).textContent = p.score;
+      }
+    }
+
+    function triggerLockout(player, isFalseStart) {
+      roundState = 'LOCKED';
+      var elapsed = performance.now() - roundStartTime;
+      clearInterval(timerId);
+
+      if (isFalseStart) {
+        playSound('error');
+        document.getElementById('buzzer-status').textContent = player.name + ' FALSE START!';
+        var card = document.getElementById('player-card-' + player.id);
+        if (card) card.classList.add('is-penalty');
+        logRound(player.name, '00:00.00', 'False Start Penalty');
+      } else {
+        playSound('win');
+        document.getElementById('buzzer-status').textContent = player.name + ' FIRST!';
+        document.getElementById('buzzer-display').textContent = formatTime(elapsed);
+        var winCard = document.getElementById('player-card-' + player.id);
+        if (winCard) winCard.classList.add('is-winner');
+
+        // Lock out others
+        for (var i = 1; i <= activePlayers; i++) {
+          if (i !== player.id) {
+            var card = document.getElementById('player-card-' + i);
+            if (card) card.classList.add('is-locked');
+          }
+        }
+        logRound(player.name, formatTime(elapsed), 'Buzzed First');
+      }
+    }
+
+    function playerBuzz(id) {
+      var player = playersData.find(function (p) { return p.id === id; });
+      if (!player) return;
+
+      if (roundState === 'IDLE' && mode === 'lockout') {
+        triggerLockout(player, true);
+      } else if (roundState === 'ARMED') {
+        triggerLockout(player, false);
+      }
+    }
+
+    function startRound() {
+      roundState = 'ARMED';
+      roundStartTime = performance.now();
+      playSound('buzz');
+      document.getElementById('buzzer-status').textContent = 'ROUND ACTIVE - BUZZ NOW!';
+
+      for (var i = 1; i <= activePlayers; i++) {
+        var card = document.getElementById('player-card-' + i);
+        if (card) card.className = 'uh-player-card';
+      }
+
+      if (timerId) clearInterval(timerId);
+      timerId = setInterval(function () {
+        if (roundState === 'ARMED') {
+          var now = performance.now() - roundStartTime;
+          document.getElementById('buzzer-display').textContent = formatTime(now);
+        }
+      }, 30);
+    }
+
+    function logRound(winner, time, result) {
+      roundsHistory.unshift({ round: roundsHistory.length + 1, winner: winner, time: time, result: result });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      var tbody = document.getElementById('history-rows');
+      if (!roundsHistory.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; opacity: 0.6;">No rounds played yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      roundsHistory.forEach(function (r) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>#' + r.round + '</td><td><strong>' + r.winner + '</strong></td><td>' + r.time + '</td><td>' + r.result + '</td>';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Event Listeners
+    document.getElementById('host-ready').addEventListener('click', startRound);
+    document.getElementById('buzzer-reset').addEventListener('click', function () {
+      roundState = 'IDLE';
+      clearInterval(timerId);
+      document.getElementById('buzzer-display').textContent = '00:00.00';
+      document.getElementById('buzzer-status').textContent = 'READY';
+      playersData.forEach(function (p) { p.score = 0; });
+      renderPlayers();
+    });
+
+    document.getElementById('players-select').addEventListener('change', function (e) {
+      activePlayers = parseInt(e.target.value, 10);
+      renderPlayers();
+    });
+
+    document.getElementById('mode-select').addEventListener('change', function (e) {
+      mode = e.target.value;
+    });
+
+    document.getElementById('audio-toggle').addEventListener('click', function () {
+      soundEnabled = !soundEnabled;
+      this.textContent = 'Sound: ' + (soundEnabled ? 'ON' : 'OFF');
+    });
+
+    document.getElementById('clear-history').addEventListener('click', function () {
+      roundsHistory = [];
+      renderHistory();
+    });
+
+    // Global Keymap Controls
+    document.addEventListener('keydown', function (e) {
+      if (e.repeat || document.activeElement.tagName === 'INPUT') return;
+      for (var i = 0; i < activePlayers; i++) {
+        var p = playersData[i];
+        if (p.code.indexOf(e.code) !== -1) {
+          e.preventDefault();
+          playerBuzz(p.id);
+          break;
+        }
+      }
+    });
+
+    // Init
+    renderPlayers();
+  })();
+  </script>
+</body>
+</html>

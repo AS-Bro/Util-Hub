@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Video Trimmer & Cutter Pro</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Video Trimmer"></script>
+  <style>
+    .uh-video-shell { max-width: 960px; margin: 0 auto; }
+    .uh-video-dropzone { border: 2px dashed rgba(143, 176, 204, 0.3); border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(0,0,0,0.15); }
+    .uh-video-dropzone:hover { border-color: var(--accent); background: rgba(111, 216, 203, 0.05); }
+    .uh-video-preview-wrap { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+    .uh-video-preview-wrap video { max-width: 100%; max-height: 100%; outline: none; }
+    .uh-timeline-slider { width: 100%; accent-color: var(--accent); margin: 12px 0; }
+    .uh-time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
+    .uh-meta-badge { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 4px; }
+    .uh-export-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
+    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+    .uh-toolbar-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .uh-download-btn { text-decoration: none !important; display: inline-flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body class="uh-time-tool uh-video-page">
+  <main class="uh-time-shell uh-video-shell" id="video-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Media tools / Precision editor Pro</span>
+      <h1>Video Trimmer & Cutter Pro</h1>
+      <p>Upload a video, preview clips, set precise timestamps, control speed, and export segments cleanly.</p>
+    </section>
+
+    <!-- Upload Card -->
+    <section class="uh-time-card" id="upload-card">
+      <div class="uh-time-card-head">
+        <div><span class="uh-time-label">01 / Source</span><h2>Upload video file</h2></div>
+      </div>
+      <div class="uh-video-dropzone" id="dropzone">
+        <p style="font-weight: 600; margin-bottom: 6px;">Drag & drop video here, or click to browse</p>
+        <p style="font-size: 0.85rem; opacity: 0.7;">Supports MP4, WebM, MOV, OGG (Processed securely in your browser)</p>
+        <input type="file" id="video-file-input" accept="video/*" style="display: none;">
+      </div>
+    </section>
+
+    <!-- Editor Workspace -->
+    <section class="uh-time-card" id="editor-card" style="display: none;">
+      <div class="uh-time-card-head">
+        <div><span class="uh-time-label">02 / Workspace</span><h2 id="video-title-header">Editing Video</h2></div>
+        <div class="uh-time-actions">
+          <button type="button" id="new-video-btn" class="uh-time-button quiet">Change video</button>
+        </div>
+      </div>
+
+      <!-- Video Preview Player -->
+      <div class="uh-video-preview-wrap">
+        <video id="main-video" controls playsinline></video>
+      </div>
+
+      <!-- Metadata summary -->
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+        <span class="uh-meta-badge" id="meta-duration">Duration: 00:00</span>
+        <span class="uh-meta-badge" id="meta-resolution">Resolution: —</span>
+        <span class="uh-meta-badge" id="meta-size">Size: —</span>
+      </div>
+
+      <!-- Playback Controls Toolbar -->
+      <div class="uh-toolbar-row">
+        <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+          Speed:
+          <select id="playback-speed" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 4px 8px; border-radius: 4px;">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1.0x (Normal)</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+          </select>
+        </label>
+        <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+          Format:
+          <select id="export-format" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 4px 8px; border-radius: 4px;">
+            <option value="webm">WebM (High Quality)</option>
+            <option value="slice">Original Stream Slicing</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Timeline & Range Controls -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-family: monospace; opacity: 0.8;">
+          <span id="current-playback-time">00:00.00</span>
+          <span id="total-video-duration">00:00.00</span>
+        </div>
+        <input type="range" id="timeline-scrubber" class="uh-timeline-slider" min="0" max="100" value="0" step="0.01">
+      </div>
+
+      <!-- Timestamp Selection Grid -->
+      <div class="uh-time-grid">
+        <div class="uh-time-field">
+          <label for="start-time-input">Start Timestamp (sec)</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <input type="number" id="start-time-input" min="0" step="0.01" value="0" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 6px; border-radius: 4px; width: 100%;">
+            <button type="button" id="set-start-btn" class="uh-time-button quiet" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
+          </div>
+        </div>
+        <div class="uh-time-field">
+          <label for="end-time-input">End Timestamp (sec)</label>
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <input type="number" id="end-time-input" min="0" step="0.01" value="0" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 6px; border-radius: 4px; width: 100%;">
+            <button type="button" id="set-end-btn" class="uh-time-button quiet" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="uh-time-actions" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <button type="button" id="preview-segment-btn" class="uh-time-button">Preview Segment (Loop)</button>
+        <button type="button" id="export-segment-btn" class="uh-time-button primary">Export Trimmed Video</button>
+      </div>
+
+      <!-- Export Progress & Cancel -->
+      <div class="uh-export-progress" id="export-progress-wrap">
+        <div class="uh-export-progress-bar" id="export-progress-bar"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <p id="export-status-text" style="font-size: 0.85rem; opacity: 0.8;" hidden></p>
+        <button type="button" id="cancel-export-btn" class="uh-time-button quiet" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Export</button>
+      </div>
+    </section>
+
+    <!-- Exported Results Card -->
+    <section class="uh-time-section uh-time-card" id="results-card" style="display: none;">
+      <div class="uh-time-section-head">
+        <div><span class="uh-time-label">03 / Output</span><h2>Trimmed video ready</h2></div>
+      </div>
+      <div style="text-align: center; padding: 16px 0;">
+        <video id="result-video" controls playsinline style="max-width: 100%; max-height: 360px; border-radius: 6px; margin-bottom: 20px;"></video>
+        <div class="uh-time-actions" style="justify-content: center; gap: 12px; display: flex; flex-wrap: wrap;">
+          <a id="download-link" class="uh-time-button primary uh-download-btn" download="trimmed-video.webm">Download Trimmed File</a>
+          <button type="button" id="trim-again-btn" class="uh-time-button quiet">Trim Another Segment</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="uh-time-footer">VIDEO TRIMMER & CUTTER PRO / CLIENT-SIDE HTML5 & MEDIARECORDER · NO SERVER UPLOADS</footer>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      var dropzone = document.getElementById('dropzone');
+      var fileInput = document.getElementById('video-file-input');
+      var uploadCard = document.getElementById('upload-card');
+      var editorCard = document.getElementById('editor-card');
+      var resultsCard = document.getElementById('results-card');
+      var videoEl = document.getElementById('main-video');
+      var resultVideoEl = document.getElementById('result-video');
+      var downloadLink = document.getElementById('download-link');
+      var titleHeader = document.getElementById('video-title-header');
+
+      var startTimeInput = document.getElementById('start-time-input');
+      var endTimeInput = document.getElementById('end-time-input');
+      var timelineScrubber = document.getElementById('timeline-scrubber');
+      var currentTimeDisplay = document.getElementById('current-playback-time');
+      var totalDurationDisplay = document.getElementById('total-video-duration');
+
+      var metaDuration = document.getElementById('meta-duration');
+      var metaResolution = document.getElementById('meta-resolution');
+      var metaSize = document.getElementById('meta-size');
+
+      var setStartBtn = document.getElementById('set-start-btn');
+      var setEndBtn = document.getElementById('set-end-btn');
+      var previewSegmentBtn = document.getElementById('preview-segment-btn');
+      var exportSegmentBtn = document.getElementById('export-segment-btn');
+      var newVideoBtn = document.getElementById('new-video-btn');
+      var trimAgainBtn = document.getElementById('trim-again-btn');
+      var playbackSpeedSelect = document.getElementById('playback-speed');
+      var exportFormatSelect = document.getElementById('export-format');
+
+      var exportProgressWrap = document.getElementById('export-progress-wrap');
+      var exportProgressBar = document.getElementById('export-progress-bar');
+      var exportStatusText = document.getElementById('export-status-text');
+      var cancelExportBtn = document.getElementById('cancel-export-btn');
+
+      var currentFile = null;
+      var isLoopingSegment = false;
+      var activeRecorder = null;
+      var exportIntervalId = null;
+      var isExporting = false;
+
+      function formatTime(sec) {
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        var mins = String(m).padStart(2, '0');
+        var secs = s.toFixed(2).padStart(5, '0');
+        return mins + ':' + secs;
+      }
+
+      function handleFile(file) {
+        if (!file || !file.type.startsWith('video/')) {
+          alert('Please select a valid video file.');
+          return;
+        }
+        currentFile = file;
+        var url = URL.createObjectURL(file);
+        videoEl.src = url;
+        titleHeader.textContent = 'Editing: ' + file.name;
+        metaSize.textContent = 'Size: ' + (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+        videoEl.onloadedmetadata = function() {
+          var dur = videoEl.duration;
+          totalDurationDisplay.textContent = formatTime(dur);
+          metaDuration.textContent = 'Duration: ' + formatTime(dur);
+          metaResolution.textContent = 'Resolution: ' + videoEl.videoWidth + 'x' + videoEl.videoHeight;
+
+          timelineScrubber.max = dur;
+          timelineScrubber.value = 0;
+          startTimeInput.value = 0;
+          endTimeInput.value = dur.toFixed(2);
+          endTimeInput.max = dur;
+          startTimeInput.max = dur;
+
+          uploadCard.style.display = 'none';
+          editorCard.style.display = 'block';
+          resultsCard.style.display = 'none';
+        };
+      }
+
+      dropzone.addEventListener('click', function() { fileInput.click(); });
+      dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; });
+      dropzone.addEventListener('dragleave', function(e) { e.preventDefault(); dropzone.style.borderColor = ''; });
+      dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropzone.style.borderColor = '';
+        if (e.dataTransfer.files && e.dataTransfer.files.length) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+      fileInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files.length) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      playbackSpeedSelect.addEventListener('change', function() {
+        videoEl.playbackRate = parseFloat(playbackSpeedSelect.value);
+      });
+
+      videoEl.addEventListener('timeupdate', function() {
+        currentTimeDisplay.textContent = formatTime(videoEl.currentTime);
+        if (!isMouseDownScrubber) {
+          timelineScrubber.value = videoEl.currentTime;
+        }
+
+        if (isLoopingSegment) {
+          var start = parseFloat(startTimeInput.value) || 0;
+          var end = parseFloat(endTimeInput.value) || videoEl.duration;
+          if (videoEl.currentTime >= end || videoEl.currentTime < start) {
+            videoEl.currentTime = start;
+          }
+        }
+      });
+
+      var isMouseDownScrubber = false;
+      timelineScrubber.addEventListener('mousedown', function() { isMouseDownScrubber = true; });
+      timelineScrubber.addEventListener('mouseup', function() { isMouseDownScrubber = false; });
+      timelineScrubber.addEventListener('input', function() {
+        videoEl.currentTime = parseFloat(timelineScrubber.value);
+      });
+
+      setStartBtn.addEventListener('click', function() {
+        startTimeInput.value = videoEl.currentTime.toFixed(2);
+      });
+      setEndBtn.addEventListener('click', function() {
+        endTimeInput.value = videoEl.currentTime.toFixed(2);
+      });
+
+      previewSegmentBtn.addEventListener('click', function() {
+        var start = parseFloat(startTimeInput.value) || 0;
+        var end = parseFloat(endTimeInput.value) || videoEl.duration;
+        if (start >= end) {
+          alert('Start time must be less than end time.');
+          return;
+        }
+        if (isLoopingSegment) {
+          isLoopingSegment = false;
+          previewSegmentBtn.textContent = 'Preview Segment (Loop)';
+          videoEl.pause();
+        } else {
+          isLoopingSegment = true;
+          previewSegmentBtn.textContent = 'Stop Loop Preview';
+          videoEl.currentTime = start;
+          videoEl.play();
+        }
+      });
+
+      videoEl.addEventListener('pause', function() {
+        if (isLoopingSegment) {
+          isLoopingSegment = false;
+          previewSegmentBtn.textContent = 'Preview Segment (Loop)';
+        }
+      });
+
+      newVideoBtn.addEventListener('click', function() {
+        videoEl.pause();
+        videoEl.src = '';
+        uploadCard.style.display = 'block';
+        editorCard.style.display = 'none';
+        resultsCard.style.display = 'none';
+        fileInput.value = '';
+      });
+      trimAgainBtn.addEventListener('click', function() {
+        resultsCard.style.display = 'none';
+        editorCard.style.display = 'block';
+      });
+
+      function resetExportState() {
+        if (exportIntervalId) clearInterval(exportIntervalId);
+        if (activeRecorder && activeRecorder.state !== 'inactive') {
+          try { activeRecorder.stop(); } catch(e) {}
+        }
+        isExporting = false;
+        exportProgressWrap.style.display = 'none';
+        exportStatusText.hidden = true;
+        cancelExportBtn.style.display = 'none';
+        exportSegmentBtn.disabled = false;
+        videoEl.pause();
+      }
+
+      cancelExportBtn.addEventListener('click', function() {
+        resetExportState();
+        exportStatusText.hidden = false;
+        exportStatusText.textContent = 'Export cancelled by user.';
+        setTimeout(function() { exportStatusText.hidden = true; }, 3000);
+      });
+
+      // Export / Trimming logic
+      exportSegmentBtn.addEventListener('click', function() {
+        var start = parseFloat(startTimeInput.value) || 0;
+        var end = parseFloat(endTimeInput.value) || videoEl.duration;
+        if (start >= end) {
+          alert('Invalid start or end timestamps.');
+          return;
+        }
+
+        if (isLoopingSegment) {
+          isLoopingSegment = false;
+          previewSegmentBtn.textContent = 'Preview Segment (Loop)';
+        }
+
+        videoEl.pause();
+        videoEl.currentTime = start;
+
+        isExporting = true;
+        exportProgressWrap.style.display = 'block';
+        exportStatusText.hidden = false;
+        cancelExportBtn.style.display = 'inline-block';
+        exportStatusText.textContent = 'Preparing export...';
+        exportProgressBar.style.width = '0%';
+        exportSegmentBtn.disabled = true;
+
+        var useSlice = exportFormatSelect.value === 'slice';
+        var stream = null;
+
+        if (!useSlice) {
+          try {
+            if (videoEl.captureStream) stream = videoEl.captureStream();
+            else if (videoEl.mozCaptureStream) stream = videoEl.mozCaptureStream();
+          } catch (e) {}
+        }
+
+        if (useSlice || !stream) {
+          exportStatusText.textContent = 'Processing fast stream slice...';
+          var sliceTimeout = setTimeout(function() {
+            if (!isExporting) return;
+            var slicedBlob = currentFile.slice((start / videoEl.duration) * currentFile.size, (end / videoEl.duration) * currentFile.size, currentFile.type);
+            var url = URL.createObjectURL(slicedBlob);
+            resultVideoEl.src = url;
+            downloadLink.href = url;
+            downloadLink.download = 'trimmed-' + currentFile.name;
+            resetExportState();
+            editorCard.style.display = 'none';
+            resultsCard.style.display = 'block';
+          }, 1000);
+          return;
+        }
+
+        var chunks = [];
+        var options = { mimeType: 'video/webm; codecs=vp9,opus' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'video/webm' };
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) options = {};
+
+        try {
+          activeRecorder = new MediaRecorder(stream, options);
+        } catch (err) {
+          activeRecorder = new MediaRecorder(stream);
+        }
+
+        activeRecorder.ondataavailable = function(e) {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+
+        activeRecorder.onstop = function() {
+          if (!isExporting) return;
+          var blob = new Blob(chunks, { type: activeRecorder.mimeType || 'video/webm' });
+          var url = URL.createObjectURL(blob);
+          resultVideoEl.src = url;
+          downloadLink.href = url;
+          downloadLink.download = 'trimmed-' + currentFile.name.replace(/\.[^/.]+$/, '') + '.webm';
+
+          resetExportState();
+          editorCard.style.display = 'none';
+          resultsCard.style.display = 'block';
+        };
+
+        activeRecorder.start();
+        videoEl.play();
+
+        var durationToRecord = ((end - start) * 1000) / videoEl.playbackRate;
+        var startTimeRecord = performance.now();
+
+        exportIntervalId = setInterval(function() {
+          if (!isExporting) return;
+          var elapsed = performance.now() - startTimeRecord;
+          var pct = Math.min(100, (elapsed / durationToRecord) * 100);
+          exportProgressBar.style.width = pct + '%';
+          exportStatusText.textContent = 'Exporting segment... ' + Math.round(pct) + '%';
+
+          if (videoEl.currentTime >= end || elapsed >= durationToRecord + 200) {
+            clearInterval(exportIntervalId);
+            videoEl.pause();
+            if (activeRecorder && activeRecorder.state !== 'inactive') activeRecorder.stop();
+          }
+        }, 50);
+      });
+    })();
+  </script>
+</body>
+</html>

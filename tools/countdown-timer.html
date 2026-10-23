@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Countdown Timer</title>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Countdown Timer"></script>
+</head>
+<body class="uh-time-tool uh-countdown-page">
+  <main class="uh-time-shell" id="countdown-app">
+    <section class="uh-time-heading">
+      <span class="uh-time-kicker">Timers / Multi-session console</span>
+      <h1>Countdown Timer</h1>
+      <p>Create precise, named timers for cooking, workouts, study blocks, and anything else you need to time.</p>
+    </section>
+
+    <div class="uh-time-columns">
+      <section class="uh-time-card" aria-labelledby="timer-create-title">
+        <div class="uh-time-card-head"><div><span class="uh-time-label">01 / Configure</span><h2 id="timer-create-title">Create a countdown</h2></div></div>
+        <form id="timer-form" class="uh-time-form">
+          <label class="uh-time-field uh-time-field-wide">Timer name
+            <input id="timer-name" type="text" maxlength="48" placeholder="e.g. Steep tea" required>
+          </label>
+          <label class="uh-time-field">Hours<input id="timer-hours" type="number" min="0" max="99" value="0" inputmode="numeric"></label>
+          <label class="uh-time-field">Minutes<input id="timer-minutes" type="number" min="0" max="59" value="5" inputmode="numeric"></label>
+          <label class="uh-time-field">Seconds<input id="timer-seconds" type="number" min="0" max="59" value="0" inputmode="numeric"></label>
+          <div class="uh-time-form-actions uh-time-field-wide">
+            <button class="uh-time-button primary" id="timer-submit" type="submit">Add timer</button>
+            <button class="uh-time-button quiet" id="timer-cancel-edit" type="button" hidden>Cancel edit</button>
+          </div>
+          <p id="timer-form-error" class="uh-time-error uh-time-field-wide" role="alert" hidden></p>
+        </form>
+        <div class="uh-time-presets" aria-label="Quick timer presets">
+          <span class="uh-time-label">Quick presets</span>
+          <div id="timer-presets" class="uh-time-chip-row">
+            <button type="button" data-minutes="1">1 min</button><button type="button" data-minutes="5">5 min</button>
+            <button type="button" data-minutes="10">10 min</button><button type="button" data-minutes="15">15 min</button>
+            <button type="button" data-minutes="25">25 min</button><button type="button" data-minutes="30">30 min</button>
+            <button type="button" data-minutes="60">60 min</button>
+          </div>
+          <form id="save-preset-form" class="uh-time-save-preset">
+            <input id="preset-name" type="text" maxlength="32" placeholder="Custom preset name" aria-label="Custom preset name">
+            <button class="uh-time-button" type="submit">Save current duration</button>
+          </form>
+          <div id="saved-presets" class="uh-time-chip-row" aria-label="Saved custom presets"></div>
+        </div>
+      </section>
+
+      <section class="uh-time-card uh-time-settings-card" aria-labelledby="timer-settings-title">
+        <div class="uh-time-card-head"><div><span class="uh-time-label">02 / Preferences</span><h2 id="timer-settings-title">Timer settings</h2></div></div>
+        <label class="uh-time-switch"><input id="timer-sound" type="checkbox"><span>Play a sound when a timer completes</span></label>
+        <label class="uh-time-field uh-time-volume">Sound volume <output id="volume-value">45%</output>
+          <input id="timer-volume" type="range" min="0" max="100" value="45">
+        </label>
+        <button type="button" id="timer-fullscreen" class="uh-time-button">Enter fullscreen</button>
+        <p class="uh-time-hint">Timers run locally and recover from tab switching or refresh using their saved deadlines.</p>
+      </section>
+    </div>
+
+    <section class="uh-time-section" aria-labelledby="active-timers-title">
+      <div class="uh-time-section-head"><div><span class="uh-time-label">Live / Local session</span><h2 id="active-timers-title">Your timers <span id="timer-count" class="uh-time-count">0</span></h2></div>
+        <button type="button" id="clear-completed-timers" class="uh-time-button quiet">Clear completed</button>
+      </div>
+      <div id="timer-list" class="uh-time-timer-grid"><div class="uh-time-empty">No countdowns yet. Set a duration above to begin.</div></div>
+    </section>
+    <footer class="uh-time-footer">COUNTDOWN ENGINE / DEADLINE-BASED TIMING · LOCAL ONLY</footer>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+    var STORAGE = 'utilityhub:countdown-timers:v1';
+    var PRESETS = 'utilityhub:countdown-presets:v1';
+    var SETTINGS = 'utilityhub:countdown-settings:v1';
+    var MAX_TIMERS = 12;
+    var timers = loadTimers();
+    var presets = readJson(PRESETS, []).filter(function (p) { return p && typeof p.name === 'string' && Number.isFinite(p.duration) && p.duration > 0; }).slice(0, 20);
+    var editingId = null;
+    var nextTimerId = 0;
+
+    function readJson(key, fallback) {
+      try { var value = JSON.parse(localStorage.getItem(key)); return value === null ? fallback : value; }
+      catch (error) { return fallback; }
+    }
+    function save(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); }
+      catch (error) { showError('Browser storage is unavailable. Changes will last only until this page is closed.'); }
+    }
+    function loadTimers() {
+      var stored = readJson(STORAGE, []);
+      if (!Array.isArray(stored)) return [];
+      return stored.filter(function (t) {
+        return t && typeof t.id === 'string' && typeof t.name === 'string' &&
+          Number.isFinite(t.duration) && t.duration > 0 && Number.isFinite(t.remaining) &&
+          ['running','paused','done'].includes(t.status) && (t.status !== 'running' || Number.isFinite(t.deadline));
+      }).slice(0, MAX_TIMERS).map(function (t) {
+        if (t.status === 'running') {
+          t.remaining = Math.max(0, t.deadline - Date.now());
+          if (t.remaining === 0) t.status = 'done';
+        }
+        return t;
+      });
+    }
+    function persist() { save(STORAGE, timers); }
+    function showError(message) {
+      var error = document.getElementById('timer-form-error');
+      error.textContent = message;
+      error.hidden = false;
+    }
+    function clearError() {
+      var error = document.getElementById('timer-form-error');
+      error.textContent = '';
+      error.hidden = true;
+    }
+    function durationInputs() {
+      var h = Number(document.getElementById('timer-hours').value);
+      var m = Number(document.getElementById('timer-minutes').value);
+      var s = Number(document.getElementById('timer-seconds').value);
+      if (![h,m,s].every(Number.isInteger) || h < 0 || h > 99 || m < 0 || m > 59 || s < 0 || s > 59) {
+        throw new Error('Use whole hours from 0–99 and minutes/seconds from 0–59.');
+      }
+      var ms = ((h * 60 + m) * 60 + s) * 1000;
+      if (ms < 1000 || ms > 359999000) throw new Error('Set a duration between 1 second and 99 hours, 59 minutes, 59 seconds.');
+      return ms;
+    }
+    function fillDuration(ms) {
+      var seconds = Math.floor(ms / 1000);
+      document.getElementById('timer-hours').value = Math.floor(seconds / 3600);
+      document.getElementById('timer-minutes').value = Math.floor(seconds % 3600 / 60);
+      document.getElementById('timer-seconds').value = seconds % 60;
+    }
+    function format(ms) {
+      var total = Math.max(0, Math.ceil(ms / 1000));
+      var h = Math.floor(total / 3600);
+      var m = Math.floor(total % 3600 / 60);
+      var s = total % 60;
+      return h ? String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0')
+        : String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+    function renderTimers() {
+      var list = document.getElementById('timer-list');
+      document.getElementById('timer-count').textContent = String(timers.length);
+      list.textContent = '';
+      if (!timers.length) {
+        var empty = document.createElement('div');
+        empty.className = 'uh-time-empty';
+        empty.textContent = 'No countdowns yet. Set a duration above to begin.';
+        list.appendChild(empty);
+        return;
+      }
+      timers.forEach(function (timer) {
+        var remaining = timer.status === 'running' ? Math.max(0, timer.deadline - Date.now()) : timer.remaining;
+        var card = document.createElement('article');
+        card.className = 'uh-time-card uh-timer-card' + (timer.status === 'done' ? ' is-done' : '');
+        var top = document.createElement('div');
+        top.className = 'uh-time-card-head';
+        var title = document.createElement('div');
+        var name = document.createElement('h3');
+        name.textContent = timer.name;
+        var status = document.createElement('span');
+        status.className = 'uh-time-label';
+        status.textContent = timer.status === 'running' ? 'RUNNING' : timer.status === 'done' ? 'COMPLETE' : 'PAUSED';
+        title.append(name, status);
+        var edit = actionButton('Edit', 'edit', timer.id);
+        top.append(title, edit);
+
+        var displayRow = document.createElement('div');
+        displayRow.className = 'uh-timer-display-row';
+        var display = document.createElement('strong');
+        display.className = 'uh-timer-digital';
+        display.textContent = format(remaining);
+        var ring = document.createElement('div');
+        ring.className = 'uh-timer-ring';
+        var progress = timer.duration ? Math.max(0, Math.min(1, remaining / timer.duration)) : 0;
+        ring.style.setProperty('--timer-progress', (progress * 360) + 'deg');
+        ring.setAttribute('aria-label', Math.round(progress * 100) + '% remaining');
+        displayRow.append(display, ring);
+
+        var progressBar = document.createElement('div');
+        progressBar.className = 'uh-time-progress';
+        var progressFill = document.createElement('span');
+        progressFill.style.width = (progress * 100) + '%';
+        progressBar.appendChild(progressFill);
+        var actions = document.createElement('div');
+        actions.className = 'uh-time-actions';
+        if (timer.status === 'running') actions.appendChild(actionButton('Pause', 'pause', timer.id));
+        else if (timer.status === 'paused') actions.appendChild(actionButton('Start', 'resume', timer.id, true));
+        else actions.appendChild(actionButton('Restart', 'restart', timer.id, true));
+        if (timer.status !== 'done') {
+          actions.appendChild(actionButton('Restart', 'restart', timer.id));
+          actions.appendChild(actionButton('Reset', 'reset', timer.id));
+        }
+        actions.appendChild(actionButton('Delete', 'delete', timer.id, false, true));
+        card.append(top, displayRow, progressBar, actions);
+        list.appendChild(card);
+      });
+    }
+    function actionButton(label, action, id, primary, danger) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'uh-time-button' + (primary ? ' primary' : '') + (danger ? ' danger' : '');
+      button.dataset.action = action;
+      button.dataset.id = id;
+      button.textContent = label;
+      return button;
+    }
+    function saveSettings() {
+      save(SETTINGS, {
+        sound: document.getElementById('timer-sound').checked,
+        volume: Number(document.getElementById('timer-volume').value)
+      });
+    }
+    function loadSettings() {
+      var config = readJson(SETTINGS, {});
+      document.getElementById('timer-sound').checked = config.sound === true;
+      document.getElementById('timer-volume').value = Number.isInteger(config.volume) ? Math.max(0,Math.min(100,config.volume)) : 45;
+      document.getElementById('volume-value').value = document.getElementById('timer-volume').value + '%';
+    }
+    function playSound() {
+      if (!document.getElementById('timer-sound').checked) return;
+      var AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      var context;
+      try {
+        context = new AudioContext();
+        var oscillator = context.createOscillator();
+        var gain = context.createGain();
+        var volume = Number(document.getElementById('timer-volume').value) / 100;
+        oscillator.frequency.value = 740;
+        gain.gain.setValueAtTime(Math.max(0.001, volume * 0.08), context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.55);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        oscillator.stop(context.currentTime + 0.55);
+        oscillator.addEventListener('ended', function () { context.close(); }, { once: true });
+      } catch (error) { if (context) context.close(); }
+    }
+    function renderPresets() {
+      var container = document.getElementById('saved-presets');
+      container.textContent = '';
+      presets.forEach(function (preset, index) {
+        var wrap = document.createElement('span');
+        wrap.className = 'uh-time-saved-preset';
+        var use = document.createElement('button');
+        use.type = 'button';
+        use.textContent = preset.name;
+        use.title = 'Use ' + preset.name;
+        use.addEventListener('click', function () {
+          document.getElementById('timer-name').value = preset.name;
+          fillDuration(preset.duration);
+        });
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', 'Remove preset ' + preset.name);
+        remove.addEventListener('click', function () {
+          presets.splice(index, 1);
+          save(PRESETS, presets);
+          renderPresets();
+        });
+        wrap.append(use, remove);
+        container.appendChild(wrap);
+      });
+    }
+    document.getElementById('timer-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      clearError();
+      var name = document.getElementById('timer-name').value.trim();
+      if (!name) return showError('Give this timer a name.');
+      var duration;
+      try { duration = durationInputs(); } catch (error) { return showError(error.message); }
+      if (editingId) {
+        var existing = timers.find(function (item) { return item.id === editingId; });
+        if (existing) Object.assign(existing, { name: name, duration: duration, remaining: duration, status: 'paused', deadline: null });
+        editingId = null;
+        document.getElementById('timer-submit').textContent = 'Add timer';
+        document.getElementById('timer-cancel-edit').hidden = true;
+      } else {
+        if (timers.length >= MAX_TIMERS) return showError('You can run up to ' + MAX_TIMERS + ' timers at once.');
+        nextTimerId += 1;
+        timers.push({ id: Date.now().toString(36) + '-' + nextTimerId.toString(36), name: name, duration: duration, remaining: duration, status: 'paused', deadline: null });
+      }
+      document.getElementById('timer-form').reset();
+      document.getElementById('timer-hours').value = '0';
+      document.getElementById('timer-minutes').value = '5';
+      document.getElementById('timer-seconds').value = '0';
+      persist();
+      renderTimers();
+    });
+    document.getElementById('timer-cancel-edit').addEventListener('click', function () {
+      editingId = null;
+      document.getElementById('timer-form').reset();
+      document.getElementById('timer-hours').value = '0';
+      document.getElementById('timer-minutes').value = '5';
+      document.getElementById('timer-seconds').value = '0';
+      document.getElementById('timer-submit').textContent = 'Add timer';
+      this.hidden = true;
+      clearError();
+    });
+    document.getElementById('timer-presets').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-minutes]');
+      if (!button) return;
+      document.getElementById('timer-name').value = button.textContent + ' timer';
+      fillDuration(Number(button.dataset.minutes) * 60000);
+      document.getElementById('timer-name').focus();
+    });
+    document.getElementById('save-preset-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      try {
+        var name = document.getElementById('preset-name').value.trim();
+        if (!name) throw new Error('Enter a name for this preset.');
+        var duration = durationInputs();
+        if (presets.length >= 20) throw new Error('You can save up to 20 custom presets.');
+        presets.push({ name: name, duration: duration });
+        save(PRESETS, presets);
+        renderPresets();
+        document.getElementById('preset-name').value = '';
+        clearError();
+      } catch (error) { showError(error.message); }
+    });
+    document.getElementById('timer-list').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-action]');
+      if (!button) return;
+      var timer = timers.find(function (item) { return item.id === button.dataset.id; });
+      if (!timer) return;
+      if (button.dataset.action === 'pause' && timer.status === 'running') {
+        timer.remaining = Math.max(0, timer.deadline - Date.now());
+        timer.status = timer.remaining ? 'paused' : 'done';
+      } else if (button.dataset.action === 'resume' && timer.status === 'paused') {
+        timer.deadline = Date.now() + timer.remaining;
+        timer.status = 'running';
+      } else if (button.dataset.action === 'restart') {
+        timer.remaining = timer.duration;
+        timer.deadline = Date.now() + timer.duration;
+        timer.status = 'running';
+      } else if (button.dataset.action === 'reset') {
+        timer.remaining = timer.duration;
+        timer.deadline = null;
+        timer.status = 'paused';
+      } else if (button.dataset.action === 'edit') {
+        editingId = timer.id;
+        document.getElementById('timer-name').value = timer.name;
+        fillDuration(timer.duration);
+        document.getElementById('timer-submit').textContent = 'Save changes';
+        document.getElementById('timer-cancel-edit').hidden = false;
+        document.getElementById('timer-name').focus();
+        return;
+      } else if (button.dataset.action === 'delete') {
+        timers = timers.filter(function (item) { return item.id !== timer.id; });
+      }
+      persist();
+      renderTimers();
+    });
+    document.getElementById('clear-completed-timers').addEventListener('click', function () {
+      timers = timers.filter(function (timer) { return timer.status !== 'done'; });
+      persist();
+      renderTimers();
+    });
+    document.getElementById('timer-sound').addEventListener('change', saveSettings);
+    document.getElementById('timer-volume').addEventListener('input', function () {
+      document.getElementById('volume-value').value = this.value + '%';
+      saveSettings();
+    });
+    document.getElementById('timer-fullscreen').addEventListener('click', function () {
+      var shell = document.getElementById('countdown-app');
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (shell.requestFullscreen) shell.requestFullscreen();
+    });
+    document.addEventListener('fullscreenchange', function () {
+      document.getElementById('timer-fullscreen').textContent = document.fullscreenElement ? 'Exit fullscreen' : 'Enter fullscreen';
+    });
+    window.addEventListener('storage', function (event) {
+      if (event.key === STORAGE) { timers = loadTimers(); renderTimers(); }
+      if (event.key === PRESETS) { presets = readJson(PRESETS, []); renderPresets(); }
+    });
+    window.addEventListener('pagehide', persist);
+    loadSettings();
+    renderPresets();
+    renderTimers();
+    window.setInterval(function () {
+      var now = Date.now();
+      var changed = false;
+      timers.forEach(function (timer) {
+        if (timer.status === 'running' && now >= timer.deadline) {
+          timer.remaining = 0;
+          timer.status = 'done';
+          timer.deadline = null;
+          changed = true;
+          playSound();
+        }
+      });
+      if (changed) persist();
+      renderTimers();
+    }, 200);
+  })();
+  </script>
+</body>
+</html>

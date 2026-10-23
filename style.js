@@ -355,10 +355,7 @@
       var controls = document.createElement('div');
       controls.className = 'uh-layout-controls';
       controls.appendChild(createBrand(title));
-      var menu = createToolsMenu();
-      controls.appendChild(menu.element);
       header.insertBefore(controls, header.firstChild);
-      loadRegistry(menu.panel);
     }
 
     addFooter(type);
