@@ -94,7 +94,6 @@
     background-color: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    contain: content;
   }
 
   .blueprint-grid {
@@ -107,8 +106,6 @@
       linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 44px 44px;
     opacity: 0.5;
-    will-change: transform;
-    transform: translateZ(0);
   }
 
   /* Hide scrollbar for clean carousel navigation */
@@ -129,8 +126,6 @@
   .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
   .tool-card {
-    will-change: transform;
-    transform: translateZ(0);
     transition: border-color 0.15s ease, transform 0.15s ease;
   }
   .tool-card:hover .corner { border-color: var(--accent); }

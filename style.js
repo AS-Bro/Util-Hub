@@ -284,8 +284,9 @@
     } else {
       footer.classList.add('uh-shared-footer');
     }
-    if (!footer.querySelector('.uh-footer-brand')) {
-      var brand = document.createElement('a');
+    var brand = footer.querySelector('.uh-footer-brand');
+    if (!brand) {
+      brand = document.createElement('a');
       brand.className = 'uh-footer-brand';
       brand.href = rootUrl.href + 'index.html';
       var logo = document.createElement('img');
@@ -297,8 +298,23 @@
       label.textContent = 'Utility Hub';
       brand.appendChild(logo);
       brand.appendChild(label);
-      footer.appendChild(brand);
     }
+
+    if (pageType === 'dashboard') {
+      if (!brand.parentNode) footer.appendChild(brand);
+      return;
+    }
+
+    var content = footer.querySelector('.uh-footer-content');
+    if (!content) {
+      content = document.createElement('div');
+      content.className = 'uh-footer-content';
+      Array.prototype.slice.call(footer.childNodes).forEach(function (node) {
+        if (node !== brand) content.appendChild(node);
+      });
+    }
+    footer.insertBefore(brand, footer.firstChild);
+    if (content.childNodes.length && content.parentNode !== footer) footer.appendChild(content);
   }
 
   function initLayout(options) {

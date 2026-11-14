@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Font Previewer - Util-Hub</title>
+<link rel="icon" type="image/png" href="../images/UH_2.png" />
+
+<!-- Theme pre-loader -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('utilityhub:theme');
+      var theme = saved === 'light' || saved === 'dark'
+        ? saved
+        : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.classList.add(theme);
+      document.documentElement.style.colorScheme = theme;
+    } catch (e) {}
+  })();
+</script>
+
+<!-- Preconnect to Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
+
+<!-- Tailwind Utility Core CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          bg: 'var(--bg)',
+          panel: 'var(--bg-panel)',
+          elevated: 'var(--bg-elevated)',
+          line: 'var(--line)',
+          'line-strong': 'var(--line-strong)',
+          ink: 'var(--text)',
+          muted: 'var(--text-muted)',
+          faint: 'var(--text-faint)',
+          accent: 'var(--accent)',
+          'accent-strong': 'var(--accent-strong)',
+          signal: 'var(--signal)',
+          'signal-strong': 'var(--signal-strong)',
+        },
+        fontFamily: {
+          display: ['"Space Grotesk"', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace'],
+        },
+        borderRadius: { card: '10px' }
+      },
+    },
+  };
+</script>
+
+<!-- Lucide icons loader -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+
+<style>
+  html.dark {
+    --bg: #0e1c2b;
+    --bg-panel: #14283b;
+    --bg-elevated: #17304a;
+    --line: rgba(143, 176, 204, 0.16);
+    --line-strong: rgba(143, 176, 204, 0.4);
+    --text: #e7eef4;
+    --text-muted: #93a9bd;
+    --text-faint: #5b7288;
+    --accent: #6fd8cb;
+    --accent-strong: #93e5da;
+    --signal: #e8a33d;
+    --signal-strong: #f2bc6b;
+  }
+  html.light {
+    --bg: #eef2f4;
+    --bg-panel: #ffffff;
+    --bg-elevated: #ffffff;
+    --line: rgba(24, 55, 79, 0.14);
+    --line-strong: rgba(24, 55, 79, 0.32);
+    --text: #142536;
+    --text-muted: #4f6779;
+    --text-faint: #869aab;
+    --accent: #0f8f80;
+    --accent-strong: #0c7267;
+    --signal: #b6741a;
+    --signal-strong: #93590f;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .blueprint-grid {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: 0.5;
+  }
+
+  .card-frame { position: relative; }
+  .corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--line-strong);
+    pointer-events: none;
+  }
+  .corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+  .corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+  .corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+  .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .switch-track { background: var(--bg); border: 1px solid var(--line-strong); }
+  .switch-knob { background: var(--accent); transition: transform 0.2s ease; }
+  html.light .switch-knob { transform: translateX(18px); }
+
+  .spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+
+<body class="min-h-screen font-body antialiased flex flex-col justify-between">
+  <div class="blueprint-grid" aria-hidden="true"></div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-3">
+        <a class="flex items-center gap-3" href="../index.html" aria-label="Utility Hub home">
+          <img src="images/UH.png" alt="" width="38" height="38" />
+          <div class="leading-tight">
+            <h1 class="font-display text-lg font-semibold tracking-tight text-ink">Font Previewer</h1>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-faint">Sheet — Typography Tool</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="active-font-badge" class="hidden sm:inline-flex rounded-full border border-line bg-panel px-3 py-1 font-mono text-xs text-muted">No font loaded</div>
+        <button
+          id="theme-toggle"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label="Toggle light and dark theme"
+          class="switch-track relative flex h-8 w-[52px] items-center rounded-full px-1"
+        >
+          <span class="switch-knob absolute left-1 flex h-6 w-6 items-center justify-center rounded-full text-bg">
+            <i data-lucide="moon" class="h-3.5 w-3.5 dark:block hidden" aria-hidden="true"></i>
+            <i data-lucide="sun" class="h-3.5 w-3.5 dark:hidden block" aria-hidden="true"></i>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN TOOL SHELL -->
+  <main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 flex-1">
+
+    <!-- Upload Section -->
+    <div id="upload-section" class="card-frame rounded-card border border-line bg-panel p-6 shadow-sm mb-6">
+      <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+      <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+      <div class="mb-4">
+        <h2 class="font-display text-base font-semibold text-ink">Upload Font File</h2>
+        <p class="text-sm text-muted">Upload a font file to inspect and preview across multiple languages locally in your browser. Supports .ttf, .otf, .woff, and .woff2.</p>
+      </div>
+
+      <div id="dropzone" class="border-2 border-dashed border-line rounded-card p-8 text-center cursor-pointer transition hover:border-accent hover:bg-elevated/50">
+        <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" class="hidden">
+        <div class="flex flex-col items-center gap-3">
+          <i data-lucide="upload-cloud" class="h-10 w-10 text-faint"></i>
+          <div>
+            <p class="text-sm font-medium text-ink">Drag & drop your font file here, or <span class="text-accent underline">browse</span></p>
+            <p class="font-mono text-[11px] text-faint mt-1">Processed 100% locally with the browser FontFace API</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading-indicator" class="hidden items-center justify-center gap-3 py-6">
+        <div class="spinner"></div>
+        <span class="font-mono text-xs text-muted">Processing font file...</span>
+      </div>
+
+      <div id="upload-error" class="hidden mt-4 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400 font-mono"></div>
+    </div>
+
+    <!-- Workspace (Hidden initially) -->
+    <div id="workspace" class="hidden space-y-6">
+
+      <!-- Font Metadata & Management Bar -->
+      <div class="card-frame rounded-card border border-line bg-panel p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h3 id="info-font-name" class="font-display text-base font-semibold text-ink">Font Family</h3>
+            <span id="info-font-format" class="rounded border border-line bg-elevated px-2 py-0.5 font-mono text-[10px] uppercase text-accent">WOFF2</span>
+          </div>
+          <p id="info-file-meta" class="font-mono text-xs text-faint mt-0.5">filename.woff2 • 45 KB</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-replace" class="rounded-md border border-line bg-elevated px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">Replace Font</button>
+          <button id="btn-remove" class="rounded-md border border-red-500/40 bg-elevated px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-red-400 transition hover:bg-red-500/10">Remove Font</button>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="card-frame rounded-card border border-line bg-panel p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+        <!-- Language Selector -->
+        <div>
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Language / Script</label>
+          <select id="language-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent"></select>
+        </div>
+
+        <!-- Font Size -->
+        <div>
+          <div class="flex justify-between font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">
+            <span>Font Size</span>
+            <span id="font-size-val" class="text-accent">36px</span>
+          </div>
+          <input type="range" id="font-size-range" min="8" max="120" value="36" class="w-full accent-accent cursor-pointer">
+        </div>
+
+        <!-- Font Weight -->
+        <div>
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Font Weight</label>
+          <select id="font-weight-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+            <option value="100">100 - Thin</option>
+            <option value="200">200 - Extra Light</option>
+            <option value="300">300 - Light</option>
+            <option value="400" selected>400 - Regular</option>
+            <option value="500">500 - Medium</option>
+            <option value="600">600 - Semi Bold</option>
+            <option value="700">700 - Bold</option>
+            <option value="800">800 - Extra Bold</option>
+            <option value="900">900 - Black</option>
+          </select>
+        </div>
+
+        <!-- Line Height -->
+        <div>
+          <div class="flex justify-between font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">
+            <span>Line Height</span>
+            <span id="line-height-val" class="text-accent">1.4</span>
+          </div>
+          <input type="range" id="line-height-range" min="0.8" max="3.0" step="0.1" value="1.4" class="w-full accent-accent cursor-pointer">
+        </div>
+
+        <!-- Letter Spacing -->
+        <div>
+          <div class="flex justify-between font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">
+            <span>Letter Spacing</span>
+            <span id="letter-spacing-val" class="text-accent">0px</span>
+          </div>
+          <input type="range" id="letter-spacing-range" min="-5" max="20" step="0.5" value="0" class="w-full accent-accent cursor-pointer">
+        </div>
+
+        <!-- Text Alignment -->
+        <div>
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Alignment</label>
+          <select id="text-align-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+            <option value="left" selected>Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+            <option value="justify">Justify</option>
+          </select>
+        </div>
+
+        <!-- Text Color -->
+        <div>
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Text Color</label>
+          <input type="color" id="text-color-picker" value="#e7eef4" class="w-full h-[38px] rounded-md border border-line bg-elevated p-1 cursor-pointer">
+        </div>
+
+        <!-- Background Color -->
+        <div>
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Background Color</label>
+          <input type="color" id="bg-color-picker" value="#14283b" class="w-full h-[38px] rounded-md border border-line bg-elevated p-1 cursor-pointer">
+        </div>
+      </div>
+
+      <!-- Secondary Toggles & Reset Bar -->
+      <div class="flex items-center justify-between px-1 flex-wrap gap-4">
+        <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
+          <input type="checkbox" id="toggle-italic" class="w-4 h-4 rounded border-line bg-elevated accent-accent"> Italic Style
+        </label>
+        <button id="btn-reset-settings" class="rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-muted transition hover:border-accent hover:text-ink">Reset Preview Settings</button>
+      </div>
+
+      <!-- Script Support Notice -->
+      <div id="script-support-notice" class="hidden rounded-card border p-4 text-sm font-mono"></div>
+
+      <!-- Navigation Tabs -->
+      <div id="preview-tabs" class="flex flex-wrap gap-2 border-b border-line pb-3" role="tablist">
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent active bg-accent text-bg font-semibold" data-tab="tab-main">1. Main</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-alphabet">2. Alphabet</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-symbols">3. Numbers & Symbols</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-paragraph">4. Paragraph</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-multilingual">5. Multilingual</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-info">6. Meta</button>
+        <button class="tab-btn rounded-md px-3.5 py-2 font-mono text-xs uppercase tracking-wide text-muted transition border border-transparent hover:border-line hover:text-ink" data-tab="tab-export">7. Export PNG</button>
+      </div>
+
+      <!-- Tab 1: Main Preview -->
+      <div id="tab-main" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+        <div class="flex items-center justify-between mb-3">
+          <label class="font-mono text-xs uppercase tracking-wider text-faint">Editable Preview Text</label>
+          <button id="btn-reset-text" class="rounded border border-line bg-elevated px-2.5 py-1 font-mono text-[11px] text-muted hover:text-ink">Reset Sample</button>
+        </div>
+        <textarea id="preview-text-input" rows="3" class="w-full rounded-md border border-line bg-elevated p-3 text-sm text-ink outline-none focus:border-accent mb-4 resize-y"></textarea>
+        <label class="block font-mono text-xs uppercase tracking-wider text-faint mb-2">Rendered Output</label>
+        <div id="main-preview-output" class="rounded-md border border-line bg-elevated p-6 min-h-[140px] overflow-x-auto break-words">Sample preview...</div>
+      </div>
+
+      <!-- Tab 2: Alphabet Preview -->
+      <div id="tab-alphabet" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+        <h3 class="font-display text-sm font-semibold text-ink mb-1">Alphabet Glyphs</h3>
+        <p class="text-xs text-muted mb-4">Uppercase and lowercase character set for the active script.</p>
+        <div id="alphabet-preview-output" class="rounded-md border border-line bg-elevated p-6 text-3xl leading-relaxed overflow-x-auto"></div>
+      </div>
+
+      <!-- Tab 3: Numbers & Symbols -->
+      <div id="tab-symbols" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+        <h3 class="font-display text-sm font-semibold text-ink mb-1">Numbers & Punctuation</h3>
+        <p class="text-xs text-muted mb-4">Digits, punctuation marks, and special symbols check.</p>
+        <div id="symbols-preview-output" class="rounded-md border border-line bg-elevated p-6 text-3xl leading-relaxed overflow-x-auto">0123456789<br>!@#$%^&*()_+-=[]{}|;':",./<>?`~</div>
+      </div>
+
+      <!-- Tab 4: Paragraph Preview -->
+      <div id="tab-paragraph" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+        <h3 class="font-display text-sm font-semibold text-ink mb-1">Paragraph Readability</h3>
+        <p class="text-xs text-muted mb-4">Multi-line extended text sample for examining typesetting rhythm.</p>
+        <div id="paragraph-preview-output" class="rounded-md border border-line bg-elevated p-6 text-lg leading-relaxed overflow-x-auto"></div>
+      </div>
+
+      <!-- Tab 5: Multilingual Comparison -->
+      <div id="tab-multilingual" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+        <h3 class="font-display text-sm font-semibold text-ink mb-1">Simultaneous Multilingual Matrix</h3>
+        <p class="text-xs text-muted mb-4">Examine font rendering across English, Malayalam, and other major writing systems simultaneously.</p>
+        <div id="multilingual-grid" class="flex flex-col gap-4"></div>
+      </div>
+
+      <!-- Tab 6: Font Info -->
+      <div id="tab-info" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+        <h3 class="font-display text-sm font-semibold text-ink mb-4">Font Metadata & Metrics</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="rounded-md border border-line bg-elevated p-4">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-faint block mb-1">Family Name</span>
+            <span id="meta-family" class="font-mono text-sm text-ink font-medium">Not available</span>
+          </div>
+          <div class="rounded-md border border-line bg-elevated p-4">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-faint block mb-1">File Format</span>
+            <span id="meta-format" class="font-mono text-sm text-ink font-medium">Not available</span>
+          </div>
+          <div class="rounded-md border border-line bg-elevated p-4">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-faint block mb-1">File Size</span>
+            <span id="meta-size" class="font-mono text-sm text-ink font-medium">Not available</span>
+          </div>
+          <div class="rounded-md border border-line bg-elevated p-4">
+            <span class="font-mono text-[10px] uppercase tracking-wider text-faint block mb-1">Malayalam Support</span>
+            <span id="meta-malayalam-support" class="font-mono text-sm text-ink font-medium">Checking...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 7: Export as PNG -->
+      <div id="tab-export" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+        <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+
+        <h3 class="font-display text-sm font-semibold text-ink mb-1">Export Font Preview as PNG</h3>
+        <p class="text-xs text-muted mb-5">Generate high-resolution PNG exports containing your custom text, alphabet sets, numbers, or full specimen grids.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Export Content Preset</label>
+            <select id="export-content-type" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+              <option value="main">Current Main Preview Text</option>
+              <option value="alphabet">Full Alphabet (Upper & Lower)</option>
+              <option value="numbers-symbols">Numbers & Symbols (0-9, Punctuation)</option>
+              <option value="comprehensive">Comprehensive Sheet (Alphabet + Numbers + Text)</option>
+              <option value="custom">Custom Text Input</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Resolution Scale</label>
+            <select id="export-scale" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+              <option value="1">1x (Standard)</option>
+              <option value="2" selected>2x (Retina / High Quality)</option>
+              <option value="3">3x (Ultra HD)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Padding</label>
+            <select id="export-padding" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+              <option value="20">Small (20px)</option>
+              <option value="40" selected>Medium (40px)</option>
+              <option value="80">Large (80px)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="export-custom-container" class="hidden mb-4">
+          <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Custom Text (Supports Malayalam, numbers, alphabets, symbols, etc.)</label>
+          <textarea id="export-custom-text" rows="3" class="w-full rounded-md border border-line bg-elevated p-3 text-sm text-ink outline-none focus:border-accent resize-y" placeholder="Type custom text to export..."></textarea>
+        </div>
+
+        <div class="flex items-center gap-4 mb-6 flex-wrap">
+          <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
+            <input type="checkbox" id="export-transparent-bg" class="w-4 h-4 rounded border-line bg-elevated accent-accent"> Transparent Background
+          </label>
+        </div>
+
+        <div class="flex items-center gap-3 mb-6 flex-wrap">
+          <button id="btn-generate-preview" class="rounded-md border border-line bg-elevated px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">Refresh Snapshot</button>
+          <button id="btn-download-png" class="rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-wide text-bg font-semibold transition hover:bg-accent-strong">Download PNG Image</button>
+        </div>
+
+        <label class="block font-mono text-xs uppercase tracking-wider text-faint mb-2">Export Snapshot Preview</label>
+        <div class="rounded-md border border-line bg-elevated p-4 overflow-auto text-center">
+          <canvas id="export-canvas" class="max-w-full h-auto mx-auto rounded shadow-sm"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-line bg-panel mt-12">
+    <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between font-mono text-xs text-faint">
+      <div>Util-Hub Font Previewer</div>
+      <div>Running locally via FontFace API</div>
+    </div>
+  </footer>
+
+  <!-- Script logic -->
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Font Previewer"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      const LANGUAGES = [
+        { id: 'en', name: 'English', sample: 'The quick brown fox jumps over the lazy dog. Typography is the art of arranging letters.', alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz' },
+        { id: 'ml', name: 'Malayalam (മലയാളം)', sample: 'മലയാളം നമ്മുടെ മാതൃഭാഷയാണ്. അക്ഷരങ്ങളുടെ സൗന്ദര്യവും എഴുത്തിന്റെ ഭംഗിയും ഇവിടെ കാണാം. (ചില്ലുകൾ: ൻ, ർ, ൽ, ൾ, ൺ)', alphabet: 'അ ആ ഇ ഈ ഉ ഊ ഋ എ ഏ ഐ ഒ ഓ ഔ ക ഖ ഗ ഘ ങ ച ഛ ജ ଝ ഞ ട ഠ ഡ ഢ ണ ത ಥ ದ ಧ ನ ಪ ಫ ಬ ಭ ಮ ಯ ರ ಲ ವ ಶ ಷ ಸ ಹ ಳ ഺ ൺ ൻ ർ ൽ ൾ' },
+        { id: 'hi', name: 'Hindi (हिन्दी)', sample: 'भारत हमारी मातृभूमि है। टोपोग्राफी और अक्षरों की बनावट का सुंदर परीक्षण।', alphabet: 'अ आ इ ई उ ऊ ऋ ए ऐ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह' },
+        { id: 'ta', name: 'Tamil (தமிழ்)', sample: 'தமிழ் எங்கள் தாய்மொழி. எழுத்துக்களின் அழகை இங்கே காண்க.', alphabet: 'அ ஆ இ ஈ உ ஊ எ ஏ ஐ ஒ ஓ ஃ க் ங் ச் ஞ் ட் ண் த் ந் ப்ம் ய் ර් ல் வ் ழ் ள் ற் ன்' },
+        { id: 'te', name: 'Telugu (తెలుగు)', sample: 'తెలుగు మా మాతృభాష. అక్షరాల సౌందర్యం ఇక్కడ చూడండి.', alphabet: 'అ ఆ ఇ ఈ ఉ ఊ ఋ ఎ ఏ ಐ ಒ ಓ ಔ ಕ ಖ ಗ ಘ ಙ ಚ ಛ ಜ ಝ ఞ ಟ ಠ ಡ ಢ ಣ ತ ಥ ದ ಧ ನ ಪ ಫ ಬ ಭ ಮ ಯ ರ ಲ ವ ಶ ಷ ಸ ಹ ళ' },
+        { id: 'kn', name: 'Kannada (ಕನ್ನಡ)', sample: 'ಕನ್ನಡ ನಮ್ಮ ಮಾತೃಭಾಷೆ. ಅಕ್ಷರಗಳ ಸೌಂದರ್ಯವನ್ನು ಇಲ್ಲಿ ವೀಕ್ಷಿಸಿ.', alphabet: 'ಅ ಆ ಇ ಈ ಉ ಊ ಋ ಎ ಏ ಐ ಒ ಓ ಔ ಕ ಖ ಗ ಘ ಙ ಚ ಛ ಜ ಝ ಞ ಟ ಠ ಡ ಢ ಣ ತ ಥ ದ ಧ ನ ಪ ಫ ಬ ಭ ಮ ಯ ರ ಲ ವ ಶ ಷ ಸ ಹ ಳ' },
+        { id: 'ar', name: 'Arabic (العربية)', sample: 'اللغة العربية لغة جميلة وعريقة. فن الخط العربي يعبر عن الأصالة.', alphabet: 'أ ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي' },
+        { id: 'bn', name: 'Bengali (বাংলা)', sample: 'বাংলা আমাদের মাতৃভাষা। অক্ষরের সৌন্দর্য এখানে উপভোগ করুন।', alphabet: 'অ আ ই ঈ উ ঊ ঋ এ ঐ ও ঔ ক খ গ ঘ ঙ চ ছ জ ঝ ঞ ট ঠ ড ঢ ণ ত থ দ ধ ন প ফ ব ভ ম য র ল শ ষ স হ' },
+        { id: 'ur', name: 'Urdu (اردو)', sample: 'اردو ہماری مادری زبان ہے۔ خوش خطی اور حروف کی خوبصورتی کا مشاہدہ کریں۔', alphabet: 'ا ب پ ت ٹ ث ج چ ح خ د ڈ ذ ر ڑ ز ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ہ ء ی ے' },
+        { id: 'sa', name: 'Sanskrit (संस्कृतम्)', sample: 'संस्कृतम् भारतस्य प्राचीनतमा भाषा अस्ति। सुभाषितानि अत्र सन्ति।', alphabet: 'अ आ इ ई उ ऋ ऌ ए ऐ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह' },
+        { id: 'fr', name: 'French', sample: 'Le vif zephyr jubile sur les faydes mûrs. La typographie est un art délicat.', alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZàâäéèêëîïôöùûüç\nabcdefghijklmnopqrstuvwxyzàâäéèêëîïôöùûüç' },
+        { id: 'de', name: 'German', sample: 'Falsches Üben von Xylophonmusik quält jeden größeren Zwerg.', alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß\nabcdefghijklmnopqrstuvwxyzäöüß' },
+        { id: 'es', name: 'Spanish', sample: 'El rápido murciélago hindú comía feliz cardillo y kiwi.', alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑ\nabcdefghijklmnopqrstuvwxyzáéíóúñ' },
+        { id: 'ja', name: 'Japanese (日本語)', sample: '吾輩は猫である。名前はまだ無い。文字のデザインと美しさを確認する。', alphabet: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん' },
+        { id: 'zh', name: 'Chinese (中文)', sample: '床前明月光，疑是地上霜。举头望明月，低头思故乡。', alphabet: '的一是不了在人有我他这个们中来上大为和国地到以说时要就出会可也你对生能而子那得于着下自之年过发后作里用道行所然家立书' },
+        { id: 'ko', name: 'Korean (한국어)', sample: '동해 물과 백두산이 마르고 닳도록 하느님이 보우하사 우리나라 만세.', alphabet: 'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ' },
+        { id: 'si', name: 'Sinhala (සිංහල)', sample: 'සිංහල අපේ මව්බසයි. අක්ෂරවල සුන්දරත්වය මෙහි දැකගත හැක.', alphabet: 'අ ආ ඇ ඈ ඉ ঈ උ ඌ ඍ ൠ ऌ එ ඒ ഐ ඔ ඕ ഔ ක ඛ ග ඝ ಙ ච ඡ ජ ಝ ఞ ට ඨ ഡ ಢ ණ ත ಥ ದ ಧ න ಪ ഫ බ ಭ ම ය ರ ල ව ശ ಷ സ హ ಳ' }
+      ];
+
+      let currentFontFace = null;
+      let currentObjectUrl = null;
+      let currentFontFamilyName = 'CustomFont';
+
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('font-file-input');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const uploadError = document.getElementById('upload-error');
+      const uploadSection = document.getElementById('upload-section');
+      const workspace = document.getElementById('workspace');
+      const activeFontBadge = document.getElementById('active-font-badge');
+
+      const languageSelect = document.getElementById('language-select');
+      const fontSizeRange = document.getElementById('font-size-range');
+      const fontSizeVal = document.getElementById('font-size-val');
+      const fontWeightSelect = document.getElementById('font-weight-select');
+      const lineHeightRange = document.getElementById('line-height-range');
+      const lineHeightVal = document.getElementById('line-height-val');
+      const letterSpacingRange = document.getElementById('letter-spacing-range');
+      const letterSpacingVal = document.getElementById('letter-spacing-val');
+      const textAlignSelect = document.getElementById('text-align-select');
+      const textColorPicker = document.getElementById('text-color-picker');
+      const bgColorPicker = document.getElementById('bg-color-picker');
+      const toggleItalic = document.getElementById('toggle-italic');
+      const btnResetSettings = document.getElementById('btn-reset-settings');
+
+      const previewTextInput = document.getElementById('preview-text-input');
+      const btnResetText = document.getElementById('btn-reset-text');
+      const mainPreviewOutput = document.getElementById('main-preview-output');
+      const alphabetPreviewOutput = document.getElementById('alphabet-preview-output');
+      const symbolsPreviewOutput = document.getElementById('symbols-preview-output');
+      const paragraphPreviewOutput = document.getElementById('paragraph-preview-output');
+      const multilingualGrid = document.getElementById('multilingual-grid');
+
+      const infoFontName = document.getElementById('info-font-name');
+      const infoFontFormat = document.getElementById('info-font-format');
+      const infoFileMeta = document.getElementById('info-file-meta');
+      const metaFamily = document.getElementById('meta-family');
+      const metaFormat = document.getElementById('meta-format');
+      const metaSize = document.getElementById('meta-size');
+      const metaMalayalamSupport = document.getElementById('meta-malayalam-support');
+
+      const btnReplace = document.getElementById('btn-replace');
+      const btnRemove = document.getElementById('btn-remove');
+
+      const exportContentType = document.getElementById('export-content-type');
+      const exportScale = document.getElementById('export-scale');
+      const exportPadding = document.getElementById('export-padding');
+      const exportCustomContainer = document.getElementById('export-custom-container');
+      const exportCustomText = document.getElementById('export-custom-text');
+      const exportTransparentBg = document.getElementById('export-transparent-bg');
+      const btnGeneratePreview = document.getElementById('btn-generate-preview');
+      const btnDownloadPng = document.getElementById('btn-download-png');
+      const exportCanvas = document.getElementById('export-canvas');
+
+      function initLanguages() {
+        languageSelect.innerHTML = '';
+        LANGUAGES.forEach(lang => {
+          const opt = document.createElement('option');
+          opt.value = lang.id;
+          opt.textContent = lang.name;
+          languageSelect.appendChild(opt);
+        });
+      }
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('bg-accent', 'text-bg', 'font-semibold');
+            b.classList.add('text-muted');
+          });
+          document.querySelectorAll('.preview-section').forEach(s => s.style.display = 'none');
+
+          btn.classList.add('bg-accent', 'text-bg', 'font-semibold');
+          btn.classList.remove('text-muted');
+
+          const targetTab = document.getElementById(btn.dataset.tab);
+          if (targetTab) {
+            targetTab.style.display = 'block';
+            if (btn.dataset.tab === 'tab-export') generateExportCanvas();
+          }
+        });
+      });
+
+      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-accent'); });
+      dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-accent'));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-accent');
+        if (e.dataTransfer.files.length) handleFontFile(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) handleFontFile(e.target.files[0]);
+      });
+
+      btnReplace.addEventListener('click', () => fileInput.click());
+      btnRemove.addEventListener('click', resetFontState);
+
+      function resetFontState() {
+        if (currentObjectUrl) {
+          URL.revokeObjectURL(currentObjectUrl);
+          currentObjectUrl = null;
+        }
+        currentFontFace = null;
+        workspace.style.display = 'none';
+        uploadSection.style.display = 'block';
+        fileInput.value = '';
+        activeFontBadge.textContent = 'No font loaded';
+        uploadError.style.display = 'none';
+      }
+
+      async function handleFontFile(file) {
+        uploadError.style.display = 'none';
+        loadingIndicator.style.display = 'flex';
+
+        const validExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
+        const fileName = file.name.toLowerCase();
+        const isValid = validExtensions.some(ext => fileName.endsWith(ext));
+
+        if (!isValid) {
+          loadingIndicator.style.display = 'none';
+          uploadError.textContent = 'Invalid file format. Please upload a .ttf, .otf, .woff, or .woff2 font file.';
+          uploadError.style.display = 'block';
+          return;
+        }
+
+        try {
+          if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+          currentObjectUrl = URL.createObjectURL(file);
+
+          let format = 'truetype';
+          if (fileName.endsWith('.otf')) format = 'opentype';
+          else if (fileName.endsWith('.woff')) format = 'woff';
+          else if (fileName.endsWith('.woff2')) format = 'woff2';
+
+          currentFontFamilyName = 'UtilHubFont_' + Date.now();
+          currentFontFace = new FontFace(currentFontFamilyName, `url(${currentObjectUrl})`, { format });
+
+          await currentFontFace.load();
+          document.fonts.add(currentFontFace);
+
+          loadingIndicator.style.display = 'none';
+          uploadSection.style.display = 'none';
+          workspace.style.display = 'block';
+
+          activeFontBadge.textContent = file.name;
+
+          const sizeKb = (file.size / 1024).toFixed(1) + ' KB';
+          infoFontName.textContent = currentFontFamilyName;
+          infoFontFormat.textContent = format.toUpperCase();
+          infoFileMeta.textContent = `${file.name} • ${sizeKb}`;
+
+          metaFamily.textContent = file.name.replace(/\.[^/.]+$/, "");
+          metaFormat.textContent = format.toUpperCase();
+          metaSize.textContent = sizeKb;
+          metaMalayalamSupport.textContent = "Supported (Active)";
+
+          updateAllPreviews();
+        } catch (err) {
+          console.error(err);
+          loadingIndicator.style.display = 'none';
+          uploadError.textContent = 'Failed to parse or load the font file.';
+          uploadError.style.display = 'block';
+        }
+      }
+
+      languageSelect.addEventListener('change', () => {
+        const lang = LANGUAGES.find(l => l.id === languageSelect.value);
+        if (lang) {
+          previewTextInput.value = lang.sample;
+          updateAllPreviews();
+        }
+      });
+
+      [fontSizeRange, fontWeightSelect, lineHeightRange, letterSpacingRange, textAlignSelect, textColorPicker, bgColorPicker, toggleItalic, previewTextInput].forEach(el => {
+        el.addEventListener('input', updateAllPreviews);
+      });
+
+      fontSizeRange.addEventListener('input', () => fontSizeVal.textContent = fontSizeRange.value + 'px');
+      lineHeightRange.addEventListener('input', () => lineHeightVal.textContent = lineHeightRange.value);
+      letterSpacingRange.addEventListener('input', () => letterSpacingVal.textContent = letterSpacingRange.value + 'px');
+
+      btnResetSettings.addEventListener('click', () => {
+        fontSizeRange.value = 36;
+        fontSizeVal.textContent = '36px';
+        fontWeightSelect.value = '400';
+        lineHeightRange.value = 1.4;
+        lineHeightVal.textContent = '1.4';
+        letterSpacingRange.value = 0;
+        letterSpacingVal.textContent = '0px';
+        textAlignSelect.value = 'left';
+        textColorPicker.value = '#000000';
+        bgColorPicker.value = '#ffffff';
+        toggleItalic.checked = false;
+        updateAllPreviews();
+      });
+
+      btnResetText.addEventListener('click', () => {
+        const lang = LANGUAGES.find(l => l.id === languageSelect.value);
+        if (lang) previewTextInput.value = lang.sample;
+        updateAllPreviews();
+      });
+
+      exportContentType.addEventListener('change', () => {
+        if (exportContentType.value === 'custom') {
+          exportCustomContainer.style.display = 'block';
+          if (!exportCustomText.value) {
+            const lang = LANGUAGES.find(l => l.id === languageSelect.value);
+            exportCustomText.value = lang ? lang.sample : '';
+          }
+        } else {
+          exportCustomContainer.style.display = 'none';
+        }
+        generateExportCanvas();
+      });
+
+      [exportScale, exportPadding, exportTransparentBg, exportCustomText].forEach(el => {
+        el.addEventListener('input', generateExportCanvas);
+        el.addEventListener('change', generateExportCanvas);
+      });
+
+      btnGeneratePreview.addEventListener('click', generateExportCanvas);
+      btnDownloadPng.addEventListener('click', () => {
+        generateExportCanvas();
+        const dataUrl = exportCanvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `${currentFontFamilyName}-preview.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+      function generateExportCanvas() {
+        if (!currentFontFace) return;
+
+        const contentType = exportContentType.value;
+        const scale = parseInt(exportScale.value, 10) || 2;
+        const padding = parseInt(exportPadding.value, 10) || 40;
+        const isTransparent = exportTransparentBg.checked;
+
+        const fontSize = parseInt(fontSizeRange.value, 10) || 36;
+        const fontWeight = fontWeightSelect.value;
+        const fontStyle = toggleItalic.checked ? 'italic' : 'normal';
+        const textColor = textColorPicker.value;
+        const bgColor = bgColorPicker.value;
+        const lineHeight = parseFloat(lineHeightRange.value) || 1.4;
+
+        let textToRender = '';
+        const currentLang = LANGUAGES.find(l => l.id === languageSelect.value) || LANGUAGES[0];
+
+        if (contentType === 'main') {
+          textToRender = previewTextInput.value || currentLang.sample;
+        } else if (contentType === 'alphabet') {
+          textToRender = currentLang.alphabet;
+        } else if (contentType === 'numbers-symbols') {
+          textToRender = "0123456789\n!@#$%^&*()_+-=[]{}|;':\",./<>?`~";
+        } else if (contentType === 'comprehensive') {
+          textToRender = `Language: ${currentLang.name}\nAlphabet:\n${currentLang.alphabet}\n\nNumbers & Symbols:\n0123456789 !@#$%^&*()\n\nSample:\n${currentLang.sample}`;
+        } else if (contentType === 'custom') {
+          textToRender = exportCustomText.value || currentLang.sample;
+        }
+
+        const ctx = exportCanvas.getContext('2d');
+        const fontString = `${fontStyle} ${fontWeight} ${fontSize * scale}px "${currentFontFamilyName}", sans-serif`;
+        ctx.font = fontString;
+
+        const lines = textToRender.split('\n');
+        const maxLineWidth = Math.max(...lines.map(l => ctx.measureText(l).width), 200);
+        const computedLineHeight = fontSize * scale * lineHeight;
+        const totalTextHeight = computedLineHeight * lines.length;
+
+        const canvasWidth = maxLineWidth + (padding * 2 * scale);
+        const canvasHeight = totalTextHeight + (padding * 2 * scale);
+
+        exportCanvas.width = canvasWidth;
+        exportCanvas.height = canvasHeight;
+        exportCanvas.style.width = (canvasWidth / scale) + 'px';
+        exportCanvas.style.height = (canvasHeight / scale) + 'px';
+
+        ctx.font = fontString;
+        ctx.textBaseline = 'top';
+
+        if (!isTransparent) {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        } else {
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        ctx.fillStyle = textColor;
+        let currentY = padding * scale;
+        const align = textAlignSelect.value;
+
+        lines.forEach(line => {
+          let currentX = padding * scale;
+          const lineWidth = ctx.measureText(line).width;
+          if (align === 'center') {
+            currentX = (canvasWidth - lineWidth) / 2;
+          } else if (align === 'right') {
+            currentX = canvasWidth - (padding * scale) - lineWidth;
+          }
+          ctx.fillText(line, currentX, currentY);
+          currentY += computedLineHeight;
+        });
+      }
+
+      function updateAllPreviews() {
+        if (!currentFontFace) return;
+
+        const family = currentFontFamilyName;
+        const size = fontSizeRange.value + 'px';
+        const weight = fontWeightSelect.value;
+        const italic = toggleItalic.checked ? 'italic' : 'normal';
+        const lineHeight = lineHeightRange.value;
+        const letterSpacing = letterSpacingRange.value + 'px';
+        const textAlign = textAlignSelect.value;
+        const color = textColorPicker.value;
+        const bg = bgColorPicker.value;
+
+        const currentLang = LANGUAGES.find(l => l.id === languageSelect.value) || LANGUAGES[0];
+
+        const applyStyles = (el) => {
+          el.style.fontFamily = `"${family}", sans-serif`;
+          el.style.fontSize = size;
+          el.style.fontWeight = weight;
+          el.style.fontStyle = italic;
+          el.style.lineHeight = lineHeight;
+          el.style.letterSpacing = letterSpacing;
+          el.style.textAlign = textAlign;
+          el.style.color = color;
+          el.style.backgroundColor = bg;
+        };
+
+        mainPreviewOutput.textContent = previewTextInput.value || currentLang.sample;
+        applyStyles(mainPreviewOutput);
+
+        alphabetPreviewOutput.textContent = currentLang.alphabet;
+        applyStyles(alphabetPreviewOutput);
+
+        applyStyles(symbolsPreviewOutput);
+
+        paragraphPreviewOutput.textContent = `${currentLang.sample} ${currentLang.sample} Typography ensures readability, hierarchy, and aesthetic harmony across diverse digital interfaces and languages.`;
+        applyStyles(paragraphPreviewOutput);
+
+        multilingualGrid.innerHTML = '';
+        LANGUAGES.forEach(lang => {
+          const row = document.createElement('div');
+          row.className = 'rounded-md border border-line bg-elevated p-4';
+
+          const label = document.createElement('div');
+          label.className = 'font-mono text-[10px] uppercase tracking-wider text-faint mb-1.5';
+          label.textContent = lang.name;
+
+          const sampleDiv = document.createElement('div');
+          sampleDiv.textContent = lang.sample;
+          sampleDiv.style.cssText = `font-family: "${family}", sans-serif; font-size: 20px; font-weight: ${weight}; font-style: ${italic}; line-height: 1.4; color: ${color}; word-break: break-word;`;
+
+          row.appendChild(label);
+          row.appendChild(sampleDiv);
+          multilingualGrid.appendChild(row);
+        });
+
+        if (document.getElementById('tab-export').style.display === 'block') {
+          generateExportCanvas();
+        }
+      }
+
+      initLanguages();
+      previewTextInput.value = LANGUAGES[0].sample;
+      lucide.createIcons();
+    })();
+  </script>
+</body>
+</html>

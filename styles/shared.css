@@ -103,19 +103,6 @@ html body.uh-tool {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-html body.uh-tool {
-  background-color: var(--uh-bg);
-  background-image:
-    radial-gradient(ellipse at 14% 0%, color-mix(in srgb, var(--uh-accent) 8%, transparent), transparent 38rem),
-    radial-gradient(ellipse at 92% 16%, color-mix(in srgb, #8fbde8 5%, transparent), transparent 34rem),
-    linear-gradient(var(--uh-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--uh-line) 1px, transparent 1px);
-  background-size: 44px 44px;
-  background-attachment: fixed;
-  color: var(--uh-text);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
 html.dark body.uh-family-tree {
   --canvas-1: #0e1c2b;
   --canvas-2: #14283b;
@@ -140,8 +127,7 @@ html body.uh-tool .uh-site-header {
   width: 100vw;
   box-sizing: border-box;
   border-bottom: 1px solid var(--uh-line);
-  background: color-mix(in srgb, var(--uh-bg) 88%, transparent);
-  backdrop-filter: blur(14px);
+  background: var(--uh-bg);
 }
 
 html body.uh-tool .uh-site-controls {
@@ -1787,7 +1773,6 @@ html body.uh-number-converter-page {
     linear-gradient(var(--uh-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--uh-line) 1px, transparent 1px);
   background-size: auto, auto, 44px 44px, 44px 44px;
-  background-attachment: fixed;
   color: var(--uh-text);
   font-family: var(--uh-font-body);
 }
@@ -2422,6 +2407,12 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
       gap: 0.5rem;
       padding: 1rem;
     }
+
+    html body.uh-tool .uh-footer-content {
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+    }
   }
 
   @media (max-width: 380px) {
@@ -2567,18 +2558,14 @@ html body.uh-dashboard .uh-tools-panel {
   }
 }
 
-/* Premium finish shared by the existing dashboard and tool interfaces. */
-html body.uh-tool {
-  background-attachment: fixed;
-}
-
+/* Shared finish for the dashboard and tool interfaces. */
 html body.uh-tool .uh-site-header,
 html body.uh-tool > .uh-layout-header,
 html body.uh-dashboard > header {
   border-color: color-mix(in srgb, var(--uh-line-strong) 72%, transparent);
-  background-color: color-mix(in srgb, var(--uh-bg) 88%, transparent);
-  box-shadow: 0 8px 28px color-mix(in srgb, var(--uh-bg) 18%, transparent);
-  backdrop-filter: blur(18px) saturate(135%);
+  background-color: var(--uh-bg);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--uh-bg) 16%, transparent);
+  backdrop-filter: none;
 }
 
 html body.uh-tool .uh-site-brand,
@@ -2717,6 +2704,23 @@ html body .uh-tools-link:hover {
 html body .uh-shared-footer {
   border-color: color-mix(in srgb, var(--uh-line-strong) 62%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--uh-panel) 96%, transparent), var(--uh-panel));
+}
+
+html body.uh-tool .uh-shared-footer {
+  box-sizing: border-box;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+  padding: 1rem max(1rem, calc((100% - 1180px) / 2));
+  text-align: left;
+}
+
+html body.uh-tool .uh-footer-content {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem 1.5rem;
 }
 
 html body .uh-update-notice,

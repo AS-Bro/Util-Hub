@@ -309,6 +309,22 @@ const toolsData = [
     icon: 'scaling',
   },
   {
+    id: 'font-previewer',
+    title: 'Font Previewer',
+    description: 'Preview uploaded fonts across sample text, scripts, and typography settings.',
+    category: 'Design',
+    url: 'tools/font-previewer.html',
+    icon: 'type',
+  },
+  {
+    id: 'table-maker',
+    title: 'Table Maker',
+    description: 'Turn structured text into customizable tables and export them in multiple formats.',
+    category: 'Productivity',
+    url: 'tools/table-maker.html',
+    icon: 'table',
+  },
+  {
     id: 'password-generator',
     title: 'Password Generator',
     description: 'Generate strong passwords with cryptographically secure randomness.',
@@ -338,7 +354,7 @@ const toolsData = [
     description: 'Track precise elapsed time, lap splits, and exportable lap history.',
     category: 'Time Tools',
     url: 'tools/stopwatch.html',
-    icon: 'stopwatch',
+    icon: 'watch',
   },
   {
     id: 'pomodoro-focus-timer',

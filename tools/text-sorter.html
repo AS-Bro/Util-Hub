@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Utility Hub / Advanced Text & Line Sorter</title>
+
+  <!-- Preconnect Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            bg: 'var(--uh-bg, #0e1c2b)',
+            panel: 'var(--uh-card-bg, #14283b)',
+            elevated: 'var(--uh-card-inner, #0f1f2e)',
+            line: 'var(--uh-border, rgba(143, 176, 204, 0.16))',
+            'line-strong': 'var(--uh-border-hover, rgba(111, 216, 203, 0.4))',
+            text: 'var(--uh-text, #e7eef4)',
+            muted: 'var(--uh-text-muted, #94a3b8)',
+            accent: 'var(--uh-accent, #6fd8cb)',
+          },
+          fontFamily: {
+            display: ['"Space Grotesk"', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Utility Hub Design Tokens & Stopwatch Reference Palette */
+    :root {
+      --uh-bg: #0e1c2b;
+      --uh-card-bg: #14283b;
+      --uh-card-inner: #0f1f2e;
+      --uh-border: rgba(143, 176, 204, 0.16);
+      --uh-border-hover: rgba(111, 216, 203, 0.4);
+      --uh-text: #e7eef4;
+      --uh-text-muted: #94a3b8;
+      --uh-accent: #6fd8cb;
+      --uh-accent-hover: #5bc4b7;
+      --uh-accent-glow: rgba(111, 216, 203, 0.25);
+      --uh-font-display: "Space Grotesk", sans-serif;
+      --uh-font-body: "Inter", sans-serif;
+      --uh-font-mono: "IBM Plex Mono", monospace;
+    }
+
+    body {
+      background-color: var(--uh-bg);
+      background-image: radial-gradient(ellipse at 14% 0%, color-mix(in srgb, var(--uh-accent) 8%, transparent), transparent 38rem),
+                        linear-gradient(var(--uh-border) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--uh-border) 1px, transparent 1px);
+      background-size: 100% 100%, 44px 44px, 44px 44px;
+      background-attachment: fixed;
+      color: var(--uh-text);
+      font-family: var(--uh-font-body);
+    }
+
+    .uh-time-shell {
+      width: min(100% - 32px, 1140px);
+      margin-inline: auto;
+      padding-block: 24px 48px;
+    }
+
+    /* Stopwatch Pro Blueprint Card Structure */
+    .uh-time-card {
+      background: var(--uh-card-bg);
+      border: 1px solid var(--uh-border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .uh-inner-card {
+      background: var(--uh-card-inner);
+      border: 1px solid var(--uh-border);
+      border-radius: 8px;
+    }
+
+    .uh-time-label {
+      font-family: var(--uh-font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--uh-text-muted);
+    }
+
+    /* Stopwatch Console Button Rules */
+    .uh-time-button {
+      background: #17304a;
+      border: 1px solid var(--uh-border);
+      color: var(--uh-text);
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-radius: 6px;
+      padding: 6px 12px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .uh-time-button:hover:not(:disabled) {
+      border-color: var(--uh-accent);
+      color: var(--uh-accent);
+      transform: translateY(-1px);
+    }
+
+    .uh-time-button.quiet {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .uh-time-button.primary {
+      background: var(--uh-accent);
+      color: #0e1c2b;
+      font-weight: 600;
+      border: none;
+    }
+
+    .uh-time-button.primary:hover:not(:disabled) {
+      background: var(--uh-accent-hover);
+      box-shadow: 0 0 12px var(--uh-accent-glow);
+      color: #0e1c2b;
+    }
+
+    .uh-time-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .uh-time-input {
+      background: var(--uh-card-inner);
+      border: 1px solid var(--uh-border);
+      color: var(--uh-text);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      transition: border-color 0.15s ease;
+    }
+
+    .uh-time-input:focus {
+      outline: none;
+      border-color: var(--uh-accent);
+    }
+
+    /* Checkbox/Radio Polish */
+    input[type="checkbox"], input[type="radio"] {
+      accent-color: var(--uh-accent);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--uh-bg); }
+    ::-webkit-scrollbar-thumb { background: #1f3a54; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--uh-accent); }
+  </style>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Text Sorter"></script>
+</head>
+<body class="uh-time-tool min-h-screen flex flex-col justify-between">
+
+  <!-- Header Navigation -->
+  <header class="border-b border-[var(--uh-border)] bg-[#0e1c2b]/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[var(--uh-accent)]/10 border border-[var(--uh-accent)]/30 flex items-center justify-center text-[var(--uh-accent)] font-bold font-['Space_Grotesk'] text-xl">
+          ↕
+        </div>
+        <div>
+          <h1 class="font-['Space_Grotesk'] font-bold text-lg text-slate-100 leading-tight">Text &amp; Line Studio</h1>
+          <p class="font-['IBM_Plex_Mono'] text-xs text-[var(--uh-text-muted)]">Utility Hub / Data Manipulation Console</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="loadSampleText()" class="uh-time-button quiet text-xs">
+          <span>📝</span> Load Sample
+        </button>
+        <button onclick="clearText()" class="uh-time-button quiet text-xs text-rose-400 hover:border-rose-400">
+          <span>🗑️</span> Clear
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Shell -->
+  <main class="uh-time-shell space-y-6">
+
+    <!-- Page Title & Kicker -->
+    <section class="uh-time-heading">
+      <span class="uh-time-label">Data Utilities / Line Studio Pro</span>
+      <h1 class="font-['Space_Grotesk'] text-2xl font-bold mt-1 text-slate-100">Text &amp; Line Sorter Pro</h1>
+      <p class="text-sm text-[var(--uh-text-muted)] mt-1">
+        Sort, deduplicate, filter, reformat, and inspect text lines with high-performance client-side processing.
+      </p>
+    </section>
+
+    <!-- Top Action Bar & Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Editor Main Column -->
+      <div class="lg:col-span-8 space-y-4">
+
+        <div class="uh-time-card p-3 flex flex-wrap items-center justify-between gap-3">
+          <!-- History Controls -->
+          <div class="flex items-center gap-2">
+            <button id="undoBtn" onclick="undo()" disabled class="uh-time-button quiet text-xs">
+              ↩ Undo
+            </button>
+            <button id="redoBtn" onclick="redo()" disabled class="uh-time-button quiet text-xs">
+              ↪ Redo
+            </button>
+            <span class="text-slate-600 text-xs">|</span>
+            <span id="historyStatus" class="text-xs text-[var(--uh-text-muted)] font-['IBM_Plex_Mono']">1 State</span>
+          </div>
+
+          <!-- Export Controls -->
+          <div class="flex items-center gap-2">
+            <button onclick="copyToClipboard()" class="uh-time-button primary text-xs">
+              <span>📋</span> Copy Text
+            </button>
+            <button onclick="downloadText()" class="uh-time-button quiet text-xs">
+              <span>💾</span> Download .TXT
+            </button>
+          </div>
+        </div>
+
+        <!-- Editor Console -->
+        <div class="relative">
+          <textarea id="textInput" rows="14" class="w-full p-4 rounded-xl font-['IBM_Plex_Mono'] text-sm leading-relaxed resize-y uh-time-input" placeholder="Type or paste text lines here to sort, remove duplicates, or format..."></textarea>
+          <div id="toast" class="hidden absolute bottom-4 right-4 bg-[var(--uh-accent)] text-slate-950 font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg transition-all z-10">
+            Action Completed!
+          </div>
+        </div>
+
+        <!-- Metrics Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statTotalLines" class="font-['Space_Grotesk'] text-lg font-bold text-[var(--uh-accent)]">0</div>
+            <div class="uh-time-label text-[10px]">Total Lines</div>
+          </div>
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statUniqueLines" class="font-['Space_Grotesk'] text-lg font-bold text-[var(--uh-accent)]">0</div>
+            <div class="uh-time-label text-[10px]">Unique Lines</div>
+          </div>
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statDuplicates" class="font-['Space_Grotesk'] text-lg font-bold text-rose-400">0</div>
+            <div class="uh-time-label text-[10px]">Duplicates</div>
+          </div>
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statBlankLines" class="font-['Space_Grotesk'] text-lg font-bold text-amber-400">0</div>
+            <div class="uh-time-label text-[10px]">Blank Lines</div>
+          </div>
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statWords" class="font-['Space_Grotesk'] text-lg font-bold text-[var(--uh-accent)]">0</div>
+            <div class="uh-time-label text-[10px]">Words</div>
+          </div>
+          <div class="uh-time-card p-2.5 text-center">
+            <div id="statCharacters" class="font-['Space_Grotesk'] text-lg font-bold text-[var(--uh-accent)]">0</div>
+            <div class="uh-time-label text-[10px]">Characters</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Controls & Modifiers Sidebar -->
+      <div class="lg:col-span-4 space-y-4">
+
+        <!-- Modifiers Card -->
+        <div class="uh-time-card p-4 space-y-3">
+          <h3 class="font-['Space_Grotesk'] font-semibold text-sm text-slate-200 flex items-center gap-2">
+            <span>⚙️</span> Sorting Options
+          </h3>
+
+          <div class="space-y-2 text-xs">
+            <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
+              <input id="optCaseSensitive" type="checkbox" class="rounded" />
+              <span>Case-sensitive sorting</span>
+            </label>
+
+            <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
+              <input id="optTrimLines" type="checkbox" checked class="rounded" />
+              <span>Trim leading/trailing whitespace</span>
+            </label>
+
+            <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
+              <input id="optIgnorePunctuation" type="checkbox" class="rounded" />
+              <span>Ignore symbols &amp; punctuation</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Filter Card -->
+        <div class="uh-time-card p-4 space-y-3">
+          <h3 class="font-['Space_Grotesk'] font-semibold text-sm text-slate-200 flex items-center gap-2">
+            <span>🔍</span> Filter &amp; Extract
+          </h3>
+
+          <div class="space-y-2">
+            <input id="filterInput" type="text" placeholder="Filter term or regex..." class="w-full uh-time-input text-xs font-['IBM_Plex_Mono']" />
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="filterLines(true)" class="uh-time-button text-xs font-medium text-[var(--uh-accent)]">
+                Keep Matching
+              </button>
+              <button onclick="filterLines(false)" class="uh-time-button text-xs font-medium text-rose-300">
+                Remove Matching
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prefix/Suffix Card -->
+        <div class="uh-time-card p-4 space-y-3">
+          <h3 class="font-['Space_Grotesk'] font-semibold text-sm text-slate-200 flex items-center gap-2">
+            <span>🏷️</span> Line Prefix &amp; Suffix
+          </h3>
+
+          <div class="grid grid-cols-2 gap-2">
+            <input id="prefixInput" type="text" placeholder="Prefix (e.g. - )" class="uh-time-input text-xs font-['IBM_Plex_Mono']" />
+            <input id="suffixInput" type="text" placeholder="Suffix (e.g. ,)" class="uh-time-input text-xs font-['IBM_Plex_Mono']" />
+          </div>
+          <button onclick="applyPrefixSuffix()" class="w-full uh-time-button text-xs font-medium">
+            Apply to Lines
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Categorized Action Panels -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <!-- Column 1: Core Sorters -->
+      <div class="uh-time-card p-4 space-y-3">
+        <h3 class="font-['Space_Grotesk'] text-sm font-bold text-slate-200 flex items-center justify-between border-b border-[var(--uh-border)] pb-2">
+          <span>🔤 Alphabetical &amp; Natural</span>
+        </h3>
+        <div class="space-y-2 text-xs">
+          <button onclick="sortLines('az')" class="w-full uh-time-button justify-between">
+            <span>Sort Alphabetical (A ➔ Z)</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">A-Z</span>
+          </button>
+          <button onclick="sortLines('za')" class="w-full uh-time-button justify-between">
+            <span>Sort Alphabetical (Z ➔ A)</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Z-A</span>
+          </button>
+          <button onclick="sortLines('natural')" class="w-full uh-time-button justify-between">
+            <span>Natural Human Sort</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Natural</span>
+          </button>
+          <button onclick="sortLines('shuffle')" class="w-full uh-time-button justify-between">
+            <span>Randomize / Shuffle</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Random</span>
+          </button>
+          <button onclick="sortLines('reverseOrder')" class="w-full uh-time-button justify-between">
+            <span>Reverse Line Order</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Flip</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Column 2: Numeric & Length Sorters -->
+      <div class="uh-time-card p-4 space-y-3">
+        <h3 class="font-['Space_Grotesk'] text-sm font-bold text-slate-200 flex items-center justify-between border-b border-[var(--uh-border)] pb-2">
+          <span>🔢 Numeric &amp; Length</span>
+        </h3>
+        <div class="space-y-2 text-xs">
+          <button onclick="sortLines('numAsc')" class="w-full uh-time-button justify-between">
+            <span>Numeric Ascending</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">1 ➔ 100</span>
+          </button>
+          <button onclick="sortLines('numDesc')" class="w-full uh-time-button justify-between">
+            <span>Numeric Descending</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">100 ➔ 1</span>
+          </button>
+          <button onclick="sortLines('lengthAsc')" class="w-full uh-time-button justify-between">
+            <span>Line Length (Shortest)</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Length ⬆</span>
+          </button>
+          <button onclick="sortLines('lengthDesc')" class="w-full uh-time-button justify-between">
+            <span>Line Length (Longest)</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Length ⬇</span>
+          </button>
+          <button onclick="sortLines('wordsCount')" class="w-full uh-time-button justify-between">
+            <span>Sort by Word Count</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Words ⬆</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Column 3: Deduplication & Cleaning -->
+      <div class="uh-time-card p-4 space-y-3">
+        <h3 class="font-['Space_Grotesk'] text-sm font-bold text-slate-200 flex items-center justify-between border-b border-[var(--uh-border)] pb-2">
+          <span>🧹 Deduplicate &amp; Clean</span>
+        </h3>
+        <div class="space-y-2 text-xs">
+          <button onclick="cleanLines('dedupe')" class="w-full uh-time-button justify-between">
+            <span>Remove Duplicate Lines</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-rose-300">Unique</span>
+          </button>
+          <button onclick="cleanLines('keepOnlyDuplicates')" class="w-full uh-time-button justify-between">
+            <span>Extract Duplicates Only</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-amber-300">Dupes</span>
+          </button>
+          <button onclick="cleanLines('removeEmpty')" class="w-full uh-time-button justify-between">
+            <span>Remove Blank Lines</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Purge</span>
+          </button>
+          <button onclick="cleanLines('trimSpaces')" class="w-full uh-time-button justify-between">
+            <span>Trim Line Spaces</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Margins</span>
+          </button>
+          <button onclick="cleanLines('removeAccents')" class="w-full uh-time-button justify-between">
+            <span>Remove Diacritics</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">é ➔ e</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Column 4: Numbering & Reformat -->
+      <div class="uh-time-card p-4 space-y-3">
+        <h3 class="font-['Space_Grotesk'] text-sm font-bold text-slate-200 flex items-center justify-between border-b border-[var(--uh-border)] pb-2">
+          <span>🔢 Number &amp; Reformat</span>
+        </h3>
+        <div class="space-y-2 text-xs">
+          <button onclick="formatLines('addNumbering')" class="w-full uh-time-button justify-between">
+            <span>Add Line Numbers</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">1. 2. 3.</span>
+          </button>
+          <button onclick="formatLines('removeNumbering')" class="w-full uh-time-button justify-between">
+            <span>Strip Line Numbers</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">Strip</span>
+          </button>
+
+          <div class="pt-1">
+            <div class="text-[11px] text-[var(--uh-text-muted)] mb-1">Join lines with separator:</div>
+            <div class="flex gap-1">
+              <input id="joinDelimiter" type="text" value=", " class="uh-time-input text-xs font-['IBM_Plex_Mono'] w-full" placeholder="e.g. , or |" />
+              <button onclick="formatLines('join')" class="uh-time-button primary text-xs">
+                Join
+              </button>
+            </div>
+          </div>
+
+          <button onclick="formatLines('splitDelimiter')" class="w-full uh-time-button justify-between mt-1">
+            <span>Split Delimited Text to Lines</span>
+            <span class="font-['IBM_Plex_Mono'] text-[10px] text-[var(--uh-accent)]">CSV ➔ Lines</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Shared Blueprint Footer -->
+  <footer class="border-t border-[var(--uh-border)] py-4 px-4 text-center text-xs text-[var(--uh-text-muted)] mt-8 bg-[var(--uh-card-bg)]">
+    TEXT &amp; LINE STUDIO PRO / UTILITY HUB ECOSYSTEM
+  </footer>
+
+  <script>
+    const textarea = document.getElementById('textInput');
+    const historyStack = [];
+    let historyStep = -1;
+    const MAX_HISTORY = 30;
+
+    saveState('');
+
+    textarea.addEventListener('input', () => {
+      debouncedSaveState(textarea.value);
+      updateAnalytics();
+    });
+
+    let debounceTimer;
+    function debouncedSaveState(val) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => saveState(val), 300);
+    }
+
+    function saveState(val) {
+      if (historyStep >= 0 && historyStack[historyStep] === val) return;
+      if (historyStep < historyStack.length - 1) {
+        historyStack.splice(historyStep + 1);
+      }
+      historyStack.push(val);
+      if (historyStack.length > MAX_HISTORY) historyStack.shift();
+      historyStep = historyStack.length - 1;
+      updateHistoryUI();
+    }
+
+    function undo() {
+      if (historyStep > 0) {
+        historyStep--;
+        textarea.value = historyStack[historyStep];
+        updateAnalytics();
+        updateHistoryUI();
+        showToast('Undo Applied');
+      }
+    }
+
+    function redo() {
+      if (historyStep < historyStack.length - 1) {
+        historyStep++;
+        textarea.value = historyStack[historyStep];
+        updateAnalytics();
+        updateHistoryUI();
+        showToast('Redo Applied');
+      }
+    }
+
+    function updateHistoryUI() {
+      document.getElementById('undoBtn').disabled = historyStep <= 0;
+      document.getElementById('redoBtn').disabled = historyStep >= historyStack.length - 1;
+      document.getElementById('historyStatus').textContent = `${historyStep + 1}/${historyStack.length} States`;
+    }
+
+    function updateAnalytics() {
+      const text = textarea.value;
+      const rawLines = text ? text.split(/\r\n|\r|\n/) : [];
+      const totalLines = rawLines.length;
+
+      let blankCount = 0;
+      const trimmedLines = [];
+      const seen = new Set();
+      let dupeCount = 0;
+
+      rawLines.forEach(l => {
+        if (l.trim() === '') {
+          blankCount++;
+        } else {
+          trimmedLines.push(l);
+        }
+
+        const normalized = document.getElementById('optCaseSensitive').checked ? l : l.toLowerCase();
+        if (seen.has(normalized)) {
+          dupeCount++;
+        } else {
+          seen.add(normalized);
+        }
+      });
+
+      const uniqueCount = seen.size;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+
+      document.getElementById('statTotalLines').textContent = totalLines.toLocaleString();
+      document.getElementById('statUniqueLines').textContent = uniqueCount.toLocaleString();
+      document.getElementById('statDuplicates').textContent = dupeCount.toLocaleString();
+      document.getElementById('statBlankLines').textContent = blankCount.toLocaleString();
+      document.getElementById('statWords').textContent = words.toLocaleString();
+      document.getElementById('statCharacters').textContent = chars.toLocaleString();
+    }
+
+    function getLines() {
+      const text = textarea.value;
+      if (!text) return [];
+      return text.split(/\r\n|\r|\n/);
+    }
+
+    function setLines(linesArray, message) {
+      const newText = linesArray.join('\n');
+      textarea.value = newText;
+      saveState(newText);
+      updateAnalytics();
+      showToast(message || 'Lines Updated!');
+    }
+
+    function prepareLineForComparison(line) {
+      let result = line;
+      if (document.getElementById('optTrimLines').checked) {
+        result = result.trim();
+      }
+      if (!document.getElementById('optCaseSensitive').checked) {
+        result = result.toLowerCase();
+      }
+      if (document.getElementById('optIgnorePunctuation').checked) {
+        result = result.replace(/[^\w\s]/gi, '');
+      }
+      return result;
+    }
+
+    function sortLines(type) {
+      const lines = getLines();
+      if (lines.length === 0) return;
+
+      if (type === 'az') {
+        lines.sort((a, b) => prepareLineForComparison(a).localeCompare(prepareLineForComparison(b)));
+      } else if (type === 'za') {
+        lines.sort((a, b) => prepareLineForComparison(b).localeCompare(prepareLineForComparison(a)));
+      } else if (type === 'natural') {
+        lines.sort((a, b) => prepareLineForComparison(a).localeCompare(prepareLineForComparison(b), undefined, { numeric: true, sensitivity: 'base' }));
+      } else if (type === 'numAsc') {
+        lines.sort((a, b) => {
+          const numA = parseFloat(a.match(/-?\d+(\.\d+)?/) || 0);
+          const numB = parseFloat(b.match(/-?\d+(\.\d+)?/) || 0);
+          return numA - numB;
+        });
+      } else if (type === 'numDesc') {
+        lines.sort((a, b) => {
+          const numA = parseFloat(a.match(/-?\d+(\.\d+)?/) || 0);
+          const numB = parseFloat(b.match(/-?\d+(\.\d+)?/) || 0);
+          return numB - numA;
+        });
+      } else if (type === 'lengthAsc') {
+        lines.sort((a, b) => a.length - b.length);
+      } else if (type === 'lengthDesc') {
+        lines.sort((a, b) => b.length - a.length);
+      } else if (type === 'wordsCount') {
+        lines.sort((a, b) => {
+          const countA = a.trim() ? a.trim().split(/\s+/).length : 0;
+          const countB = b.trim() ? b.trim().split(/\s+/).length : 0;
+          return countA - countB;
+        });
+      } else if (type === 'reverseOrder') {
+        lines.reverse();
+      } else if (type === 'shuffle') {
+        for (let i = lines.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [lines[i], lines[j]] = [lines[j], lines[i]];
+        }
+      }
+
+      setLines(lines, 'Lines Sorted!');
+    }
+
+    function cleanLines(type) {
+      let lines = getLines();
+      if (lines.length === 0) return;
+
+      if (type === 'dedupe') {
+        const seen = new Set();
+        lines = lines.filter(line => {
+          const key = prepareLineForComparison(line);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      } else if (type === 'keepOnlyDuplicates') {
+        const counts = {};
+        lines.forEach(l => {
+          const key = prepareLineForComparison(l);
+          counts[key] = (counts[key] || 0) + 1;
+        });
+        const seenInOutput = new Set();
+        lines = lines.filter(l => {
+          const key = prepareLineForComparison(l);
+          if (counts[key] > 1 && !seenInOutput.has(key)) {
+            seenInOutput.add(key);
+            return true;
+          }
+          return false;
+        });
+      } else if (type === 'removeEmpty') {
+        lines = lines.filter(line => line.trim() !== '');
+      } else if (type === 'trimSpaces') {
+        lines = lines.map(line => line.trim());
+      } else if (type === 'removeAccents') {
+        lines = lines.map(line => line.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+      }
+
+      setLines(lines, 'Cleaning Complete!');
+    }
+
+    function formatLines(type) {
+      let lines = getLines();
+      if (lines.length === 0) return;
+
+      if (type === 'addNumbering') {
+        lines = lines.map((l, i) => `${i + 1}. ${l}`);
+      } else if (type === 'removeNumbering') {
+        lines = lines.map(l => l.replace(/^\s*\d+[\.\)\:-]\s*/, ''));
+      } else if (type === 'join') {
+        const delim = document.getElementById('joinDelimiter').value;
+        textarea.value = lines.join(delim);
+        saveState(textarea.value);
+        updateAnalytics();
+        showToast('Joined Lines!');
+        return;
+      } else if (type === 'splitDelimiter') {
+        const delim = document.getElementById('joinDelimiter').value || ',';
+        const rawText = textarea.value;
+        lines = rawText.split(delim).map(s => s.trim()).filter(Boolean);
+      }
+
+      setLines(lines, 'Formatting Complete!');
+    }
+
+    function filterLines(keepMatching) {
+      const query = document.getElementById('filterInput').value;
+      if (!query) return;
+
+      let lines = getLines();
+      try {
+        const isRegex = query.startsWith('/') && query.endsWith('/');
+        const pattern = isRegex ? new RegExp(query.slice(1, -1), 'i') : new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+        lines = lines.filter(line => {
+          const matches = pattern.test(line);
+          return keepMatching ? matches : !matches;
+        });
+
+        setLines(lines, keepMatching ? 'Filtered Matching Lines!' : 'Removed Matching Lines!');
+      } catch (err) {
+        showToast('Invalid Filter / Regex pattern.');
+      }
+    }
+
+    function applyPrefixSuffix() {
+      const pre = document.getElementById('prefixInput').value;
+      const suf = document.getElementById('suffixInput').value;
+      if (!pre && !suf) return;
+
+      let lines = getLines();
+      lines = lines.map(l => `${pre}${l}${suf}`);
+      setLines(lines, 'Prefix & Suffix Applied!');
+    }
+
+    async function copyToClipboard() {
+      if (!textarea.value) return;
+      await navigator.clipboard.writeText(textarea.value);
+      showToast('Copied to Clipboard!');
+    }
+
+    function downloadText() {
+      if (!textarea.value) return;
+      const blob = new Blob([textarea.value], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `sorted-text.txt`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function clearText() {
+      if (!textarea.value) return;
+      textarea.value = '';
+      saveState('');
+      updateAnalytics();
+      showToast('Cleared!');
+    }
+
+    function loadSampleText() {
+      const sample = `banana
+10 Apple
+2 Orange
+apple
+banana
+1 Grapefruit
+cherry
+  pineapple
+Orange
+100 Apple
+mango`;
+
+      textarea.value = sample;
+      saveState(sample);
+      updateAnalytics();
+      showToast('Sample Text Loaded!');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2000);
+    }
+  </script>
+</body>
+</html>
