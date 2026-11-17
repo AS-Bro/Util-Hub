@@ -7,66 +7,57 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], textarea { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .uh-tab-active { background:var(--uh-panel); color:var(--uh-accent); }
+  .drop-zone.active { border-color: var(--uh-accent); background: color-mix(in srgb, var(--uh-accent) 8%, transparent); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Structured Text Extractor Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Structured Text Extractor Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Extract clean, structured Markdown, Plain Text, or JSON AST from HTML documents while preserving layout layout, tables, and headings.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Structured Text Extractor Studio</h1>
+      <p class="uh-page-sub">Extract clean, structured Markdown, Plain Text, or JSON AST from HTML documents while preserving layout layout, tables, and headings.</p>
+    </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="uh-grid uh-grid-2 gap-6">
       
       <!-- Input & Configuration Left Panel -->
-      <div class="lg:col-span-5 space-y-4">
+      <div class="space-y-4">
         
         <!-- Tab Navigation -->
-        <div class="flex border-b border-white/10 pb-2 gap-2">
-          <button id="tabInputBtn" onclick="switchTab('input')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">HTML Input</button>
-          <button id="tabOptionsBtn" onclick="switchTab('options')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Extraction Filters</button>
+        <div class="uh-toolbar flex border-b pb-2 gap-2">
+          <button id="tabInputBtn" onclick="switchTab('input')" class="uh-tab-active mono text-xs uppercase font-bold px-3 py-1 rounded">HTML Input</button>
+          <button id="tabOptionsBtn" onclick="switchTab('options')" class="mono text-xs uppercase font-bold text-[var(--uh-muted)] px-3 py-1">Extraction Filters</button>
         </div>
 
         <!-- TAB 1: HTML INPUT SOURCE -->
         <div id="tabInput" class="space-y-4">
           <!-- Drop Zone -->
-          <div id="dropZone" class="drop-zone rounded-md p-6 text-center bg-[#14283b]/20 cursor-pointer">
+          <div id="dropZone" class="uh-dropzone drop-zone rounded-md p-6 text-center cursor-pointer">
             <input type="file" id="fileInput" accept=".html,.htm,.txt" class="hidden" />
-            <div class="mono text-teal-300 text-xs font-semibold mb-1">Click or drag HTML document here</div>
-            <div id="fileLabel" class="text-[11px] text-slate-400">Supports .html and .htm files</div>
+            <div class="mono text-[var(--uh-accent)] text-xs font-semibold mb-1">Click or drag HTML document here</div>
+            <div id="fileLabel" class="text-[11px] text-[var(--uh-muted)]">Supports .html and .htm files</div>
           </div>
 
           <div class="relative flex py-1 items-center">
-            <div class="flex-grow border-t border-white/10"></div>
-            <span class="flex-shrink mx-2 mono text-[10px] text-slate-500 uppercase">OR Paste Markup</span>
-            <div class="flex-grow border-t border-white/10"></div>
+            <div class="flex-grow border-t uh-line-border"></div>
+            <span class="flex-shrink mx-2 mono text-[10px] uh-faint-text uppercase">OR Paste Markup</span>
+            <div class="flex-grow border-t uh-line-border"></div>
           </div>
 
           <!-- Raw Input Textarea -->
           <div>
-            <textarea id="rawInput" rows="10" placeholder="Paste HTML markup here..." class="w-full p-3 rounded-md text-xs mono leading-relaxed"></textarea>
+            <textarea id="rawInput" rows="10" placeholder="Paste HTML markup here..." class="uh-textarea w-full p-3 rounded-md text-xs mono leading-relaxed"></textarea>
           </div>
 
-          <button id="extractBtn" onclick="processHTML()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md">Extract Structured Data</button>
+          <button id="extractBtn" onclick="processHTML()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-2.5 rounded-md">Extract Structured Data</button>
         </div>
 
         <!-- TAB 2: FILTERS & RULES -->
-        <div id="tabOptions" class="space-y-4 hidden bg-[#14283b]/30 p-4 rounded-md border border-white/10">
+        <div id="tabOptions" class="uh-card space-y-4 hidden p-4">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Target Output Format</label>
-            <select id="outputFormat" onchange="processHTML()" class="w-full rounded-md p-2 text-xs">
+            <label class="uh-label mono text-xs uppercase block mb-1">Target Output Format</label>
+            <select id="outputFormat" onchange="processHTML()" class="uh-select w-full rounded-md p-2 text-xs">
               <option value="markdown" selected>Structured Markdown (.md)</option>
               <option value="plaintext">Pure Plain Text (.txt)</option>
               <option value="cleanHtml">Sanitized Clean HTML</option>
@@ -75,35 +66,35 @@
             </select>
           </div>
 
-          <div class="space-y-2 pt-2 border-t border-white/5">
-            <label class="mono text-[11px] text-teal-300 uppercase block font-semibold">Extraction Toggles</label>
+          <div class="space-y-2 pt-2 border-t uh-line-border">
+            <label class="uh-label mono text-[11px] uppercase block font-semibold">Extraction Toggles</label>
             
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="keepLinks" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="keepLinks" checked onchange="processHTML()" class="uh-checkbox" />
               <span>Include Hyperlinks [Text](URL)</span>
             </label>
 
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="keepImages" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="keepImages" checked onchange="processHTML()" class="uh-checkbox" />
               <span>Include Image Alt Descriptions</span>
             </label>
 
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="stripStyles" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="stripStyles" checked onchange="processHTML()" class="uh-checkbox" />
               <span>Remove Scripts, Inline CSS, & SVGs</span>
             </label>
           </div>
 
-          <div class="space-y-2 pt-2 border-t border-white/5">
-            <label class="mono text-[11px] text-teal-300 uppercase block font-semibold">Sanitization Rules</label>
+          <div class="space-y-2 pt-2 border-t uh-line-border">
+            <label class="uh-label mono text-[11px] uppercase block font-semibold">Sanitization Rules</label>
             
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="trimWhitespace" checked onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="trimWhitespace" checked onchange="processHTML()" class="uh-checkbox" />
               <span>Collapse Blank Lines & Spaces</span>
             </label>
 
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="maskEmails" onchange="processHTML()" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs cursor-pointer">
+              <input type="checkbox" id="maskEmails" onchange="processHTML()" class="uh-checkbox" />
               <span>Anonymize Detected Email Addresses</span>
             </label>
           </div>
@@ -112,21 +103,21 @@
       </div>
 
       <!-- Extracted Result Right Display Panel -->
-      <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
+      <div class="flex flex-col justify-between space-y-4">
         
-        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex-grow flex flex-col">
+        <div class="uh-card p-4 flex-grow flex flex-col">
           
           <!-- Search & Header Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-white/10">
-            <span class="mono text-xs uppercase text-teal-300 font-bold">Extracted Output</span>
-            <input type="text" id="searchFilter" oninput="filterOutputText()" placeholder="Search extracted text..." class="p-1.5 rounded text-xs px-2 w-48" />
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b uh-line-border">
+            <span class="mono text-xs uppercase text-[var(--uh-accent)] font-bold">Extracted Output</span>
+            <input type="text" id="searchFilter" oninput="filterOutputText()" placeholder="Search extracted text..." class="uh-input p-1.5 rounded text-xs px-2 w-48" />
           </div>
 
           <!-- Output Content Area -->
-          <textarea id="outputText" readonly class="w-full h-[420px] p-3 rounded bg-[#0e1c2b] text-xs mono leading-relaxed resize-none border border-white/5"></textarea>
+          <textarea id="outputText" readonly class="uh-textarea w-full h-[420px] p-3 rounded text-xs mono leading-relaxed resize-none"></textarea>
 
           <!-- Live Character Statistics Bar -->
-          <div class="flex flex-wrap justify-between items-center text-[11px] mono text-slate-400 mt-3 pt-2 border-t border-white/5">
+          <div class="flex flex-wrap justify-between items-center text-[11px] mono text-[var(--uh-muted)] mt-3 pt-2 border-t border-[var(--uh-line)]">
             <div id="statCounts">Characters: 0 | Words: 0 | Lines: 0</div>
             <div id="statElements">Headings: 0 | Tables: 0 | Links: 0</div>
           </div>
@@ -134,10 +125,10 @@
         </div>
 
         <!-- Toolbar Actions -->
-        <div class="bg-[#14283b]/30 p-3 rounded-md border border-white/10 flex justify-between items-center gap-2">
-          <button id="copyBtn" onclick="copyExtractedText()" class="secondary mono text-xs uppercase px-4 py-2 rounded-md">Copy Text</button>
-          <button id="downloadBtn" onclick="downloadExtractedText()" class="primary mono text-xs uppercase px-5 py-2 rounded-md">Download Output</button>
-        </div>
+        <div class="uh-toolbar flex justify-between items-center gap-2">
+          <button id="copyBtn" onclick="copyExtractedText()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-4 py-2 rounded-md">Copy Text</button>
+          <button id="downloadBtn" onclick="downloadExtractedText()" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2 rounded-md">Download Output</button>
+        </main>
 
       </div>
 
@@ -168,13 +159,13 @@
       ['input', 'options'].forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
-        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
-        btn.classList.add('text-slate-400');
+        btn.classList.remove('uh-tab-active');
+        btn.classList.add('text-[var(--uh-muted)]');
       });
 
       const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
-      activeBtn.classList.remove('text-slate-400');
-      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      activeBtn.classList.remove('text-[var(--uh-muted)]');
+      activeBtn.classList.add('uh-tab-active');
       document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
     };
 

@@ -92,15 +92,35 @@ html {
   background: var(--uh-bg, #0e1c2b);
 }
 
-html body.uh-tool {
+html body.uh-tool,
+html body.uh-dashboard {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  isolation: isolate;
+  margin: 0;
   min-height: 100vh;
   background-color: var(--uh-bg, #0e1c2b);
-  background-image:
-    linear-gradient(var(--uh-line, rgba(143, 176, 204, 0.16)) 1px, transparent 1px),
-    linear-gradient(90deg, var(--uh-line, rgba(143, 176, 204, 0.16)) 1px, transparent 1px);
-  background-size: 44px 44px;
   color: var(--uh-text, #e7eef4);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html body.uh-tool > main,
+html body.uh-dashboard > main {
+  flex: 1 0 auto;
+}
+
+html body.uh-tool::before,
+html body.uh-dashboard::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--uh-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--uh-line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  content: "";
+  pointer-events: none;
 }
 
 html.dark body.uh-family-tree {
@@ -860,6 +880,423 @@ html body.uh-tool a {
   }
 }
 
+html body.uh-tool .uh-text {
+  color: var(--uh-text);
+}
+
+html body.uh-tool .uh-muted-text {
+  color: var(--uh-muted);
+}
+
+html body.uh-tool .uh-faint-text {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool .uh-bg-text {
+  color: var(--uh-bg);
+}
+
+html body.uh-tool .uh-accent-text {
+  color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-success-text {
+  color: var(--uh-success);
+}
+
+html body.uh-tool .uh-warning-text {
+  color: var(--uh-warning);
+}
+
+html body.uh-tool .uh-danger-text {
+  color: var(--uh-danger);
+}
+
+html body.uh-tool .uh-accent-bg {
+  background-color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-panel-bg {
+  background-color: var(--uh-panel);
+}
+
+html body.uh-tool .uh-elevated-bg {
+  background-color: var(--uh-elevated);
+}
+
+html body.uh-tool .uh-bg-bg {
+  background-color: var(--uh-bg);
+}
+
+html body.uh-tool .uh-accent-bg-soft {
+  background-color: color-mix(in srgb, var(--uh-accent) 10%, transparent);
+}
+
+html body.uh-tool .uh-warning-bg-soft {
+  background-color: color-mix(in srgb, var(--uh-warning) 20%, transparent);
+}
+
+html body.uh-tool .uh-danger-bg-soft {
+  background-color: color-mix(in srgb, var(--uh-danger) 20%, transparent);
+}
+
+html body.uh-tool .uh-success-bg-soft {
+  background-color: color-mix(in srgb, var(--uh-success) 20%, transparent);
+}
+
+html body.uh-tool .uh-line-border {
+  border-color: var(--uh-line);
+}
+
+html body.uh-tool .uh-accent-border {
+  border-color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-danger-border {
+  border-color: var(--uh-danger);
+}
+
+html body.uh-tool .uh-success-border {
+  border-color: var(--uh-success);
+}
+
+html body.uh-tool .uh-warning-border {
+  border-color: var(--uh-warning);
+}
+
+html body.uh-tool .hover\:uh-text:hover {
+  color: var(--uh-text);
+}
+
+html body.uh-tool .hover\:uh-muted-text:hover {
+  color: var(--uh-muted);
+}
+
+html body.uh-tool .hover\:uh-faint-text:hover {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool .hover\:uh-accent-text:hover {
+  color: var(--uh-accent);
+}
+
+html body.uh-tool .hover\:uh-success-text:hover {
+  color: var(--uh-success);
+}
+
+html body.uh-tool .hover\:uh-danger-text:hover {
+  color: var(--uh-danger);
+}
+
+html body.uh-tool .hover\:uh-accent-border:hover {
+  border-color: var(--uh-accent);
+}
+
+html body.uh-tool .hover\:uh-elevated-bg:hover {
+  background-color: var(--uh-elevated);
+}
+
+html body.uh-tool .hover\:uh-panel-bg:hover {
+  background-color: var(--uh-panel);
+}
+
+html body.uh-tool .hover\:uh-danger-border:hover {
+  border-color: var(--uh-danger);
+}
+
+html body.uh-tool .focus\:uh-accent-border:focus {
+  border-color: var(--uh-accent);
+}
+
+html body.uh-tool .focus\:uh-warning-border:focus {
+  border-color: var(--uh-warning);
+}
+
+html body.uh-tool .placeholder-uh-faint::placeholder {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool .divide-uh-line > :not(:first-child) {
+  border-color: var(--uh-line);
+}
+
+html body.uh-tool .uh-container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding: 2.5rem 1.5rem;
+}
+
+html body.uh-tool .uh-container--narrow {
+  max-width: 720px;
+}
+
+html body.uh-tool .uh-container--wide {
+  max-width: 1280px;
+}
+
+html body.uh-tool .uh-page-head {
+  margin: 0 0 1.5rem;
+  text-align: left;
+}
+
+html body.uh-tool .uh-page-title {
+  margin: 0;
+  color: var(--uh-text);
+  font: 600 clamp(1.5rem, 3vw, 2rem) / 1.2 var(--uh-font-display);
+  letter-spacing: -0.035em;
+}
+
+html body.uh-tool .uh-page-sub {
+  max-width: 68ch;
+  margin: 0.5rem 0 0;
+  color: var(--uh-muted);
+  font: 400 0.9rem / 1.55 var(--uh-font-body);
+}
+
+html body.uh-tool .uh-card {
+  padding: 1.25rem;
+}
+
+html body.uh-tool .uh-card-title {
+  margin: 0 0 0.875rem;
+  font: 600 0.78rem / 1.4 var(--uh-font-mono);
+}
+
+html body.uh-tool .uh-panel,
+html body.uh-tool .uh-stat {
+  position: relative;
+  border: 1px solid var(--uh-line);
+  border-radius: var(--uh-radius-md);
+  background: color-mix(in srgb, var(--uh-elevated) 78%, transparent);
+  padding: 1rem;
+}
+
+html body.uh-tool .uh-stat {
+  display: grid;
+  gap: 0.35rem;
+}
+
+html body.uh-tool .uh-stat-value {
+  color: var(--uh-text);
+  font: 600 1.4rem / 1.2 var(--uh-font-display);
+}
+
+html body.uh-tool .uh-muted {
+  color: var(--uh-muted);
+}
+
+html body.uh-tool .uh-faint {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool .uh-accent {
+  color: var(--uh-accent);
+}
+
+html body.uh-tool :is(.text-slate-50, .text-slate-100, .text-slate-200, .text-slate-300) {
+  color: var(--uh-text);
+}
+
+html body.uh-tool :is(.text-slate-400, .text-gray-400) {
+  color: var(--uh-muted);
+}
+
+html body.uh-tool :is(.text-slate-500, .text-slate-600, .text-gray-500) {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool :is(.text-teal-200, .text-teal-300, .text-teal-400, .text-emerald-300) {
+  color: var(--uh-accent);
+}
+
+html body.uh-tool :is(.text-amber-300, .text-amber-400) {
+  color: var(--uh-signal);
+}
+
+html body.uh-tool :is(.text-rose-300, .text-rose-400, .text-red-400) {
+  color: var(--uh-danger);
+}
+
+html body.uh-tool :is([class~="bg-white/5"], [class~="bg-white/10"], [class~="bg-slate-800"], [class~="bg-slate-900"]) {
+  background-color: var(--uh-elevated);
+}
+
+html body.uh-tool :is([class~="border-white/5"], [class~="border-white/10"], [class~="border-slate-800"], [class~="border-slate-700/80"]) {
+  border-color: var(--uh-line);
+}
+
+html body.uh-tool :is([class~="bg-teal-500/10"], [class~="bg-emerald-500/10"]) {
+  background-color: color-mix(in srgb, var(--uh-accent) 10%, transparent);
+}
+
+html body.uh-tool [class~="bg-amber-500/10"] {
+  background-color: color-mix(in srgb, var(--uh-signal) 10%, transparent);
+}
+
+html body.uh-tool :is([class~="border-teal-500/20"], [class~="border-teal-500/30"]) {
+  border-color: color-mix(in srgb, var(--uh-accent) 35%, var(--uh-line));
+}
+
+html body.uh-tool .uh-btn,
+html body.uh-tool .uh-btn--primary,
+html body.uh-tool .uh-btn--secondary,
+html body.uh-tool .uh-btn--danger,
+html body.uh-tool .uh-btn--ghost {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--uh-radius-sm);
+  padding: 0.5rem 0.875rem;
+  font: 500 0.82rem / 1.2 var(--uh-font-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--uh-transition), border-color var(--uh-transition), background-color var(--uh-transition), box-shadow var(--uh-transition), transform var(--uh-transition);
+}
+
+html body.uh-tool .uh-btn--primary {
+  border-color: var(--uh-accent);
+  background: var(--uh-accent);
+  color: var(--uh-bg);
+}
+
+html body.uh-tool .uh-btn--secondary {
+  border-color: var(--uh-line-strong);
+  background: var(--uh-elevated);
+  color: var(--uh-text);
+}
+
+html body.uh-tool .uh-btn--danger {
+  border-color: color-mix(in srgb, var(--uh-danger) 40%, transparent);
+  background: color-mix(in srgb, var(--uh-danger) 14%, transparent);
+  color: var(--uh-danger);
+}
+
+html body.uh-tool .uh-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--uh-muted);
+}
+
+html body.uh-tool :is(.uh-btn, .uh-btn--primary, .uh-btn--secondary, .uh-btn--danger, .uh-btn--ghost):hover:not(:disabled) {
+  border-color: var(--uh-accent);
+  color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-btn--primary:hover:not(:disabled) {
+  border-color: var(--uh-accent-strong);
+  background: var(--uh-accent-strong);
+  color: var(--uh-bg);
+}
+
+html body.uh-tool :is(.uh-btn, .uh-btn--primary, .uh-btn--secondary, .uh-btn--danger, .uh-btn--ghost):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+html body.uh-tool :is(.uh-input, .uh-select, .uh-textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--uh-line-strong);
+  border-radius: var(--uh-radius-sm);
+  background: var(--uh-panel);
+  padding: 0.55rem 0.75rem;
+  color: var(--uh-text);
+  font: 400 0.875rem / 1.4 var(--uh-font-body);
+  transition: border-color var(--uh-transition), box-shadow var(--uh-transition), background-color var(--uh-transition);
+}
+
+html body.uh-tool .uh-textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+html body.uh-tool :is(.uh-input, .uh-select, .uh-textarea)::placeholder {
+  color: var(--uh-faint);
+}
+
+html body.uh-tool :is(.uh-input, .uh-select, .uh-textarea):focus {
+  border-color: var(--uh-accent);
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--uh-accent) 22%, transparent);
+}
+
+html body.uh-tool .uh-label {
+  display: block;
+  color: var(--uh-muted);
+  font: 500 0.75rem / 1.4 var(--uh-font-body);
+}
+
+html body.uh-tool .uh-range,
+html body.uh-tool .uh-checkbox {
+  accent-color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-range {
+  width: 100%;
+}
+
+html body.uh-tool .uh-alert {
+  border: 1px solid var(--uh-line-strong);
+  border-radius: var(--uh-radius-sm);
+  background: var(--uh-panel);
+  padding: 0.75rem 1rem;
+  color: var(--uh-text);
+}
+
+html body.uh-tool .uh-alert--info {
+  border-color: color-mix(in srgb, var(--uh-accent) 40%, var(--uh-line));
+  color: var(--uh-accent);
+}
+
+html body.uh-tool .uh-alert--success {
+  border-color: color-mix(in srgb, var(--uh-success) 40%, var(--uh-line));
+  color: var(--uh-success);
+}
+
+html body.uh-tool .uh-alert--error {
+  border-color: color-mix(in srgb, var(--uh-danger) 40%, var(--uh-line));
+  color: var(--uh-danger);
+}
+
+html body.uh-tool .uh-dropzone {
+  border-color: var(--uh-line-strong);
+  background: color-mix(in srgb, var(--uh-panel) 65%, transparent);
+}
+
+html body.uh-tool .uh-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+html body.uh-tool .uh-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  html body.uh-tool .uh-container {
+    padding: 2rem 1rem;
+  }
+
+  html body.uh-tool .uh-card {
+    padding: 1rem;
+  }
+
+  html body.uh-tool .uh-row > .uh-btn,
+  html body.uh-tool .uh-row > button {
+    flex: 1 1 auto;
+  }
+}
+
 /* Shared timer-tool components. */
 html body.uh-time-tool {
   color: var(--uh-text);
@@ -874,8 +1311,8 @@ html body.uh-time-tool .uh-time-shell {
 
 html body.uh-time-tool .uh-time-heading {
   max-width: 760px;
-  margin: 0 auto 2rem;
-  text-align: center;
+  margin: 0 0 2rem;
+  text-align: left;
 }
 
 html body.uh-time-tool .uh-time-heading h1 {
@@ -886,7 +1323,7 @@ html body.uh-time-tool .uh-time-heading h1 {
 }
 
 html body.uh-time-tool .uh-time-heading p {
-  margin: 0 auto;
+  margin: 0;
   max-width: 640px;
   color: var(--uh-muted);
   line-height: 1.7;
@@ -894,7 +1331,6 @@ html body.uh-time-tool .uh-time-heading p {
 
 html body.uh-time-tool .uh-time-kicker,
 html body.uh-time-tool .uh-time-label,
-html body.uh-time-tool .uh-time-footer,
 html body.uh-time-tool .uh-buzzer-clock-label {
   color: var(--uh-accent);
   font: 500 0.68rem/1.4 var(--uh-font-mono);
@@ -996,57 +1432,10 @@ html body.uh-time-tool .uh-time-field textarea {
 }
 
 html body.uh-time-tool .uh-time-field :is(input, textarea, select):focus-visible,
-html body.uh-time-tool .uh-time-button:focus-visible,
+html body.uh-time-tool .uh-btn:focus-visible,
 html body.uh-time-tool .uh-time-chip-row button:focus-visible {
   outline: 2px solid var(--uh-accent);
   outline-offset: 2px;
-}
-
-html body.uh-time-tool .uh-time-button {
-  min-height: 40px;
-  border: 1px solid var(--uh-line-strong);
-  border-radius: 7px;
-  background: var(--uh-elevated);
-  color: var(--uh-text);
-  padding: 0.58rem 0.9rem;
-  font: 550 0.82rem var(--uh-font-body);
-  cursor: pointer;
-  transition: border-color var(--uh-transition), background-color var(--uh-transition), color var(--uh-transition), transform var(--uh-transition);
-}
-
-html body.uh-time-tool .uh-time-button:hover:not(:disabled) {
-  border-color: var(--uh-accent);
-  color: var(--uh-accent);
-}
-
-html body.uh-time-tool .uh-time-button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-html body.uh-time-tool .uh-time-button.primary {
-  border-color: var(--uh-accent);
-  background: var(--uh-accent);
-  color: var(--uh-bg);
-  font-weight: 650;
-}
-
-html body.uh-time-tool .uh-time-button.primary:hover:not(:disabled) {
-  background: var(--uh-accent-strong);
-  color: var(--uh-bg);
-}
-
-html body.uh-time-tool .uh-time-button.quiet {
-  background: transparent;
-}
-
-html body.uh-time-tool .uh-time-button.danger {
-  border-color: color-mix(in srgb, var(--uh-danger) 45%, transparent);
-  color: var(--uh-danger);
-}
-
-html body.uh-time-tool .uh-time-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
 }
 
 html body.uh-time-tool .uh-time-actions,
@@ -1101,15 +1490,6 @@ html body.uh-time-tool .uh-time-count {
   color: var(--uh-accent);
   font: 500 0.7rem var(--uh-font-mono);
   vertical-align: 0.12em;
-}
-
-html body.uh-time-tool .uh-time-footer {
-  margin-top: 2rem;
-  border-top: 1px solid var(--uh-line);
-  padding-top: 0.85rem;
-  text-align: center;
-  color: var(--uh-faint);
-  font-size: 0.62rem;
 }
 
 html body.uh-time-tool .uh-time-empty {
@@ -1633,7 +2013,7 @@ html body.uh-time-tool :focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html body.uh-time-tool .uh-time-button,
+  html body.uh-time-tool .uh-btn,
   html body.uh-time-tool .uh-time-progress span,
   html body.uh-time-tool .uh-buzzer-display,
   html body.uh-time-tool .uh-buzzer-bezel,
@@ -1708,21 +2088,6 @@ html body.uh-password-generator-page .uh-mark {
   color: var(--uh-accent);
 }
 
-html body.uh-image-resizer-page .uh-btn.primary,
-html body.uh-password-generator-page .uh-btn.primary {
-  border-color: color-mix(in srgb, var(--uh-accent) 70%, transparent);
-  background: linear-gradient(110deg, var(--uh-accent), color-mix(in srgb, var(--uh-accent) 72%, #b8e9ff));
-  color: var(--uh-bg);
-  box-shadow: 0 5px 16px color-mix(in srgb, var(--uh-accent) 14%, transparent);
-}
-
-html body.uh-image-resizer-page .uh-btn:not(.primary),
-html body.uh-password-generator-page .uh-btn:not(.primary) {
-  border-color: var(--uh-line-strong);
-  background-color: color-mix(in srgb, var(--uh-elevated) 76%, transparent);
-  color: var(--uh-text);
-}
-
 html body.uh-image-resizer-page .uh-btn:hover:not(:disabled),
 html body.uh-password-generator-page .uh-btn:hover:not(:disabled),
 html body.uh-password-generator-page .uh-small-btn:hover {
@@ -1767,12 +2132,6 @@ html body.uh-password-generator-page :is(input[type="number"], input[type="text"
 
 html body.uh-number-converter-page {
   background-color: var(--uh-bg);
-  background-image:
-    radial-gradient(ellipse at 14% 0%, color-mix(in srgb, var(--uh-accent) 8%, transparent), transparent 38rem),
-    radial-gradient(ellipse at 92% 16%, color-mix(in srgb, #8fbde8 5%, transparent), transparent 34rem),
-    linear-gradient(var(--uh-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--uh-line) 1px, transparent 1px);
-  background-size: auto, auto, 44px 44px, 44px 44px;
   color: var(--uh-text);
   font-family: var(--uh-font-body);
 }
@@ -1998,21 +2357,6 @@ html body.uh-code-diff-page :focus-visible {
   outline-offset: 2px;
 }
 
-html body.uh-code-diff-page > footer,
-html body.uh-image-resizer-page .uh-footer,
-html body.uh-password-generator-page .uh-footer,
-html body.uh-number-converter-page > .max-w-6xl > footer {
-  border-color: var(--uh-line);
-  color: var(--uh-muted);
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -2161,8 +2505,7 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
     margin-inline: auto;
   }
 
-  html body .uh-layout-brand,
-  html body .uh-footer-brand {
+  html body .uh-layout-brand {
     display: inline-flex;
     min-width: 0;
     align-items: center;
@@ -2209,15 +2552,6 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
   html body .uh-dashboard-brand {
     color: inherit;
     text-decoration: none;
-  }
-
-  html body.uh-dashboard .uh-shared-footer {
-    display: block;
-  }
-
-  html body.uh-dashboard .uh-footer-brand {
-    justify-content: center;
-    margin-top: 1rem;
   }
 
   html body .uh-brand-logo {
@@ -2327,24 +2661,69 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
 
   html body .uh-shared-footer {
     display: flex;
-    min-height: 64px;
+    width: 100%;
+    box-sizing: border-box;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem 2rem;
+    gap: 0.5rem 1rem;
     border-top: 1px solid var(--uh-line);
     background: var(--uh-panel);
-    padding: 1rem max(1rem, calc((100vw - 1180px) / 2));
+    padding: 1.25rem 1rem;
     color: var(--uh-muted);
     font: 400 0.75rem/1.5 var(--uh-font-body);
     text-align: center;
   }
 
   html body .uh-footer-brand {
+    display: inline-flex;
     flex: 0 0 auto;
+    min-width: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    margin: 0 auto;
     color: var(--uh-muted);
     font-family: var(--uh-font-display);
     font-size: 0.78rem;
     font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  html body .uh-footer-content {
+    display: flex;
+    width: 100%;
+    max-width: 1180px;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 1.5rem;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  html body .uh-footer-content > * {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  html body .uh-shared-footer :is(a, p, span, small) {
+    text-align: center;
+  }
+
+  html body.uh-dashboard #footer-categories {
+    justify-content: center;
+  }
+
+  html body.uh-time-tool .uh-time-footer {
+    margin-top: 2rem;
+    border-top: 1px solid var(--uh-line);
+    padding-top: 0.85rem;
+    color: var(--uh-muted);
+    font-size: 0.62rem;
+    text-align: center;
   }
 
   html body .uh-footer-brand img {
@@ -2356,10 +2735,7 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
 
   html body .uh-footer-brand:hover {
     color: var(--uh-accent);
-  }
-
-  html body.uh-tool .uh-shared-footer {
-    margin-top: 2rem;
+    transform: translateY(-1px);
   }
 
   @media (max-width: 900px) {
@@ -2402,17 +2778,6 @@ html body.uh-number-converter-page > .max-w-6xl > footer {
       font-size: 0.65rem;
     }
 
-    html body .uh-shared-footer {
-      flex-direction: column;
-      gap: 0.5rem;
-      padding: 1rem;
-    }
-
-    html body.uh-tool .uh-footer-content {
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-    }
   }
 
   @media (max-width: 380px) {
@@ -2664,8 +3029,7 @@ html body .uh-layout-controls {
   min-height: 68px;
 }
 
-html body .uh-layout-brand:hover,
-html body .uh-footer-brand:hover {
+html body .uh-layout-brand:hover {
   transform: translateY(-1px);
 }
 
@@ -2699,28 +3063,6 @@ html body .uh-tools-link {
 
 html body .uh-tools-link:hover {
   transform: translateX(2px);
-}
-
-html body .uh-shared-footer {
-  border-color: color-mix(in srgb, var(--uh-line-strong) 62%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--uh-panel) 96%, transparent), var(--uh-panel));
-}
-
-html body.uh-tool .uh-shared-footer {
-  box-sizing: border-box;
-  justify-content: space-between;
-  gap: 1rem 2rem;
-  padding: 1rem max(1rem, calc((100% - 1180px) / 2));
-  text-align: left;
-}
-
-html body.uh-tool .uh-footer-content {
-  display: flex;
-  min-width: 0;
-  flex: 1 1 auto;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem 1.5rem;
 }
 
 html body .uh-update-notice,

@@ -9,22 +9,23 @@
 <style>
   .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
   .mode-tab { flex:1; text-align:center; padding:10px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
-  .mode-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  .mode-tab.active { border-color:var(--uh-accent); color:var(--uh-accent); background:color-mix(in srgb, var(--uh-accent) 8%, transparent); }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Flatten PDF"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Flatten PDF</h1>
-    <p class="page-sub">Bake interactive form fields (or the entire page) into static, non-editable content.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Flatten PDF</h1>
+      <p class="uh-page-sub">Bake interactive form fields (or the entire page) into static, non-editable content.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">📦</div>
       <div class="primary-txt">Click or drag a PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

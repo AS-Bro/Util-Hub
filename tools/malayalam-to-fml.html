@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malayalam to FML Converter — Utility Hub</title>
+  <link rel="icon" type="image/png" href="../images/UH_2.png" />
+
+  <!-- Preconnect & Fonts matching Utility Hub -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* Scoped styles strictly for the two-column converter workspace */
+    .fml-shell {
+      padding-block: clamp(1.25rem, 3vw, 2.25rem);
+    }
+
+    .fml-main-card {
+      padding: clamp(1rem, 2.5vw, 1.5rem);
+    }
+
+    .fml-top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--uh-line);
+    }
+
+    .fml-live-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .fml-io-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      min-width: 0;
+    }
+
+    .fml-panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .fml-panel-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .fml-textarea {
+      width: 100%;
+      min-height: 270px;
+      padding: 0.9rem 1rem;
+      box-sizing: border-box;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      resize: vertical;
+    }
+
+    html body.uh-tool textarea.fml-output-font {
+      font-family: "FML-Karthika", "Karthika", "ML-TTKarthika", var(--uh-font-mono);
+    }
+
+    .fml-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .fml-copy-feedback {
+      color: var(--uh-success);
+      opacity: 0;
+      transition: opacity var(--uh-transition);
+    }
+
+    .fml-copy-feedback.is-visible {
+      opacity: 1;
+    }
+
+    .fml-info-card {
+      margin-top: 1.25rem;
+      padding: clamp(1rem, 2.2vw, 1.35rem);
+    }
+
+  </style>
+</head>
+<body class="uh-tool">
+  <main class="uh-container uh-container--wide fml-shell">
+    <!-- Page Heading (styled by shared.css) -->
+    <div class="uh-page-heading">
+      <h1>Malayalam Unicode to FML Converter</h1>
+      <p>
+        Convert standard Malayalam Unicode text into legacy FML / Karthika ASCII encoding locally in your browser.
+      </p>
+    </div>
+
+    <!-- Main Blueprint Converter Card -->
+    <section class="uh-card fml-main-card">
+      <!-- Top Control Toolbar -->
+      <div class="fml-top-bar">
+        <div class="uh-toolbar">
+          <button type="button" id="btnSample" class="uh-btn uh-btn--secondary uh-button-secondary">
+            Load Sample
+          </button>
+          <button type="button" id="btnClear" class="uh-btn uh-btn--secondary uh-button-secondary">
+            Clear All
+          </button>
+        </div>
+
+        <div class="uh-toolbar">
+          <label class="uh-label fml-live-toggle">
+            <input type="checkbox" id="chkLiveConvert" checked />
+            Live Conversion
+          </label>
+          <button type="button" id="btnConvert" class="uh-btn uh-btn--primary uh-button-primary">
+            Convert to FML
+          </button>
+        </div>
+      </div>
+
+      <!-- Two-Column Input / Output Grid (uses shared.css .uh-grid & .uh-grid-2) -->
+      <div class="uh-grid uh-grid-2">
+        <!-- Unicode Input Column -->
+        <div class="fml-io-panel">
+          <div class="fml-panel-head">
+            <div class="fml-panel-title-group">
+              <span class="uh-label">Malayalam Unicode</span>
+              <span class="uh-badge">UTF-8</span>
+            </div>
+            <div class="uh-actions">
+              <button type="button" id="btnPaste" class="uh-btn uh-btn--secondary uh-button-secondary">
+                Paste
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            id="unicodeInput"
+            class="uh-input fml-textarea"
+            placeholder="മലയാളം യൂണികോഡ് ടെക്സ്റ്റ് ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ പേസ്റ്റ് ചെയ്യുക..."
+            spellcheck="false"
+          ></textarea>
+
+          <div class="fml-status-row">
+            <span id="inputStats">0 chars · 0 words</span>
+            <span>SOURCE: UNICODE</span>
+          </div>
+        </div>
+
+        <!-- FML Output Column -->
+        <div class="fml-io-panel">
+          <div class="fml-panel-head">
+            <div class="fml-panel-title-group">
+              <span class="uh-label">FML / ASCII Output</span>
+              <span class="uh-badge">KARTHIKA MAP</span>
+            </div>
+            <div class="uh-actions">
+              <span id="copyToast" class="uh-badge uh-badge-success fml-copy-feedback">COPIED</span>
+              <button type="button" id="btnCopy" class="uh-btn uh-btn--primary uh-button-primary">
+                Copy FML
+              </button>
+              <button type="button" id="btnDownload" class="uh-btn uh-btn--secondary uh-button-secondary">
+                .TXT
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            id="fmlOutput"
+            class="uh-input fml-textarea fml-output-font"
+            placeholder="Converted FML / Karthika ASCII output will appear here..."
+            readonly
+          ></textarea>
+
+          <div class="fml-status-row">
+            <span id="outputStats">0 chars</span>
+            <span>TARGET: FML-KARTHIKA</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DTP Usage Guide Card -->
+    <section class="uh-card fml-info-card">
+      <div class="uh-card-title">Usage Notes — DTP & Legacy Fonts</div>
+      <ul>
+        <li>Click <strong>Copy FML</strong> to copy the converted ASCII characters to your clipboard.</li>
+        <li>Paste into Adobe PageMaker, InDesign, Photoshop, CorelDRAW, or MS Word.</li>
+        <li>Apply any <strong>FML</strong> typeface (such as <em>FML-Karthika</em>, <em>FML-Indulekha</em>, or <em>FML-Leela</em>) to display the Malayalam script.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const mapTable = {
+      "font": "karthika",
+      "map": {
+        "ം": "w",
+        "ഃ": "x",
+        "അ": "A",
+        "ആ": "B",
+        "ഇ": "C",
+        "ഈ": "Cu",
+        "ഉ": "D",
+        "ഊ": "Du",
+        "ഋ": "E",
+        "ഌ": "p",
+        "എ": "F",
+        "ഏ": "G",
+        "ഐ": "sF",
+        "ഒ": "H",
+        "ഓ": "Hm",
+        "ഔ": "Hu",
+        "ക": "I",
+        "ഖ": "J",
+        "ഗ": "K",
+        "ഘ": "L",
+        "ങ": "M",
+        "ച": "N",
+        "ഛ": "O",
+        "ജ": "P",
+        "ഝ": "Q",
+        "ഞ": "R",
+        "ട": "S",
+        "ഠ": "T",
+        "ഡ": "U",
+        "ഢ": "V",
+        "ണ": "W",
+        "ത": "X",
+        "ഥ": "Y",
+        "ദ": "Z",
+        "ധ": "[",
+        "ന": "\\",
+        "പ": "]",
+        "ഫ": "^",
+        "ബ": "_",
+        "ഭ": "`",
+        "മ": "a",
+        "യ": "b",
+        "ര": "c",
+        "റ": "d",
+        "ല": "e",
+        "ള": "f",
+        "ഴ": "g",
+        "വ": "h",
+        "ശ": "i",
+        "ഷ": "j",
+        "സ": "k",
+        "ഹ": "l",
+        "ാ": "m",
+        "ി": "n",
+        "ീ": "o",
+        "ു": "p",
+        "ൂ": "q",
+        "ൃ": "r",
+        "െ": "s",
+        "േ": "t",
+        "ൈ": "ss",
+        "ൊ": "sm",
+        "ോ": "tm",
+        "ൌ": "su",
+        "്‌": "v",
+        "്": "v",
+        "ൗ": "u",
+        "്യേ": "ty",
+        "്യെ": "sy",
+        "ക്ക": "¡",
+        "ക്ല": "¢",
+        "ക്ഷ": "£",
+        "ഗ്ഗ": "¤",
+        "ഗ്ല": "¥",
+        "ങ്ക": "¦",
+        "ങ്ങ": "§",
+        "ച്ച": "¨",
+        "ഞ്ച": "©",
+        "ഞ്ഞ": "ª",
+        "ട്ട": "«",
+        "ണ്‍": "¬",
+        "ണ്ട": "ï",
+        "ണ്ണ": "®",
+        "ത്ത": "¯",
+        "ത്ഥ": "°",
+        "ദ്ദ": "±",
+        "ദ്ധ": "²",
+        "ന്‍": "³",
+        "ൻ": "³",
+        "ന്ത": "´",
+        "ന്ദ": "µ",
+        "ന്ന": "¶",
+        "ന്മ": "·",
+        "പ്പ": "¸",
+        "പ്ല": "¹",
+        "ബ്ബ": "º",
+        "ബ്ല": "»",
+        "മ്പ": "¼",
+        "മ്മ": "½",
+        "മ്ല": "Ÿ",
+        "യ്യ": "¿",
+        "ർ‌": "À",
+        "ർ‍": "À",
+        "ർ": "À",
+        "ര്‍": "À",
+        "റ്റ": "ä",
+        "ല്‍": "Â",
+        "ൽ": "Â",
+        "ല്ല": "Ã",
+        "ള്‍": "Ä",
+        "ൾ": "Ä",
+        "ള്ള": "Å",
+        "വ്വ": "Æ",
+        "ശ്ല": "Ç",
+        "ശ്ശ": "È",
+        "സ്ല": "É",
+        "സ്സ": "Ê",
+        "ഹ്ല": "Ë",
+        "സ്റ്റ": "Ì",
+        "ഡ്ഡ": "Í",
+        "ക്ട": "Î",
+        "ബ്ധ": "Ï",
+        "ബ്ദ": "Ð",
+        "ച്ഛ": "Ñ",
+        "ഹ്മ": "Ò",
+        "ഹ്ന": "Ó",
+        "ന്ധ": "Ô",
+        "ത്സ": "Õ",
+        "ജ്ജ": "Ö",
+        "ണ്മ": "×",
+        "സ്ഥ": "Ø",
+        "ന്ഥ": "Ù",
+        "ജ്ഞ": "Ú",
+        "ത്ഭ": "Û",
+        "ഗ്മ": "Ü",
+        "ശ്ച": "Ý",
+        "ണ്ഡ": "Þ",
+        "ത്മ": "ß",
+        "ക്ത": "à",
+        "ഗ്ന": "á",
+        "ന്റ": "â",
+        "ഷ്ട": "ã",
+        "്യ": "y",
+        "്വ": "z",
+        "്ര": "{",
+        "-": "þ"
+      }
+    };
+
+    function unicode2ascii(strText) {
+      let chUnicode;
+      let chAscii;
+      let index;
+      let lenChar;
+      let bRepham = 0;
+      let ascii_text = "";
+
+      for (index = 0; index < strText.length; ) {
+        for (lenChar = 3; lenChar > 0; lenChar--) {
+          chUnicode = strText.substring(index, index + lenChar);
+
+          if (mapTable.map[chUnicode]) {
+            chAscii = mapTable.map[chUnicode];
+
+            if (chUnicode === "ൈ") {
+              if (bRepham === 1) {
+                bRepham = 0;
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 2) +
+                  chAscii +
+                  ascii_text[ascii_text.length - 2] +
+                  ascii_text[ascii_text.length - 1];
+              } else {
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 1) +
+                  chAscii +
+                  ascii_text[ascii_text.length - 1];
+              }
+            } else if (chUnicode === "ോ" || chUnicode === "ൊ" || chUnicode === "ൌ") {
+              if (bRepham === 1) {
+                bRepham = 0;
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 2) +
+                  chAscii[0] +
+                  ascii_text[ascii_text.length - 2] +
+                  ascii_text[ascii_text.length - 1] +
+                  chAscii[1];
+              } else {
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 1) +
+                  chAscii[0] +
+                  ascii_text[ascii_text.length - 1] +
+                  chAscii[1];
+              }
+            } else if (chUnicode === "്യേ" || chUnicode === "്യെ") {
+              bRepham = 0;
+              ascii_text =
+                ascii_text.substring(0, ascii_text.length - 1) +
+                chAscii[0] +
+                ascii_text[ascii_text.length - 1] +
+                chAscii[1];
+            } else if (chUnicode === "െ" || chUnicode === "േ" || chUnicode === "്ര") {
+              if (bRepham === 1) {
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 2) +
+                  chAscii[0] +
+                  ascii_text[ascii_text.length - 2] +
+                  ascii_text[ascii_text.length - 1];
+                bRepham = 0;
+              } else {
+                ascii_text =
+                  ascii_text.substring(0, ascii_text.length - 1) +
+                  chAscii[0] +
+                  ascii_text[ascii_text.length - 1];
+              }
+
+              if (chUnicode === "്ര") {
+                bRepham = 1;
+              }
+            } else {
+              bRepham = 0;
+              ascii_text = ascii_text + chAscii;
+            }
+
+            index = index + lenChar;
+            break;
+          } else {
+            if (lenChar === 1) {
+              ascii_text = ascii_text + chUnicode;
+              index++;
+              bRepham = 0;
+            }
+          }
+        }
+      }
+
+      return ascii_text;
+    }
+
+    const unicodeInput = document.getElementById("unicodeInput");
+    const fmlOutput = document.getElementById("fmlOutput");
+    const chkLiveConvert = document.getElementById("chkLiveConvert");
+    const btnConvert = document.getElementById("btnConvert");
+    const btnClear = document.getElementById("btnClear");
+    const btnSample = document.getElementById("btnSample");
+    const btnPaste = document.getElementById("btnPaste");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnDownload = document.getElementById("btnDownload");
+    const copyToast = document.getElementById("copyToast");
+    const inputStats = document.getElementById("inputStats");
+    const outputStats = document.getElementById("outputStats");
+
+    function updateStats() {
+      const inVal = unicodeInput.value;
+      const outVal = fmlOutput.value;
+      const words = inVal.trim() ? inVal.trim().split(/\s+/).length : 0;
+      inputStats.textContent = `${inVal.length} chars · ${words} words`;
+      outputStats.textContent = `${outVal.length} chars`;
+    }
+
+    function runConversion() {
+      const source = unicodeInput.value;
+      fmlOutput.value = source ? unicode2ascii(source) : "";
+      updateStats();
+    }
+
+    unicodeInput.addEventListener("input", () => {
+      if (chkLiveConvert.checked) {
+        runConversion();
+      } else {
+        updateStats();
+      }
+    });
+
+    btnConvert.addEventListener("click", runConversion);
+
+    btnClear.addEventListener("click", () => {
+      unicodeInput.value = "";
+      fmlOutput.value = "";
+      updateStats();
+      unicodeInput.focus();
+    });
+
+    btnSample.addEventListener("click", () => {
+      unicodeInput.value =
+        "മലയാളം നമ്മുടെ മാതൃഭാഷയാണ്. അക്ഷരങ്ങളുടെ സൗന്ദര്യവും എഴുത്തിന്റെ ഭംഗിയും പ്രോഗ്രാമിംഗിലൂടെ എളുപ്പത്തിൽ മാറ്റിയെടുക്കാം.";
+      runConversion();
+    });
+
+    btnPaste.addEventListener("click", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        unicodeInput.value = text;
+        if (chkLiveConvert.checked) runConversion();
+        else updateStats();
+      } catch (err) {
+        alert("Clipboard access denied. Please paste manually using Ctrl+V / Cmd+V.");
+      }
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      if (!fmlOutput.value) return;
+      try {
+        await navigator.clipboard.writeText(fmlOutput.value);
+      } catch (err) {
+        fmlOutput.select();
+        document.execCommand("copy");
+      }
+      copyToast.classList.add("is-visible");
+      setTimeout(() => copyToast.classList.remove("is-visible"), 2000);
+    });
+
+    btnDownload.addEventListener("click", () => {
+      if (!fmlOutput.value) return;
+      const blob = new Blob([fmlOutput.value], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "converted-fml-text.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Malayalam to FML Converter"></script>
+</body>
+</html>

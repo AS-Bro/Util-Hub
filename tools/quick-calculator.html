@@ -7,109 +7,104 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  .key { border:1px solid rgba(143,176,204,.16); background:#14283b/60; transition: all 0.15s ease; }
-  .key:hover { border-color:#6fd8cb; color:#6fd8cb; background:#14283b; }
+  .key { border:1px solid var(--uh-line); background:var(--uh-panel); color:var(--uh-text); transition:all var(--uh-transition); }
+  .key:hover { border-color:var(--uh-accent); color:var(--uh-accent); background:var(--uh-elevated); }
   .key:active { transform: scale(0.96); }
-  .key.op { color:#e8a33d; }
-  .key.action { color:#6fd8cb; }
-  .key.memory { color:#a855f7; font-size:11px; }
-  #screen { background:#14283b; border:1px solid rgba(143,176,204,.16); }
+  .key.op, .key.action { color:var(--uh-accent); }
+  .key.memory { color:var(--uh-muted); font-size:11px; }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Quick Calculator"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-2xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Quick Calculator</h1>
-    <p class="text-sm text-slate-400 mb-6">Scientific calculations, keyboard support, memory store, and computation history.</p>
+<body>
+  <main class="uh-container uh-container--narrow">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Quick Calculator</h1>
+      <p class="uh-page-sub">Scientific calculations, keyboard support, memory store, and computation history.</p>
+    </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       
       <!-- Calculator Main -->
       <div class="md:col-span-2">
         <!-- Display Screen -->
-        <div id="screen" class="rounded-md p-4 mb-4 relative flex flex-col justify-between min-h-[100px]">
+        <div id="screen" class="uh-card rounded-md p-4 mb-4 relative flex flex-col justify-between min-h-[100px]">
           <div class="flex justify-between items-center mb-1">
-            <span id="memBadge" class="mono text-[10px] uppercase text-purple-400 opacity-0 font-bold">MEM</span>
-            <div id="subDisplay" class="mono text-xs text-slate-400 overflow-x-auto whitespace-nowrap"></div>
+            <span id="memBadge" class="uh-badge mono text-[10px] uppercase opacity-0 font-bold">MEM</span>
+            <div id="subDisplay" class="mono text-xs text-[var(--uh-muted)] overflow-x-auto whitespace-nowrap"></div>
           </div>
           
           <div class="flex items-center justify-between gap-2">
-            <div id="mainDisplay" class="mono text-right text-2xl text-teal-300 font-bold break-all flex-1 cursor-pointer" title="Click to copy result">0</div>
-            <button id="backspace" class="text-slate-400 hover:text-teal-300 p-1 mono text-xs" title="Backspace">⌫</button>
+            <div id="mainDisplay" class="mono text-right text-2xl text-[var(--uh-accent)] font-bold break-all flex-1 cursor-pointer" title="Click to copy result">0</div>
+            <button id="backspace" class="uh-btn uh-btn--ghost p-1 mono text-xs" title="Backspace">⌫</button>
           </div>
-          <span id="copiedToast" class="mono text-[9px] text-teal-300 absolute bottom-1 left-4 hidden">Copied to clipboard!</span>
+          <span id="copiedToast" class="mono text-[9px] text-[var(--uh-accent)] absolute bottom-1 left-4 hidden">Copied to clipboard!</span>
         </div>
 
         <!-- Mode Toggle & Memory Toolbar -->
         <div class="flex justify-between items-center mb-3">
           <div class="grid grid-cols-4 gap-1.5 flex-1 mr-2">
-            <button class="key memory rounded py-1" data-k="MC">MC</button>
-            <button class="key memory rounded py-1" data-k="MR">MR</button>
-            <button class="key memory rounded py-1" data-k="M+">M+</button>
-            <button class="key memory rounded py-1" data-k="M-">M-</button>
+            <button class="uh-btn uh-btn--secondary key memory rounded py-1" data-k="MC">MC</button>
+            <button class="uh-btn uh-btn--secondary key memory rounded py-1" data-k="MR">MR</button>
+            <button class="uh-btn uh-btn--secondary key memory rounded py-1" data-k="M+">M+</button>
+            <button class="uh-btn uh-btn--secondary key memory rounded py-1" data-k="M-">M-</button>
           </div>
-          <button id="toggleSci" class="mono text-xs text-slate-400 hover:text-teal-300 border border-white/10 px-2 py-1 rounded">
+          <button id="toggleSci" class="uh-btn uh-btn--secondary mono text-xs px-2 py-1 rounded">
             Sci Mode <span id="sciIndicator">▼</span>
           </button>
         </div>
 
         <!-- Scientific Panel (Collapsible) -->
         <div id="sciPanel" class="grid grid-cols-4 gap-2 mb-2 hidden">
-          <button class="key action mono text-xs rounded-md py-2" data-k="sin">sin</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="cos">cos</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="tan">tan</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="sqrt">√</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="sin">sin</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="cos">cos</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="tan">tan</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="sqrt">√</button>
 
-          <button class="key action mono text-xs rounded-md py-2" data-k="pow">x^y</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="log">ln</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="pi">π</button>
-          <button class="key action mono text-xs rounded-md py-2" data-k="e">e</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="pow">x^y</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="log">ln</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="pi">π</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-xs rounded-md py-2" data-k="e">e</button>
         </div>
 
         <!-- Primary Keypad -->
         <div class="grid grid-cols-4 gap-2">
-          <button class="key mono text-sm rounded-md py-3 text-rose-400" data-k="C">C</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="(">(</button>
-          <button class="key mono text-sm rounded-md py-3" data-k=")">)</button>
-          <button class="key op mono text-sm rounded-md py-3" data-k="/">÷</button>
+          <button class="uh-btn uh-btn--danger key mono text-sm rounded-md py-3" data-k="C">C</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="(">(</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k=")">)</button>
+          <button class="uh-btn uh-btn--secondary key op mono text-sm rounded-md py-3" data-k="/">÷</button>
 
-          <button class="key mono text-sm rounded-md py-3" data-k="7">7</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="8">8</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="9">9</button>
-          <button class="key op mono text-sm rounded-md py-3" data-k="*">×</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="7">7</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="8">8</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="9">9</button>
+          <button class="uh-btn uh-btn--secondary key op mono text-sm rounded-md py-3" data-k="*">×</button>
 
-          <button class="key mono text-sm rounded-md py-3" data-k="4">4</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="5">5</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="6">6</button>
-          <button class="key op mono text-sm rounded-md py-3" data-k="-">−</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="4">4</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="5">5</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="6">6</button>
+          <button class="uh-btn uh-btn--secondary key op mono text-sm rounded-md py-3" data-k="-">−</button>
 
-          <button class="key mono text-sm rounded-md py-3" data-k="1">1</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="2">2</button>
-          <button class="key mono text-sm rounded-md py-3" data-k="3">3</button>
-          <button class="key op mono text-sm rounded-md py-3" data-k="+">+</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="1">1</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="2">2</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="3">3</button>
+          <button class="uh-btn uh-btn--secondary key op mono text-sm rounded-md py-3" data-k="+">+</button>
 
-          <button class="key mono text-sm rounded-md py-3" data-k="0">0</button>
-          <button class="key mono text-sm rounded-md py-3" data-k=".">.</button>
-          <button class="key action mono text-sm rounded-md py-3" data-k="factorial">n!</button>
-          <button class="key op mono text-sm rounded-md py-3 bg-teal-500/10 border-teal-500/30 text-teal-300" data-k="=">=</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k="0">0</button>
+          <button class="uh-btn uh-btn--secondary key mono text-sm rounded-md py-3" data-k=".">.</button>
+          <button class="uh-btn uh-btn--secondary key action mono text-sm rounded-md py-3" data-k="factorial">n!</button>
+          <button class="uh-btn uh-btn--primary key mono text-sm rounded-md py-3" data-k="=">=</button>
         </div>
       </div>
 
       <!-- Calculation History Drawer -->
-      <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-col h-[380px]">
+      <div class="uh-card p-4 flex flex-col h-[380px]">
         <div class="flex justify-between items-center mb-3">
-          <span class="mono text-xs uppercase font-bold text-slate-400">History</span>
-          <button id="clearHistory" class="mono text-[10px] text-slate-500 hover:text-rose-400">Clear</button>
+          <span class="uh-label mono text-xs uppercase font-bold">History</span>
+          <button id="clearHistory" class="uh-btn uh-btn--ghost mono text-[10px]">Clear</button>
         </div>
         <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 mono text-xs">
-          <div class="text-slate-500 text-center py-6 text-xs">No recent calculations</div>
+          <div class="text-[var(--uh-muted)] text-center py-6 text-xs">No recent calculations</div>
         </div>
-      </div>
+      </main>
 
     </div>
   </div>
@@ -175,13 +170,13 @@
 
     function renderHistory() {
       if (history.length === 0) {
-        historyList.innerHTML = `<div class="text-slate-500 text-center py-6 text-xs">No recent calculations</div>`;
+        historyList.innerHTML = `<div class="text-[var(--uh-muted)] text-center py-6 text-xs">No recent calculations</div>`;
         return;
       }
       historyList.innerHTML = history.map((item, idx) => `
-        <div data-idx="${idx}" class="history-item bg-[#14283b] p-2 rounded border border-white/5 hover:border-teal-500/40 cursor-pointer transition-colors">
-          <div class="text-slate-400 text-[10px] break-all">${item.expr}</div>
-          <div class="text-teal-300 font-bold text-sm text-right break-all">= ${item.result}</div>
+        <div data-idx="${idx}" class="history-item uh-panel p-2 cursor-pointer transition-colors">
+          <div class="text-[var(--uh-muted)] text-[10px] break-all">${item.expr}</div>
+          <div class="text-[var(--uh-accent)] font-bold text-sm text-right break-all">= ${item.result}</div>
         </div>
       `).join('');
     }

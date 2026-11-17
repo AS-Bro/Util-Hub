@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Utility Hub / Number Converter</title>
+    <title>Number Converter - Util-Hub</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: JetBrains Mono & Inter -->
@@ -16,18 +16,38 @@
                 extend: {
                     colors: {
                         navy: {
-                            900: '#0b132b',
-                            800: '#1c2541',
-                            700: '#232d4d',
-                            600: '#3a506b',
+                            900: 'var(--uh-bg)',
+                            800: 'var(--uh-panel)',
+                            700: 'var(--uh-elevated)',
+                            600: 'var(--uh-line-strong)',
                         },
                         cyan: {
-                            accent: '#4cc9f0',
-                            glow: 'rgba(76, 201, 240, 0.15)',
+                            accent: 'var(--uh-accent)',
+                            glow: 'color-mix(in srgb, var(--uh-accent) 15%, transparent)',
                         },
                         mint: {
-                            accent: '#06d6a0',
-                        }
+                            accent: 'var(--uh-success)',
+                        },
+                        purple: {
+                            300: 'var(--uh-accent)',
+                            400: 'var(--uh-accent-strong)',
+                            500: 'var(--uh-accent)',
+                            900: 'var(--uh-panel)',
+                        },
+                        amber: {
+                            300: 'var(--uh-warning)',
+                            400: 'var(--uh-warning)',
+                            500: 'var(--uh-warning)',
+                            900: 'var(--uh-panel)',
+                            950: 'var(--uh-panel)',
+                        },
+                        red: {
+                            400: 'var(--uh-danger)',
+                            300: 'var(--uh-danger)',
+                            700: 'var(--uh-danger)',
+                            900: 'var(--uh-panel)',
+                            950: 'var(--uh-panel)',
+                        },
                     },
                     fontFamily: {
                         mono: ['"JetBrains Mono"', 'monospace'],
@@ -38,107 +58,42 @@
         }
     </script>
     <style>
-        body {
-            background-color: #0b132b;
-            color: #e2e8f0;
-            font-family: 'Inter', sans-serif;
-            background-image: 
-                radial-gradient(rgba(58, 80, 107, 0.25) 1px, transparent 1px);
-            background-size: 24px 24px;
-        }
         .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0b132b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #3a506b;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4cc9f0;
-        }
-        .blueprint-card {
-            background: #1c2541;
-            border: 1px solid #3a506b;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
-        }
-        .blueprint-card:focus-within {
-            border-color: #4cc9f0;
-            box-shadow: 0 0 15px rgba(76, 201, 240, 0.2);
-        }
-        .tech-corner {
-            position: relative;
-        }
-        .tech-corner::before {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: -1px;
-            width: 6px;
-            height: 6px;
-            border-top: 2px solid #4cc9f0;
-            border-left: 2px solid #4cc9f0;
-        }
-        .tech-corner::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            right: -1px;
-            width: 6px;
-            height: 6px;
-            border-bottom: 2px solid #4cc9f0;
-            border-right: 2px solid #4cc9f0;
+            font-family: var(--uh-font-mono);
         }
     </style>
     <script src="../style.js" data-uh-page-type="tool" data-uh-title="Number Converter"></script>
 </head>
-<body class="min-h-full flex flex-col justify-between p-4 sm:p-6 md:p-8 uh-number-converter-page">
+<body class="uh-number-converter-page">
 
     <!-- Notification Toast Container -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <div class="max-w-6xl w-full mx-auto space-y-6">
+    <main class="uh-container uh-container--wide space-y-6">
         
-        <!-- Header Console Bar -->
-        <header class="blueprint-card rounded-lg p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 tech-corner border-l-4 border-l-[#4cc9f0]">
-            <div>
-                <div class="flex items-center gap-2 text-xs font-mono text-cyan-accent tracking-widest uppercase mb-1">
-                    <span class="inline-block w-2 h-2 rounded-full bg-mint-accent animate-pulse"></span>
-                    System Console v2.5 // Base Engine
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-3">
-                    Utility Hub <span class="text-navy-600 font-normal">/</span> <span class="text-cyan-accent">Number Converter</span>
-                </h1>
-            </div>
-            <div class="flex items-center gap-2 self-end sm:self-center">
-                <button id="btn-formatted-toggle" onclick="toggleFormatting()" class="px-3 py-1.5 rounded text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 text-slate-200 transition flex items-center gap-2">
-                    <svg class="w-4 h-4 text-cyan-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                    Formatting: <span id="formatting-status" class="text-mint-accent font-bold">ON</span>
-                </button>
-            </div>
-        </header>
+        <div class="uh-page-head">
+            <h1 class="uh-page-title">Number Converter</h1>
+            <p class="uh-page-sub">Convert values across number bases, inspect binary representation, and translate HEX colors.</p>
+        </div>
 
         <!-- Quick Actions & Presets Toolbar -->
-        <div class="blueprint-card rounded-lg p-4 flex flex-wrap items-center justify-between gap-4" data-number-mode="standard">
+        <div class="uh-toolbar uh-panel p-4 flex flex-wrap items-center justify-between gap-4" data-number-mode="standard">
             <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-mono text-slate-400 uppercase tracking-wider mr-1">Presets:</span>
-                <button onclick="applyPreset('255')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">255 (8-bit max)</button>
-                <button onclick="applyPreset('1024')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">1024 (1 KiB)</button>
-                <button onclick="applyPreset('65535')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">65535 (16-bit max)</button>
-                <button onclick="applyPreset('16777215')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">16777215 (24-bit RGB)</button>
-                <button onclick="applyPreset('18446744073709551615')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-cyan-accent hover:border-cyan-accent transition">64-bit Max</button>
-                <button onclick="applyPreset('-42')" class="px-2.5 py-1 text-xs font-mono bg-navy-700 hover:bg-navy-600 border border-navy-600 rounded text-amber-400 hover:border-amber-400 transition">-42 (Negative)</button>
+                <span class="text-xs font-mono uh-muted-text uppercase tracking-wider mr-1">Presets:</span>
+                <button onclick="applyPreset('255')" class="uh-btn uh-btn--secondary text-xs font-mono">255 (8-bit max)</button>
+                <button onclick="applyPreset('1024')" class="uh-btn uh-btn--secondary text-xs font-mono">1024 (1 KiB)</button>
+                <button onclick="applyPreset('65535')" class="uh-btn uh-btn--secondary text-xs font-mono">65535 (16-bit max)</button>
+                <button onclick="applyPreset('16777215')" class="uh-btn uh-btn--secondary text-xs font-mono">16777215 (24-bit RGB)</button>
+                <button onclick="applyPreset('18446744073709551615')" class="uh-btn uh-btn--secondary text-xs font-mono">64-bit Max</button>
+                <button onclick="applyPreset('-42')" class="uh-btn uh-btn--secondary text-xs font-mono">-42 (Negative)</button>
             </div>
 
             <div class="flex items-center gap-2">
-                <button onclick="clearAll()" class="px-3 py-1.5 text-xs font-mono bg-red-950/40 hover:bg-red-900/60 border border-red-700/60 text-red-300 rounded transition flex items-center gap-1.5">
+                <button id="btn-formatted-toggle" onclick="toggleFormatting()" class="uh-btn uh-btn--secondary text-xs font-mono flex items-center gap-2">
+                    <svg class="w-4 h-4 text-cyan-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    Formatting: <span id="formatting-status" class="text-mint-accent font-bold">ON</span>
+                </button>
+                <button onclick="clearAll()" class="uh-btn uh-btn--danger text-xs font-mono flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Clear All
                 </button>
@@ -151,7 +106,7 @@
             <button type="button" class="uh-number-mode" data-mode="color" aria-pressed="false">HEX / RGB</button>
         </nav>
 
-        <section class="blueprint-card uh-number-panel hidden" data-number-mode="custom" aria-labelledby="custom-base-title">
+        <section class="uh-card uh-number-panel hidden" data-number-mode="custom" aria-labelledby="custom-base-title">
             <div class="uh-number-panel-head">
                 <div>
                     <h2 id="custom-base-title">Custom base conversion</h2>
@@ -161,17 +116,17 @@
             </div>
             <div class="uh-number-conversion-grid">
                 <label class="uh-number-field" for="custom-input">Value
-                    <input type="text" id="custom-input" autocomplete="off" spellcheck="false" placeholder="e.g. 101101">
+                    <input type="text" id="custom-input" autocomplete="off" spellcheck="false" placeholder="e.g. 101101" class="uh-input">
                 </label>
                 <label class="uh-number-field" for="custom-from">From base
-                    <input type="number" id="custom-from" min="2" max="36" value="2" inputmode="numeric">
+                    <input type="number" id="custom-from" min="2" max="36" value="2" inputmode="numeric" class="uh-input">
                 </label>
                 <label class="uh-number-field" for="custom-to">To base
-                    <input type="number" id="custom-to" min="2" max="36" value="10" inputmode="numeric">
+                    <input type="number" id="custom-to" min="2" max="36" value="10" inputmode="numeric" class="uh-input">
                 </label>
                 <label class="uh-number-field" for="custom-output">Result
                     <span class="uh-number-output-row">
-                        <input type="text" id="custom-output" readonly aria-live="polite" placeholder="Converted value">
+                        <input type="text" id="custom-output" readonly aria-live="polite" placeholder="Converted value" class="uh-input">
                         <button type="button" id="custom-copy" class="uh-number-action">Copy</button>
                     </span>
                 </label>
@@ -179,7 +134,7 @@
             <p id="custom-error" class="uh-number-error" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="blueprint-card uh-number-panel hidden" data-number-mode="color" aria-labelledby="color-conversion-title">
+        <section class="uh-card uh-number-panel hidden" data-number-mode="color" aria-labelledby="color-conversion-title">
             <div class="uh-number-panel-head">
                 <div>
                     <h2 id="color-conversion-title">HEX / RGB conversion</h2>
@@ -190,20 +145,20 @@
             <div class="uh-number-color-grid">
                 <label class="uh-number-field" for="color-hex">HEX
                     <span class="uh-number-output-row">
-                        <input type="text" id="color-hex" value="#6FD8CB" autocomplete="off" spellcheck="false" placeholder="#6FD8CB" maxlength="7">
+                        <input type="text" id="color-hex" value="#6FD8CB" autocomplete="off" spellcheck="false" placeholder="#6FD8CB" maxlength="7" class="uh-input">
                         <button type="button" id="color-copy-hex" class="uh-number-action">Copy</button>
                     </span>
                 </label>
                 <fieldset class="uh-number-rgb">
                     <legend>RGB</legend>
                     <label class="uh-number-field" for="color-red">Red
-                        <input type="number" id="color-red" min="0" max="255" value="111" inputmode="numeric">
+                        <input type="number" id="color-red" min="0" max="255" value="111" inputmode="numeric" class="uh-input">
                     </label>
                     <label class="uh-number-field" for="color-green">Green
-                        <input type="number" id="color-green" min="0" max="255" value="216" inputmode="numeric">
+                        <input type="number" id="color-green" min="0" max="255" value="216" inputmode="numeric" class="uh-input">
                     </label>
                     <label class="uh-number-field" for="color-blue">Blue
-                        <input type="number" id="color-blue" min="0" max="255" value="203" inputmode="numeric">
+                        <input type="number" id="color-blue" min="0" max="255" value="203" inputmode="numeric" class="uh-input">
                     </label>
                 </fieldset>
                 <button type="button" id="color-copy-rgb" class="uh-number-action uh-number-rgb-copy">Copy RGB</button>
@@ -215,163 +170,158 @@
         <div class="grid grid-cols-1 gap-5" data-number-mode="standard">
             
             <!-- BINARY (Base 2) -->
-            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-bin">
+            <div class="uh-card rounded-lg p-5 space-y-3" id="card-bin">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-0.5 text-xs font-mono font-bold bg-cyan-accent/20 text-cyan-accent border border-cyan-accent/40 rounded">BASE 2</span>
-                        <label for="input-bin" class="text-sm font-semibold font-mono text-slate-200">BINARY</label>
+                        <label for="input-bin" class="text-sm font-semibold font-mono uh-text">BINARY</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span id="badge-bin" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-1)</span>
-                        <button onclick="copyToClipboard('bin')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                        <span id="badge-bin" class="hidden text-xs font-mono px-2 py-0.5 rounded uh-danger-bg-soft uh-danger-text border uh-danger-border">Invalid Digits (0-1)</span>
+                        <button onclick="copyToClipboard('bin')" class="p-1.5 uh-muted-text hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
                 </div>
                 <div class="relative">
-                    <input type="text" id="input-bin" oninput="handleInput('bin')" placeholder="e.g. 11111111" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-cyan-accent focus:outline-none focus:border-cyan-accent transition tracking-wider">
+                    <input type="text" id="input-bin" oninput="handleInput('bin')" placeholder="e.g. 11111111" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-cyan-accent focus:outline-none focus:border-cyan-accent transition tracking-wider uh-input">
                 </div>
-                <div id="formatted-bin" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
-                    <span class="text-slate-500 uppercase mr-2">Formatted (4-bit nibbles):</span>
-                    <span id="formatted-bin-val" class="text-slate-200"></span>
+                <div id="formatted-bin" class="text-xs font-mono uh-muted-text break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="uh-faint-text uppercase mr-2">Formatted (4-bit nibbles):</span>
+                    <span id="formatted-bin-val" class="uh-text"></span>
                 </div>
             </div>
 
             <!-- OCTAL (Base 8) -->
-            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-oct">
+            <div class="uh-card rounded-lg p-5 space-y-3" id="card-oct">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded">BASE 8</span>
-                        <label for="input-oct" class="text-sm font-semibold font-mono text-slate-200">OCTAL</label>
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold uh-accent-bg-soft uh-accent-text border uh-accent-border rounded">BASE 8</span>
+                        <label for="input-oct" class="text-sm font-semibold font-mono uh-text">OCTAL</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span id="badge-oct" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-7)</span>
-                        <button onclick="copyToClipboard('oct')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                        <span id="badge-oct" class="hidden text-xs font-mono px-2 py-0.5 rounded uh-danger-bg-soft uh-danger-text border uh-danger-border">Invalid Digits (0-7)</span>
+                        <button onclick="copyToClipboard('oct')" class="p-1.5 uh-muted-text hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
                 </div>
                 <div class="relative">
-                    <input type="text" id="input-oct" oninput="handleInput('oct')" placeholder="e.g. 377" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-purple-300 focus:outline-none focus:border-purple-400 transition tracking-wider">
+                    <input type="text" id="input-oct" oninput="handleInput('oct')" placeholder="e.g. 377" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg uh-accent-text focus:outline-none focus:uh-accent-border transition tracking-wider uh-input">
                 </div>
-                <div id="formatted-oct" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
-                    <span class="text-slate-500 uppercase mr-2">Formatted (3-digit groups):</span>
-                    <span id="formatted-oct-val" class="text-slate-200"></span>
+                <div id="formatted-oct" class="text-xs font-mono uh-muted-text break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="uh-faint-text uppercase mr-2">Formatted (3-digit groups):</span>
+                    <span id="formatted-oct-val" class="uh-text"></span>
                 </div>
             </div>
 
             <!-- DECIMAL (Base 10) -->
-            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-dec">
+            <div class="uh-card rounded-lg p-5 space-y-3" id="card-dec">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-0.5 text-xs font-mono font-bold bg-mint-accent/20 text-mint-accent border border-mint-accent/40 rounded">BASE 10</span>
-                        <label for="input-dec" class="text-sm font-semibold font-mono text-slate-200">DECIMAL</label>
+                        <label for="input-dec" class="text-sm font-semibold font-mono uh-text">DECIMAL</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span id="badge-dec" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-9)</span>
-                        <button onclick="copyToClipboard('dec')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                        <span id="badge-dec" class="hidden text-xs font-mono px-2 py-0.5 rounded uh-danger-bg-soft uh-danger-text border uh-danger-border">Invalid Digits (0-9)</span>
+                        <button onclick="copyToClipboard('dec')" class="p-1.5 uh-muted-text hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
                 </div>
                 <div class="relative">
-                    <input type="text" id="input-dec" oninput="handleInput('dec')" placeholder="e.g. 255" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-mint-accent focus:outline-none focus:border-mint-accent transition tracking-wider">
+                    <input type="text" id="input-dec" oninput="handleInput('dec')" placeholder="e.g. 255" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-mint-accent focus:outline-none focus:border-mint-accent transition tracking-wider uh-input">
                 </div>
-                <div id="formatted-dec" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
-                    <span class="text-slate-500 uppercase mr-2">Formatted (Thousands separators):</span>
-                    <span id="formatted-dec-val" class="text-slate-200"></span>
+                <div id="formatted-dec" class="text-xs font-mono uh-muted-text break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="uh-faint-text uppercase mr-2">Formatted (Thousands separators):</span>
+                    <span id="formatted-dec-val" class="uh-text"></span>
                 </div>
             </div>
 
             <!-- HEXADECIMAL (Base 16) -->
-            <div class="blueprint-card rounded-lg p-5 space-y-3 tech-corner" id="card-hex">
+            <div class="uh-card rounded-lg p-5 space-y-3" id="card-hex">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded">BASE 16</span>
-                        <label for="input-hex" class="text-sm font-semibold font-mono text-slate-200">HEXADECIMAL</label>
+                        <span class="px-2 py-0.5 text-xs font-mono font-bold uh-warning-bg-soft uh-warning-text border uh-warning-border rounded">BASE 16</span>
+                        <label for="input-hex" class="text-sm font-semibold font-mono uh-text">HEXADECIMAL</label>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span id="badge-hex" class="hidden text-xs font-mono px-2 py-0.5 rounded bg-red-900/50 text-red-300 border border-red-700">Invalid Digits (0-9, A-F)</span>
-                        <button onclick="copyToClipboard('hex')" class="p-1.5 text-slate-400 hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
+                        <span id="badge-hex" class="hidden text-xs font-mono px-2 py-0.5 rounded uh-danger-bg-soft uh-danger-text border uh-danger-border">Invalid Digits (0-9, A-F)</span>
+                        <button onclick="copyToClipboard('hex')" class="p-1.5 uh-muted-text hover:text-cyan-accent bg-navy-700 hover:bg-navy-600 rounded border border-navy-600 transition" title="Copy Raw Value">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                         </button>
                     </div>
                 </div>
                 <div class="relative">
-                    <input type="text" id="input-hex" oninput="handleInput('hex')" placeholder="e.g. FF" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg text-amber-300 focus:outline-none focus:border-amber-400 transition tracking-wider uppercase">
+                    <input type="text" id="input-hex" oninput="handleInput('hex')" placeholder="e.g. FF" class="w-full bg-navy-900 border border-navy-600 rounded px-4 py-3 font-mono text-lg uh-warning-text focus:outline-none focus:uh-warning-border transition tracking-wider uppercase uh-input">
                 </div>
-                <div id="formatted-hex" class="text-xs font-mono text-slate-400 break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
-                    <span class="text-slate-500 uppercase mr-2">Formatted (Byte pairs):</span>
-                    <span id="formatted-hex-val" class="text-slate-200"></span>
+                <div id="formatted-hex" class="text-xs font-mono uh-muted-text break-all bg-navy-900/50 p-2.5 rounded border border-navy-700/50 hidden">
+                    <span class="uh-faint-text uppercase mr-2">Formatted (Byte pairs):</span>
+                    <span id="formatted-hex-val" class="uh-text"></span>
                 </div>
             </div>
 
         </div>
 
         <!-- Bitwise & Representation Telemetry Info -->
-        <div class="blueprint-card rounded-lg p-5 space-y-4" data-number-mode="standard">
+        <div class="uh-card rounded-lg p-5 space-y-4" data-number-mode="standard">
             <h2 class="text-xs font-mono text-cyan-accent uppercase tracking-widest flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
                 Bitwise & Architecture Specs
             </h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
                 <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
-                    <span class="text-slate-400 block mb-1">Bit Count (Magnitude):</span>
-                    <span id="meta-bits" class="text-slate-100 font-bold text-sm">0 bits</span>
+                    <span class="uh-muted-text block mb-1">Bit Count (Magnitude):</span>
+                    <span id="meta-bits" class="uh-text font-bold text-sm">0 bits</span>
                 </div>
                 <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
-                    <span class="text-slate-400 block mb-1">Byte Count:</span>
-                    <span id="meta-bytes" class="text-slate-100 font-bold text-sm">0 bytes</span>
+                    <span class="uh-muted-text block mb-1">Byte Count:</span>
+                    <span id="meta-bytes" class="uh-text font-bold text-sm">0 bytes</span>
                 </div>
                 <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
-                    <span class="text-slate-400 block mb-1">Min Boundary Width:</span>
-                    <span id="meta-width" class="text-slate-100 font-bold text-sm">8-bit</span>
+                    <span class="uh-muted-text block mb-1">Min Boundary Width:</span>
+                    <span id="meta-width" class="uh-text font-bold text-sm">8-bit</span>
                 </div>
                 <div class="bg-navy-900/80 p-3 rounded border border-navy-700">
-                    <span class="text-slate-400 block mb-1">Sign State:</span>
+                    <span class="uh-muted-text block mb-1">Sign State:</span>
                     <span id="meta-sign" class="text-mint-accent font-bold text-sm">Positive (+)</span>
                 </div>
             </div>
             <div class="bg-navy-900/80 p-3 rounded border border-navy-700 text-xs font-mono space-y-1">
-                <div class="text-slate-400 flex justify-between">
+                <div class="uh-muted-text flex justify-between">
                     <span>2's Complement Representation (8/16/32-bit padded):</span>
                     <button onclick="copy2sComp()" class="text-cyan-accent hover:underline lowercase">copy</button>
                 </div>
-                <div id="meta-twos-comp" class="text-slate-200 break-all font-bold">00000000</div>
+                <div id="meta-twos-comp" class="uh-text break-all font-bold">00000000</div>
             </div>
         </div>
 
         <!-- Step-by-Step Educational Explanation Accordion -->
-        <div class="blueprint-card rounded-lg overflow-hidden" data-number-mode="standard">
+        <div class="uh-card rounded-lg overflow-hidden" data-number-mode="standard">
             <button onclick="toggleAccordion()" class="w-full p-4 text-left flex justify-between items-center hover:bg-navy-700/50 transition">
-                <span class="text-sm font-mono font-bold text-slate-200 flex items-center gap-2">
+                <span class="text-sm font-mono font-bold uh-text flex items-center gap-2">
                     <svg class="w-4 h-4 text-cyan-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Step-by-Step Math Breakdown
                 </span>
-                <span id="accordion-icon" class="text-slate-400 font-mono text-xs">▼ Expand</span>
+                <span id="accordion-icon" class="uh-muted-text font-mono text-xs">▼ Expand</span>
             </button>
             <div id="accordion-content" class="hidden p-5 border-t border-navy-600 bg-navy-900/40 space-y-4 text-xs font-mono">
                 <div>
                     <h3 class="text-cyan-accent font-bold mb-2 uppercase">1. Evaluation to Decimal (Base 10)</h3>
-                    <div id="step-to-dec" class="text-slate-300 space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
+                    <div id="step-to-dec" class="uh-text space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
                         Enter a valid value above to see the calculation steps.
                     </div>
                 </div>
                 <div>
                     <h3 class="text-mint-accent font-bold mb-2 uppercase">2. Conversion to Binary (Base 2 Place Values)</h3>
-                    <div id="step-to-bin" class="text-slate-300 space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
+                    <div id="step-to-bin" class="uh-text space-y-1 bg-navy-900 p-3 rounded border border-navy-700 overflow-x-auto">
                         Enter a valid value above to see the calculation steps.
                     </div>
                 </div>
             </div>
         </div>
 
-    </div>
-
-    <!-- Footer -->
-    <footer class="max-w-6xl w-full mx-auto mt-8 text-center text-xs font-mono text-slate-500">
-        Utility Hub Console • High-Precision BigInt Base Engine
-    </footer>
+    </main>
 
     <!-- Logic Engine JS -->
     <script>
@@ -399,7 +349,7 @@
         function toggleFormatting() {
             isFormatted = !isFormatted;
             document.getElementById('formatting-status').textContent = isFormatted ? 'ON' : 'OFF';
-            document.getElementById('formatting-status').className = isFormatted ? 'text-mint-accent font-bold' : 'text-red-400 font-bold';
+            document.getElementById('formatting-status').className = isFormatted ? 'text-mint-accent font-bold' : 'uh-danger-text font-bold';
             
             const containers = ['formatted-bin', 'formatted-oct', 'formatted-dec', 'formatted-hex'];
             containers.forEach(id => {
@@ -595,7 +545,7 @@
             const signEl = document.getElementById('meta-sign');
             if (isNeg) {
                 signEl.textContent = 'Negative (-)';
-                signEl.className = 'text-amber-400 font-bold text-sm';
+                signEl.className = 'uh-warning-text font-bold text-sm';
             } else {
                 signEl.textContent = 'Positive (+)';
                 signEl.className = 'text-mint-accent font-bold text-sm';
@@ -671,13 +621,13 @@
         // Error Badges
         function showBadge(base) {
             document.getElementById(`badge-${base}`).classList.remove('hidden');
-            document.getElementById(`card-${base}`).classList.add('border-red-500');
+            document.getElementById(`card-${base}`).classList.add('uh-danger-border');
         }
 
         function clearBadges() {
             ['bin', 'oct', 'dec', 'hex'].forEach(b => {
                 document.getElementById(`badge-${b}`).classList.add('hidden');
-                document.getElementById(`card-${b}`).classList.remove('border-red-500');
+                document.getElementById(`card-${b}`).classList.remove('uh-danger-border');
             });
         }
 
@@ -723,7 +673,7 @@
             const toast = document.createElement('div');
             toast.className = `px-4 py-2.5 rounded shadow-lg text-xs font-mono border transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2 ${
                 type === 'error' 
-                    ? 'bg-red-950 text-red-200 border-red-700' 
+                    ? 'uh-danger-bg-soft uh-danger-text uh-danger-border'
                     : 'bg-navy-800 text-cyan-accent border-cyan-accent/50'
             }`;
             

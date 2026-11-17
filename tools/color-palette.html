@@ -7,33 +7,36 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
   .swatch { transition: transform .15s ease, box-shadow .15s ease; }
   .swatch:hover { transform: translateY(-3px); }
-  select, input { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .uh-contrast-low { color: var(--uh-warning); }
+  .uh-contrast-aa { color: var(--uh-accent); }
+  .uh-contrast-aaa { color: var(--uh-success); }
+  .uh-contrast-low-badge { color: var(--uh-warning); background: color-mix(in srgb, var(--uh-warning) 12%, transparent); border-color: color-mix(in srgb, var(--uh-warning) 40%, transparent); }
+  .uh-contrast-aa-badge { color: var(--uh-accent); background: color-mix(in srgb, var(--uh-accent) 12%, transparent); border-color: color-mix(in srgb, var(--uh-accent) 40%, transparent); }
+  .uh-contrast-aaa-badge { color: var(--uh-success); background: color-mix(in srgb, var(--uh-success) 12%, transparent); border-color: color-mix(in srgb, var(--uh-success) 40%, transparent); }
+  .uh-contrast-low-dot { background: var(--uh-warning); }
+  .uh-contrast-aa-dot { background: var(--uh-accent); }
+  .uh-contrast-aaa-dot { background: var(--uh-success); }
+  .uh-swatch-selected { color: var(--uh-accent); border-color: var(--uh-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--uh-accent) 20%, transparent); }
+  .uh-swatch-option { color: var(--uh-muted); border-color: var(--uh-line); }
+  .uh-swatch-option:hover { color: var(--uh-text); border-color: var(--uh-accent); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Color Palette Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-4xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Color Palette Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Generate color harmonies, lock individual swatches, inspect accessibility, and export palette code.</p>
+<body>
+  <main class="uh-container">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Color Palette Studio</h1>
+      <p class="uh-page-sub">Generate color harmonies, lock individual swatches, inspect accessibility, and export palette code.</p>
+    </div>
 
     <!-- Toolbar Controls -->
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-[#14283b]/40 p-4 rounded-md border border-white/10">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 uh-panel p-4 rounded-md border uh-line-border">
       <div class="flex flex-wrap items-center gap-2">
-        <button id="generate" class="primary mono text-xs uppercase px-4 py-2 rounded-md transition-all">Generate Palette</button>
+        <button id="generate" class="uh-btn uh-btn--primary mono text-xs uppercase px-4 py-2 rounded-md transition-all">Generate Palette</button>
         
-        <select id="harmonyMode" class="mono text-xs p-2 rounded-md">
+        <select id="harmonyMode" class="mono text-xs p-2 rounded-md uh-select">
           <option value="analogous" selected>Analogous</option>
           <option value="monochromatic">Monochromatic</option>
           <option value="triadic">Triadic</option>
@@ -41,7 +44,7 @@
           <option value="random">Random</option>
         </select>
 
-        <select id="formatSelect" class="mono text-xs p-2 rounded-md">
+        <select id="formatSelect" class="mono text-xs p-2 rounded-md uh-select">
           <option value="hex" selected>HEX Format</option>
           <option value="rgb">RGB Format</option>
           <option value="hsl">HSL Format</option>
@@ -49,9 +52,9 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <button id="copyCss" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy CSS</button>
-        <button id="copyJson" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy JSON</button>
-        <button id="downloadPng" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">PNG Canvas</button>
+        <button id="copyCss" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy CSS</button>
+        <button id="copyJson" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Copy JSON</button>
+        <button id="downloadPng" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">PNG Canvas</button>
       </div>
     </div>
 
@@ -59,19 +62,19 @@
     <div id="palette" class="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-4"></div>
 
     <div class="flex justify-between items-center mb-8">
-      <p id="copied" class="mono text-xs text-teal-300 h-4"></p>
-      <span class="mono text-[11px] text-slate-500">Tip: Press <kbd class="px-1.5 py-0.5 bg-[#14283b] rounded border border-white/10 text-slate-300">Space</kbd> to generate a new palette</span>
+      <p id="copied" class="mono text-xs uh-accent-text h-4"></p>
+      <span class="mono text-[11px] uh-faint-text">Tip: Press <kbd class="px-1.5 py-0.5 uh-panel rounded border uh-line-border uh-text">Space</kbd> to generate a new palette</span>
     </div>
 
     <!-- Tints & Shades Inspector -->
-    <div id="inspector" class="rounded-md border border-white/10 p-5 bg-[#14283b]/30 hidden">
+    <div id="inspector" class="rounded-md border uh-line-border p-5 uh-panel hidden">
       <div class="flex justify-between items-center mb-3">
-        <h3 id="inspectorTitle" class="mono text-xs uppercase tracking-wider text-slate-300">Shades & Tints Inspector</h3>
-        <span id="inspectorHex" class="mono text-xs text-teal-300"></span>
+        <h3 id="inspectorTitle" class="mono text-xs uppercase tracking-wider uh-text">Shades & Tints Inspector</h3>
+        <span id="inspectorHex" class="mono text-xs uh-accent-text"></span>
       </div>
       <div id="shadesGrid" class="grid grid-cols-10 gap-1.5 h-12 rounded overflow-hidden"></div>
     </div>
-  </div>
+  </main>
 
   <script>
     const paletteEl = document.getElementById('palette');
@@ -125,17 +128,17 @@
       const bestContrast = Math.max(contrastWhite, contrastBlack).toFixed(1);
       
       let badge = 'Low Contrast';
-      let dotColor = 'bg-amber-400';
-      let badgeBg = 'bg-amber-950/80 border-amber-500/40 text-amber-300';
+      let dotColor = 'uh-contrast-low-dot';
+      let badgeBg = 'uh-contrast-low-badge';
 
       if (bestContrast >= 7.0) {
         badge = `AAA (${bestContrast}:1)`;
-        dotColor = 'bg-emerald-400';
-        badgeBg = 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300';
+        dotColor = 'uh-contrast-aaa-dot';
+        badgeBg = 'uh-contrast-aaa-badge';
       } else if (bestContrast >= 4.5) {
         badge = `AA (${bestContrast}:1)`;
-        dotColor = 'bg-teal-400';
-        badgeBg = 'bg-teal-950/80 border-teal-500/40 text-teal-300';
+        dotColor = 'uh-contrast-aa-dot';
+        badgeBg = 'uh-contrast-aa-badge';
       }
 
       return {
@@ -204,11 +207,11 @@
         const isLocked = lockedSwatches[i];
 
         const card = document.createElement('div');
-        card.className = 'swatch rounded-md overflow-hidden border border-white/10 bg-[#14283b] flex flex-col justify-between';
+        card.className = 'swatch rounded-md overflow-hidden border uh-line-border uh-panel flex flex-col justify-between';
         
         const lockBtnStyle = isLocked 
-          ? 'bg-[#0e1c2b] text-teal-300 border-teal-400/60 shadow-[0_0_10px_rgba(111,216,203,0.2)]' 
-          : 'bg-[#17304a] text-slate-300 border-white/10 hover:border-teal-400/40 hover:text-white';
+          ? 'uh-panel uh-swatch-selected'
+          : 'uh-panel uh-swatch-option';
 
         card.innerHTML = `
           <div style="background:${color.hex}" class="h-32 p-3 flex flex-col justify-end group transition-all">
@@ -216,14 +219,14 @@
               Inspect Shades &rarr;
             </div>
           </div>
-          <div class="p-3 bg-[#14283b] flex flex-col gap-2.5">
+          <div class="p-3 uh-panel flex flex-col gap-2.5">
             <!-- Color Code -->
-            <div class="mono text-xs font-semibold text-center text-slate-200 cursor-pointer hover:text-teal-300 transition copy-val truncate" title="Click to copy">
+            <div class="mono text-xs font-semibold text-center uh-text cursor-pointer hover:uh-accent-text transition copy-val truncate" title="Click to copy">
               ${displayCode}
             </div>
 
             <!-- Controls Stacked Below Color Code -->
-            <div class="flex flex-col gap-1.5 pt-2 border-t border-white/5">
+            <div class="flex flex-col gap-1.5 pt-2 border-t uh-line-border">
               <!-- Lock Button -->
               <button class="lock-btn w-full mono text-[10px] uppercase tracking-wider font-bold px-2 py-1.5 rounded-md border transition-all flex items-center justify-center gap-1.5 ${lockBtnStyle}">
                 <span>${isLocked ? '🔒' : '🔓'}</span>

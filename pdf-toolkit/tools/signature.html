@@ -11,28 +11,29 @@
   .img-el { position:absolute; cursor:move; border:1px dashed transparent; }
   .img-el.selected { border-color: var(--teal); }
   .img-el img { width:100%; height:100%; display:block; pointer-events:none; }
-  .img-el .del-x { position:absolute; top:-9px; right:-9px; width:16px; height:16px; background:#e88a8a; color:#fff; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; }
+  .img-el .del-x { position:absolute; top:-9px; right:-9px; width:16px; height:16px; background:var(--uh-danger); color:var(--uh-bg); border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; }
   .sig-tabs { display:flex; gap:8px; margin-bottom:10px; }
   .sig-tab { flex:1; text-align:center; padding:8px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
-  .sig-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  .sig-tab.active { border-color:var(--uh-accent); color:var(--uh-accent); background:color-mix(in srgb, var(--uh-accent) 8%, transparent); }
   #sigPad { background:#fff; border-radius:6px; width:100%; touch-action:none; cursor:crosshair; }
   .el-list-item { display:flex; justify-content:space-between; align-items:center; background:var(--panel); border-radius:6px; padding:6px 8px; margin-bottom:6px; font-size:11.5px; cursor:pointer; }
   .el-list-item.selected { border:1px solid var(--teal); }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Add Signature"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Add Signature</h1>
-    <p class="page-sub">Draw or upload a signature and place it anywhere on the document. This creates a <strong>visual</strong> signature stamp — not a legally certified digital signature.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Add Signature</h1>
+      <p class="uh-page-sub">Draw or upload a signature and place it anywhere on the document. This creates a <strong>visual</strong> signature stamp — not a legally certified digital signature.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">✍️</div>
       <div class="primary-txt">Click or drag a PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

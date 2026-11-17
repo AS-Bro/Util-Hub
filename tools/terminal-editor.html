@@ -9,53 +9,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@600;700&family=Source+Code+Pro:wght@400;600&family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
   <style>
-    body { background: #0b131e; color: #e7eef4; font-family: 'Inter', sans-serif; }
-    .mono { font-family: 'Ubuntu Mono', monospace; }
-    .display { font-family: 'Space Grotesk', sans-serif; }
-    .card { background: #112131; border: 1px solid rgba(143, 176, 204, 0.16); }
-    
-    input[type="text"], input[type="number"], select, textarea { 
-      background-color: #0b1622 !important; 
-      border: 1px solid rgba(143, 176, 204, 0.25) !important; 
-      color: #e7eef4 !important; 
-    }
-    input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus { 
-      outline: none; 
-      border-color: #6fd8cb !important; 
-      box-shadow: 0 0 0 1px #6fd8cb;
-    }
-    
     input[type="color"] {
       -webkit-appearance: none;
       appearance: none;
       height: 38px;
       width: 100%;
       padding: 3px;
-      background-color: #0b1622;
-      border: 1px solid rgba(143, 176, 204, 0.2);
+      background-color: var(--uh-panel);
+      border: 1px solid var(--uh-line);
       border-radius: 0.5rem;
       cursor: pointer;
     }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
-
-    .btn-action {
-      background: #6fd8cb;
-      color: #0e1c2b;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-action:hover {
-      background: #5bc4b7;
-      box-shadow: 0 0 12px rgba(111, 216, 203, 0.3);
-    }
-    .btn-secondary {
-      background: #172c42;
-      border: 1px solid rgba(143, 176, 204, 0.2);
-      color: #e7eef4;
-      transition: all 0.15s ease;
-    }
-    .btn-secondary:hover { border-color: #6fd8cb; }
 
     .stage { transform-origin: top center; transition: transform 0.1s ease-out; }
     
@@ -65,91 +31,70 @@
       white-space: pre; 
       -webkit-font-smoothing: antialiased; 
       border-radius: 8px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      box-shadow: 0 20px 40px color-mix(in srgb, var(--uh-bg) 60%, transparent);
       transition: box-shadow 0.2s ease, filter 0.2s ease;
     }
 
     .term-glass {
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border: 1px solid var(--uh-line-strong) !important;
     }
     .term-glow {
-      box-shadow: 0 0 35px rgba(111, 216, 203, 0.25) !important;
+      box-shadow: 0 0 35px color-mix(in srgb, var(--uh-accent) 25%, transparent) !important;
     }
 
     .line { white-space: pre; min-height: 1.1em; padding: 0 4px; border-radius: 2px; display: flex; align-items: flex-start; }
-    .line-num { display: inline-block; min-width: 2.2em; color: rgba(255,255,255,0.3); text-align: right; margin-right: 12px; user-select: none; }
-    .line-highlight { background: rgba(255, 255, 255, 0.08); border-left: 3px solid #6fd8cb; }
-    .user { color: #4e9a06; font-weight: 700; }
-    .path { color: #3465a4; font-weight: 700; }
-    .white { color: #ffffff; }
+    .line-num { display: inline-block; min-width: 2.2em; color: var(--uh-faint); text-align: right; margin-right: 12px; user-select: none; }
+    .line-highlight { background: color-mix(in srgb, var(--uh-accent) 8%, transparent); border-left: 3px solid var(--uh-accent); }
+    .user { color: var(--uh-success); font-weight: 700; }
+    .path { color: var(--uh-accent); font-weight: 700; }
+    .white { color: var(--uh-text); }
     .content-body { display: inline; flex: 1; }
 
-    .cursor-solid { display: inline-block; width: 0.62em; height: 1.05em; background: #ffffff; vertical-align: -0.15em; margin-left: 2px; }
-    .cursor-hollow { display: inline-block; width: 0.62em; height: 1.05em; border: 1px solid #ffffff; vertical-align: -0.15em; margin-left: 2px; }
-    .cursor-line { display: inline-block; width: 2px; height: 1.05em; background: #ffffff; vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-solid { display: inline-block; width: 0.62em; height: 1.05em; background: var(--uh-text); vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-hollow { display: inline-block; width: 0.62em; height: 1.05em; border: 1px solid var(--uh-text); vertical-align: -0.15em; margin-left: 2px; }
+    .cursor-line { display: inline-block; width: 2px; height: 1.05em; background: var(--uh-text); vertical-align: -0.15em; margin-left: 2px; }
     .cursor-blink { animation: blink 1s step-end infinite; }
 
     @keyframes blink { 50% { opacity: 0; } }
 
-    .line-error { color: #ff5555; }
-    .line-success { color: #50fa7b; }
-    .line-comment { color: #6272a4; font-style: italic; }
+    .line-error { color: var(--uh-danger); }
+    .line-success { color: var(--uh-success); }
+    .line-comment { color: var(--uh-muted); font-style: italic; }
 
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0b131e; }
-    ::-webkit-scrollbar-thumb { background: #1c334d; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+    ::-webkit-scrollbar-track { background: var(--uh-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--uh-elevated); border-radius: var(--uh-radius-sm); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--uh-accent); }
   </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Ubuntu Terminal UI Studio"></script>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
-
-  <!-- Responsive Header Bar -->
-  <header class="border-b border-slate-800 bg-[#0b131e]/90 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 shrink-0 rounded-lg bg-teal-400/10 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold display text-xl">
-          &gt;_
-        </div>
-        <div>
-          <h1 class="display font-bold text-base sm:text-lg text-slate-100 leading-tight">Ubuntu Terminal UI Studio</h1>
-          <p class="text-xs text-slate-400">Pure Canvas &bull; Feature-Packed Pro</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 shrink-0">
-        <button id="reset" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
-          <span>🔄</span> Reset
-        </button>
-        <button id="copy" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
-          <span>📋</span> Copy Text
-        </button>
-        <button id="download" class="btn-action px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 whitespace-nowrap">
-          <span>💾</span> Export PNG
-        </button>
-        <button id="downloadScript" class="btn-secondary px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 whitespace-nowrap">
-          <span>📜</span> Export .sh
-        </button>
-        
-      </div>
+<body>
+  <main class="uh-container uh-container--wide space-y-6">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Ubuntu Terminal UI Studio</h1>
+      <p class="uh-page-sub">Configure a terminal canvas, compose sample output, and export your design as an image or script.</p>
     </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto px-4 py-6 w-full space-y-6">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="uh-toolbar flex flex-wrap gap-2">
+      <button id="reset" class="uh-btn uh-btn--secondary text-xs whitespace-nowrap">🔄 Reset</button>
+      <button id="copy" class="uh-btn uh-btn--secondary text-xs whitespace-nowrap">📋 Copy Text</button>
+      <button id="download" class="uh-btn uh-btn--primary text-xs whitespace-nowrap">💾 Export PNG</button>
+      <button id="downloadScript" class="uh-btn uh-btn--secondary text-xs whitespace-nowrap">📜 Export .sh</button>
+    </div>
+    <div class="uh-grid uh-grid-2 gap-6">
       
       <!-- Controls Sidebar -->
-      <div class="lg:col-span-5 space-y-4">
+      <div class="space-y-4">
         
         <!-- Theme & Font Settings -->
-        <div class="card p-4 rounded-xl space-y-3">
-          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+        <div class="uh-card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-[var(--uh-text)] flex items-center gap-2 border-b border-[var(--uh-line)] pb-2">
             <span>🎨</span> Color Schemes &amp; Fonts
           </h3>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Color Preset</label>
-              <select id="themePreset" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Color Preset</label>
+              <select id="themePreset" class="uh-select w-full px-2.5 py-1.5 text-xs">
                 <option value="ubuntu" selected>Ubuntu Purple</option>
                 <option value="dracula">Dracula Dark</option>
                 <option value="monokai">Monokai Pro</option>
@@ -159,8 +104,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Font Family</label>
-              <select id="fontFamily" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Font Family</label>
+              <select id="fontFamily" class="uh-select w-full px-2.5 py-1.5 text-xs">
                 <option value="'Ubuntu Mono', monospace" selected>Ubuntu Mono</option>
                 <option value="'Fira Code', monospace">Fira Code</option>
                 <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
@@ -171,69 +116,69 @@
         </div>
 
         <!-- Canvas Dimensions -->
-        <div class="card p-4 rounded-xl space-y-3">
-          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+        <div class="uh-card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-[var(--uh-text)] flex items-center gap-2 border-b border-[var(--uh-line)] pb-2">
             <span>🖼️</span> Canvas Layout &amp; Spacing
           </h3>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Width (px)</label>
-              <input id="w" type="number" value="1280" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Width (px)</label>
+              <input id="w" type="number" value="1280" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Height (px)</label>
-              <input id="h" type="number" value="720" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Font Size (px)</label>
-              <input id="font" type="number" value="22" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Line Spacing</label>
-              <input id="line" type="number" step="0.05" value="1.2" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Height (px)</label>
+              <input id="h" type="number" value="720" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Padding X (px)</label>
-              <input id="px" type="number" value="24" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Font Size (px)</label>
+              <input id="font" type="number" value="22" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Padding Y (px)</label>
-              <input id="py" type="number" value="18" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Line Spacing</label>
+              <input id="line" type="number" step="0.05" value="1.2" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Background Color</label>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Padding X (px)</label>
+              <input id="px" type="number" value="24" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
+            </div>
+            <div>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Padding Y (px)</label>
+              <input id="py" type="number" value="18" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Background Color</label>
               <input id="bg" type="color" value="#300a24">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Default Text Color</label>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Default Text Color</label>
               <input id="text" type="color" value="#ffffff">
             </div>
           </div>
         </div>
 
         <!-- Terminal Display & Cursor Options -->
-        <div class="card p-4 rounded-xl space-y-3">
-          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+        <div class="uh-card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-[var(--uh-text)] flex items-center gap-2 border-b border-[var(--uh-line)] pb-2">
             <span>✨</span> Terminal Display FX &amp; Cursor
           </h3>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Cursor Style</label>
-              <select id="cursorStyle" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Cursor Style</label>
+              <select id="cursorStyle" class="uh-select w-full px-2.5 py-1.5 text-xs">
                 <option value="hollow" selected>Hollow Box</option>
                 <option value="solid">Solid Block</option>
                 <option value="line">Vertical Line</option>
               </select>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Visual FX</label>
-              <select id="visualFx" class="w-full px-2.5 py-1.5 rounded-lg text-xs">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Visual FX</label>
+              <select id="visualFx" class="uh-select w-full px-2.5 py-1.5 text-xs">
                 <option value="none" selected>Standard View</option>
                 <option value="glow">Neon Glow Shadow</option>
                 <option value="glass">Glassmorphic Blur</option>
@@ -242,67 +187,67 @@
           </div>
           
           <div class="grid grid-cols-3 gap-2 pt-1">
-            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-              <input id="hideCursor" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
-              <span class="font-medium text-slate-200">Hide Cursor</span>
+            <label class="flex items-center gap-2 text-xs text-[var(--uh-muted)] cursor-pointer">
+              <input id="hideCursor" type="checkbox" class="rounded uh-panel-bg border-[var(--uh-line)] text-[var(--uh-accent)] focus:ring-0">
+              <span class="font-medium text-[var(--uh-text)]">Hide Cursor</span>
             </label>
-            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-              <input id="cursorBlink" type="checkbox" checked class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
+            <label class="flex items-center gap-2 text-xs text-[var(--uh-muted)] cursor-pointer">
+              <input id="cursorBlink" type="checkbox" checked class="rounded uh-panel-bg border-[var(--uh-line)] text-[var(--uh-accent)] focus:ring-0">
               <span>Blinking</span>
             </label>
-            <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-              <input id="showLineNums" type="checkbox" class="rounded bg-slate-800 border-slate-700 text-teal-400 focus:ring-0">
+            <label class="flex items-center gap-2 text-xs text-[var(--uh-muted)] cursor-pointer">
+              <input id="showLineNums" type="checkbox" class="rounded uh-panel-bg border-[var(--uh-line)] text-[var(--uh-accent)] focus:ring-0">
               <span>Line Nums</span>
             </label>
           </div>
         </div>
 
         <!-- Prompt Variables -->
-        <div class="card p-4 rounded-xl space-y-3">
-          <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2 border-b border-slate-800 pb-2">
+        <div class="uh-card p-4 rounded-xl space-y-3">
+          <h3 class="display font-semibold text-sm text-[var(--uh-text)] flex items-center gap-2 border-b border-[var(--uh-line)] pb-2">
             <span>⚙️</span> Prompt Variables
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Username</label>
-              <input id="username" type="text" value="student" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Username</label>
+              <input id="username" type="text" value="student" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Hostname</label>
-              <input id="hostname" type="text" value="student-OptiPlex-390" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Hostname</label>
+              <input id="hostname" type="text" value="student-OptiPlex-390" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Directory</label>
-              <input id="directory" type="text" value="~/Desktop/kailas" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono">
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Directory</label>
+              <input id="directory" type="text" value="~/Desktop/kailas" class="uh-input w-full px-2.5 py-1.5 text-xs mono">
             </div>
           </div>
           <div class="grid grid-cols-3 gap-2">
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">User Color</label>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">User Color</label>
               <input id="userColor" type="color" value="#4e9a06">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Path Color</label>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Path Color</label>
               <input id="pathColor" type="color" value="#3465a4">
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1">Prompt Symbol</label>
+              <label class="block text-[11px] text-[var(--uh-muted)] mb-1">Prompt Symbol</label>
               <input id="promptSymbol" type="text" value="$" class="w-full px-2.5 py-1.5 rounded-lg text-xs mono text-center">
             </div>
           </div>
         </div>
 
         <!-- Code Presets & Input -->
-        <div class="card p-4 rounded-xl space-y-3">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-2 gap-2">
-            <h3 class="display font-semibold text-sm text-slate-200 flex items-center gap-2">
+        <div class="uh-card p-4 rounded-xl space-y-3">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[var(--uh-line)] pb-2 gap-2">
+            <h3 class="display font-semibold text-sm text-[var(--uh-text)] flex items-center gap-2">
               <span>📝</span> Terminal Input
             </h3>
             <div class="flex items-center gap-2 w-full sm:w-auto">
-              <button id="insertTab" class="btn-secondary px-2 py-1 rounded text-xs font-semibold flex items-center gap-1" title="Insert Tab Space">
+              <button id="insertTab" class="uh-btn uh-btn--secondary px-2 py-1 rounded text-xs font-semibold flex items-center gap-1" title="Insert Tab Space">
                 <span>⇥</span> Add Tab
               </button>
-              <select id="codePreset" class="w-full sm:w-auto px-2 py-1 rounded text-xs bg-[#0b1622] border border-slate-700">
+              <select id="codePreset" class="uh-select w-full sm:w-auto px-2 py-1 text-xs">
                 <option value="" disabled selected>Load Clean Preset...</option>
                 <option value="cprog">C Compile &amp; Run</option>
                 <option value="pyt">Python Execution</option>
@@ -313,7 +258,7 @@
             </div>
           </div>
           <div>
-            <textarea id="content" rows="6" class="w-full p-3 rounded-xl mono text-xs leading-relaxed resize-y focus:ring-1 focus:ring-teal-400" placeholder="Type or paste here. Press Tab or click 'Add Tab' to insert indentations...">$ gedit hello.c
+            <textarea id="content" rows="6" class="uh-textarea w-full p-3 mono text-xs leading-relaxed resize-y" placeholder="Type or paste here. Press Tab or click 'Add Tab' to insert indentations...">$ gedit hello.c
 $ gcc hello.c -o hello
 ! compilation warning: unused variable 'x'
 $ ./hello
@@ -324,42 +269,42 @@ $ ./hello
       </div>
 
       <!-- Live Preview Area -->
-      <div class="lg:col-span-7 space-y-4 flex flex-col">
+      <div class="space-y-4 flex flex-col">
         
         <!-- Viewport Toolbar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[#112131] p-3 rounded-xl border border-slate-700/50 gap-2">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-[var(--uh-panel)] p-3 rounded-xl border border-[var(--uh-line)]/50 gap-2">
           <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-400 font-medium">Terminal Viewport:</span>
-            <span id="sizeLabel" class="text-xs text-teal-300 mono font-bold">1280 × 720</span>
+            <span class="text-xs text-[var(--uh-muted)] font-medium">Terminal Viewport:</span>
+            <span id="sizeLabel" class="text-xs text-[var(--uh-accent)] mono font-bold">1280 × 720</span>
           </div>
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <span id="zoomLevel" class="text-xs text-slate-400 mono font-semibold px-2">100%</span>
-            <button id="zoomOut" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom Out">-</button>
-            <button id="zoomIn" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom In">+</button>
-            <button id="zoomReset" class="btn-secondary px-2.5 py-1 rounded-lg text-xs font-medium">1:1</button>
-            <button id="fit" class="btn-secondary px-3 py-1 rounded-lg text-xs font-medium">Fit Preview</button>
+            <span id="zoomLevel" class="text-xs text-[var(--uh-muted)] mono font-semibold px-2">100%</span>
+            <button id="zoomOut" class="uh-btn uh-btn--secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom Out">-</button>
+            <button id="zoomIn" class="uh-btn uh-btn--secondary px-2.5 py-1 rounded-lg text-xs font-bold" title="Zoom In">+</button>
+            <button id="zoomReset" class="uh-btn uh-btn--secondary px-2.5 py-1 rounded-lg text-xs font-medium">1:1</button>
+            <button id="fit" class="uh-btn uh-btn--secondary px-3 py-1 rounded-lg text-xs font-medium">Fit Preview</button>
           </div>
         </div>
 
         <!-- Terminal Stage Container with Auto-Height Fix -->
-        <div class="relative card min-h-[220px] sm:min-h-[450px] flex items-center justify-center p-3 sm:p-6 overflow-hidden bg-[#070d14] rounded-xl border border-slate-800" id="previewArea">
+        <div class="relative uh-card min-h-[220px] sm:min-h-[450px] flex items-center justify-center p-3 sm:p-6 overflow-hidden bg-[#070d14] rounded-xl border border-[var(--uh-line)]" id="previewArea">
           <div class="stage" id="stage">
             <div id="terminal"></div>
           </div>
-          <div id="toast" class="hidden absolute bottom-4 right-4 bg-teal-400 text-slate-950 font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg transition-all z-10">
+          <div id="toast" class="hidden absolute bottom-4 right-4 uh-accent-bg uh-bg-text font-semibold px-3 py-1.5 rounded-lg text-xs shadow-lg transition-all z-10">
             Action Applied!
           </div>
         </div>
 
         <!-- Formatting Reference -->
-        <div class="card p-3.5 rounded-xl text-xs text-slate-400 space-y-1">
-          <div class="font-semibold text-slate-200">💡 Custom Syntax Guide:</div>
+        <div class="uh-card p-3.5 rounded-xl text-xs text-[var(--uh-muted)] space-y-1">
+          <div class="font-semibold text-[var(--uh-text)]">💡 Custom Syntax Guide:</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <p>• <code class="text-teal-300 font-bold">$</code> = Command prompt line</p>
-            <p>• <code class="text-amber-300 font-bold">*</code> = Line focus highlight</p>
-            <p>• <code class="text-rose-400 font-bold">!</code> = Error / Warning line</p>
-            <p>• <code class="text-emerald-400 font-bold">&gt;</code> = Program output</p>
-            <p>• <code class="text-slate-500 font-bold">#</code> = Comment string</p>
+            <p>• <code class="text-[var(--uh-accent)] font-bold">$</code> = Command prompt line</p>
+            <p>• <code class="uh-warning-text font-bold">*</code> = Line focus highlight</p>
+            <p>• <code class="uh-danger-text font-bold">!</code> = Error / Warning line</p>
+            <p>• <code class="uh-success-text font-bold">&gt;</code> = Program output</p>
+            <p>• <code class="uh-faint-text font-bold">#</code> = Comment string</p>
             <p>• <code class="text-sky-300 font-bold">Tab key / ⇥</code> = Indent tab spaces</p>
           </div>
         </div>

@@ -7,32 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    body { background: #0e1c2b; color: #e7eef4; font-family: 'Inter', sans-serif; }
-    .mono { font-family: 'IBM Plex Mono', monospace; }
-    .display { font-family: 'Space Grotesk', sans-serif; }
-    .card { background: #14283b; border: 1px solid rgba(143, 176, 204, 0.16); }
-    .btn-secondary { background: #17304a; border: 1px solid rgba(143, 176, 204, 0.2); color: #e7eef4; transition: all 0.15s ease; }
-    .btn-secondary:hover { border-color: #6fd8cb; color: #6fd8cb; }
-    .btn-primary { background: #6fd8cb; color: #0e1c2b; font-weight: 600; transition: all 0.15s ease; }
-    .btn-primary:hover { background: #93e5da; }
-    .dropzone-active { border-color: #6fd8cb !important; background: rgba(111, 216, 203, 0.05); }
-    input[type="range"]::-webkit-slider-thumb { background: #6fd8cb; }
-    .modal-backdrop { background: rgba(14, 28, 43, 0.85); backdrop-filter: blur(6px); }
+    .dropzone-active { border-color: var(--uh-accent) !important; background: color-mix(in srgb, var(--uh-accent) 8%, transparent); }
+    input[type="range"]::-webkit-slider-thumb { background: var(--uh-accent); }
+    .modal-backdrop { background: color-mix(in srgb, var(--uh-bg) 85%, transparent); backdrop-filter: blur(6px); }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Image Converter"></script>
 </head>
-<body class="min-h-screen pb-12">
-  <div class="mx-auto max-w-5xl px-6 py-10">
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Universal Image Converter & Optimizer</h1>
-    <p class="text-sm text-slate-400 mb-6">Convert, resize, and compress images in bulk. Re-convert anytime from original files with dynamic settings.</p>
+<body>
+  <main class="uh-container">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Universal Image Converter &amp; Optimizer</h1>
+      <p class="uh-page-sub">Convert, resize, and compress images in bulk. Re-convert anytime from original files with dynamic settings.</p>
+    </div>
 
-    <div class="card rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+    <div class="uh-card rounded-lg p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
       <div class="flex items-center gap-3">
-        <label for="globalFormat" class="mono text-xs uppercase tracking-wider text-slate-400 whitespace-nowrap">Format:</label>
-        <select id="globalFormat" onchange="applyGlobalFormat()" class="w-full bg-[#17304a] text-slate-200 border border-slate-700 text-xs rounded px-3 py-2 focus:outline-none focus:border-teal-400 mono">
+        <label for="globalFormat" class="mono text-xs uppercase tracking-wider uh-muted-text whitespace-nowrap">Format:</label>
+        <select id="globalFormat" onchange="applyGlobalFormat()" class="w-full uh-panel uh-text border border text-xs rounded px-3 py-2 focus:outline-none focus:uh-accent-border mono uh-select">
           <option value="image/webp" selected>WEBP (Best Compression)</option>
           <option value="image/jpeg">JPG / JPEG</option>
           <option value="image/png">PNG (Lossless Alpha)</option>
@@ -42,78 +35,78 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <label for="globalQuality" class="mono text-xs uppercase tracking-wider text-slate-400 whitespace-nowrap">Quality: <span id="globalQualVal" class="text-teal-300">85%</span></label>
-        <input type="range" id="globalQuality" min="10" max="100" value="85" oninput="applyGlobalQuality(this.value)" class="w-full accent-teal-400 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+        <label for="globalQuality" class="mono text-xs uppercase tracking-wider uh-muted-text whitespace-nowrap">Quality: <span id="globalQualVal" class="uh-accent-text">85%</span></label>
+        <input type="range" id="globalQuality" min="10" max="100" value="85" oninput="applyGlobalQuality(this.value)" class="w-full accent-teal-400 h-1.5 uh-elevated-bg rounded-lg appearance-none cursor-pointer uh-range">
       </div>
 
       <div class="flex items-center justify-start md:justify-end gap-2">
-        <button id="convertAllBtn" onclick="convertAll()" class="btn-primary mono text-xs uppercase px-4 py-2 rounded-md">Convert All</button>
-        <button id="downloadZipBtn" onclick="downloadAllZip()" class="btn-secondary mono text-xs uppercase px-3 py-2 rounded-md hidden">Download ZIP</button>
-        <button onclick="clearAll()" class="btn-secondary mono text-xs uppercase px-3 py-2 rounded-md text-rose-400 border-rose-400/30 hover:border-rose-400 hover:text-rose-300">Clear</button>
+        <button id="convertAllBtn" onclick="convertAll()" class="uh-btn uh-btn--primary mono text-xs uppercase px-4 py-2 rounded-md">Convert All</button>
+        <button id="downloadZipBtn" onclick="downloadAllZip()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md hidden">Download ZIP</button>
+        <button onclick="clearAll()" class="uh-btn uh-btn--danger mono text-xs uppercase px-3 py-2 rounded-md">Clear</button>
       </div>
     </div>
 
-    <div id="dropzone" onclick="document.getElementById('fileInput').click()" class="card border-dashed border-2 border-slate-700 rounded-xl p-8 mb-8 text-center cursor-pointer transition-colors hover:border-teal-400/50">
+    <div id="dropzone" onclick="document.getElementById('fileInput').click()" class="uh-card border-dashed border-2 border rounded-xl p-8 mb-8 text-center cursor-pointer transition-colors hover:uh-accent-border">
       <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="handleFiles(this.files)" />
       <div class="flex flex-col items-center justify-center">
-        <svg class="w-10 h-10 text-teal-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-10 h-10 uh-accent-text mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <p class="text-base font-medium mb-1">Drop images here or click to browse</p>
-        <p class="mono text-xs text-slate-400">Supports JPG, PNG, WEBP, GIF, BMP, SVG, and AVIF</p>
+        <p class="mono text-xs uh-muted-text">Supports JPG, PNG, WEBP, GIF, BMP, SVG, and AVIF</p>
       </div>
     </div>
 
-    <div id="summaryBar" class="card rounded-lg p-4 mb-4 hidden bg-[#112233]">
+    <div id="summaryBar" class="uh-card rounded-lg p-4 mb-4 hidden uh-panel">
       <div class="flex flex-wrap items-center justify-between gap-4 mono text-xs">
         <div>
-          <span class="text-slate-400 uppercase">Total Files:</span> 
-          <span id="queueCount" class="text-slate-200 font-bold">0</span>
+          <span class="uh-muted-text uppercase">Total Files:</span>
+          <span id="queueCount" class="uh-text font-bold">0</span>
         </div>
         <div>
-          <span class="text-slate-400 uppercase">Original Size:</span> 
-          <span id="totalOrigSize" class="text-slate-200 font-bold">0 KB</span>
+          <span class="uh-muted-text uppercase">Original Size:</span>
+          <span id="totalOrigSize" class="uh-text font-bold">0 KB</span>
         </div>
         <div>
-          <span class="text-slate-400 uppercase">Converted Size:</span> 
-          <span id="totalConvSize" class="text-slate-200 font-bold">0 KB</span>
+          <span class="uh-muted-text uppercase">Converted Size:</span>
+          <span id="totalConvSize" class="uh-text font-bold">0 KB</span>
         </div>
         <div>
-          <span class="text-slate-400 uppercase">Total Space Saved:</span> 
-          <span id="totalSaved" class="text-teal-300 font-bold">0%</span>
+          <span class="uh-muted-text uppercase">Total Space Saved:</span>
+          <span id="totalSaved" class="uh-accent-text font-bold">0%</span>
         </div>
       </div>
     </div>
 
     <div id="fileList" class="space-y-4"></div>
-  </div>
+  </main>
 
   <div id="compareModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
-    <div class="card rounded-xl max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-700/60 mb-4">
+    <div class="uh-card rounded-xl max-w-4xl w-full p-6 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between pb-4 border-b border mb-4">
         <h3 class="display text-lg font-bold">Visual & Size Comparison</h3>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+        <button onclick="closeModal()" class="uh-muted-text hover:uh-text text-xl leading-none">&times;</button>
       </div>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-y-auto mb-4">
-        <div class="bg-[#0e1c2b] p-3 rounded-lg border border-slate-800 text-center flex flex-col">
-          <span class="mono text-xs text-slate-400 uppercase block mb-2">Original File</span>
-          <div class="h-64 flex-1 flex items-center justify-center bg-black/40 rounded overflow-hidden mb-3">
+        <div class="uh-panel p-3 rounded-lg border border text-center flex flex-col">
+          <span class="mono text-xs uh-muted-text uppercase block mb-2">Original File</span>
+          <div class="h-64 flex-1 flex items-center justify-center uh-panel rounded overflow-hidden mb-3">
             <img id="modalOrigImg" class="max-h-full max-w-full object-contain" />
           </div>
-          <p id="modalOrigMeta" class="mono text-xs text-slate-300"></p>
+          <p id="modalOrigMeta" class="mono text-xs uh-text"></p>
         </div>
-        <div class="bg-[#0e1c2b] p-3 rounded-lg border border-slate-800 text-center flex flex-col">
-          <span class="mono text-xs text-teal-300 uppercase block mb-2">Converted File</span>
-          <div class="h-64 flex-1 flex items-center justify-center bg-black/40 rounded overflow-hidden mb-3">
+        <div class="uh-panel p-3 rounded-lg border border text-center flex flex-col">
+          <span class="mono text-xs uh-accent-text uppercase block mb-2">Converted File</span>
+          <div class="h-64 flex-1 flex items-center justify-center uh-panel rounded overflow-hidden mb-3">
             <img id="modalConvImg" class="max-h-full max-w-full object-contain" />
           </div>
-          <p id="modalConvMeta" class="mono text-xs text-teal-300"></p>
+          <p id="modalConvMeta" class="mono text-xs uh-accent-text"></p>
         </div>
       </div>
 
-      <div class="flex justify-end pt-2 border-t border-slate-700/60">
-        <button onclick="closeModal()" class="btn-secondary mono text-xs uppercase px-4 py-2 rounded">Close</button>
+      <div class="flex justify-end pt-2 border-t border">
+        <button onclick="closeModal()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-4 py-2 rounded">Close</button>
       </div>
     </div>
   </div>
@@ -252,28 +245,28 @@
         const isSmaller = sizeDiff <= 0;
 
         return `
-          <div class="card rounded-lg p-4 flex flex-col gap-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700/50 pb-3">
+          <div class="uh-card rounded-lg p-4 flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border pb-3">
               <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-12 h-12 rounded bg-[#0e1c2b] flex items-center justify-center shrink-0 overflow-hidden border border-slate-700">
+                <div class="w-12 h-12 rounded uh-panel flex items-center justify-center shrink-0 overflow-hidden border border">
                   <img src="${URL.createObjectURL(item.file)}" class="w-full h-full object-cover" alt="Preview"/>
                 </div>
                 <div class="truncate">
                   <p class="text-sm font-medium truncate">${item.file.name}</p>
-                  <p class="mono text-xs text-slate-400">Original: ${formatBytes(item.file.size)} &bull; ${item.origDimensions.width}x${item.origDimensions.height}px (${item.file.type.split('/')[1] || 'IMG'})</p>
+                  <p class="mono text-xs uh-muted-text">Original: ${formatBytes(item.file.size)} &bull; ${item.origDimensions.width}x${item.origDimensions.height}px (${item.file.type.split('/')[1] || 'IMG'})</p>
                 </div>
               </div>
 
               <div class="flex items-center gap-2 self-end sm:self-auto">
-                <button onclick="convertSingle('${item.id}')" class="btn-secondary mono text-xs uppercase px-3 py-1.5 rounded flex items-center gap-1.5">
+                <button onclick="convertSingle('${item.id}')" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-1.5 rounded flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                   ${hasConverted ? 'Re-convert' : 'Convert'}
                 </button>
                 ${hasConverted ? `
-                  <button onclick="openCompareModal('${item.id}')" class="btn-secondary mono text-xs uppercase px-2.5 py-1.5 rounded">Compare</button>
-                  <a href="${URL.createObjectURL(item.convertedBlob)}" download="${item.convertedName}" class="btn-primary mono text-xs uppercase px-3 py-1.5 rounded">Download</a>
+                  <button onclick="openCompareModal('${item.id}')" class="uh-btn uh-btn--secondary mono text-xs uppercase px-2.5 py-1.5 rounded">Compare</button>
+                  <a href="${URL.createObjectURL(item.convertedBlob)}" download="${item.convertedName}" class="uh-btn uh-btn--primary mono text-xs uppercase px-3 py-1.5 rounded">Download</a>
                 ` : ''}
-                <button onclick="removeFile('${item.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded hover:bg-slate-800">
+                <button onclick="removeFile('${item.id}')" class="uh-faint-text hover:uh-danger-text p-1 rounded hover:uh-panel-bg">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
               </div>
@@ -281,8 +274,8 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-center text-xs mono">
               <div>
-                <label class="text-slate-400 uppercase text-[10px] block mb-1">Target Format</label>
-                <select onchange="updateItemFormat('${item.id}', this.value)" class="w-full bg-[#0e1c2b] text-slate-200 border border-slate-700 rounded px-2 py-1 focus:outline-none focus:border-teal-400">
+                <label class="uh-muted-text uppercase text-[10px] block mb-1">Target Format</label>
+                <select onchange="updateItemFormat('${item.id}', this.value)" class="w-full uh-panel uh-text border border rounded px-2 py-1 focus:outline-none focus:uh-accent-border uh-select">
                   <option value="image/webp" ${item.targetFormat === 'image/webp' ? 'selected' : ''}>WEBP</option>
                   <option value="image/jpeg" ${item.targetFormat === 'image/jpeg' ? 'selected' : ''}>JPG</option>
                   <option value="image/png" ${item.targetFormat === 'image/png' ? 'selected' : ''}>PNG</option>
@@ -292,33 +285,33 @@
               </div>
 
               <div>
-                <label class="text-slate-400 uppercase text-[10px] block mb-1">Quality: <span id="qualVal_${item.id}" class="text-teal-300">${item.quality}%</span></label>
-                <input type="range" min="10" max="100" value="${item.quality}" onchange="updateItemQuality('${item.id}', this.value)" class="w-full accent-teal-400 h-1 bg-slate-700 rounded appearance-none cursor-pointer">
+                <label class="uh-muted-text uppercase text-[10px] block mb-1">Quality: <span id="qualVal_${item.id}" class="uh-accent-text">${item.quality}%</span></label>
+                <input type="range" min="10" max="100" value="${item.quality}" onchange="updateItemQuality('${item.id}', this.value)" class="w-full accent-teal-400 h-1 uh-elevated-bg rounded appearance-none cursor-pointer uh-range">
               </div>
 
               <div class="col-span-1 md:col-span-2 flex items-center gap-2">
                 <div class="flex-1">
-                  <label class="text-slate-400 uppercase text-[10px] block mb-1">Width (px)</label>
-                  <input type="number" id="width_${item.id}" value="${item.targetWidth}" onchange="updateItemDimension('${item.id}', 'width', this.value)" class="w-full bg-[#0e1c2b] border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-teal-400" />
+                  <label class="uh-muted-text uppercase text-[10px] block mb-1">Width (px)</label>
+                  <input type="number" id="width_${item.id}" value="${item.targetWidth}" onchange="updateItemDimension('${item.id}', 'width', this.value)" class="w-full uh-panel border border rounded px-2 py-1 uh-text focus:outline-none focus:uh-accent-border uh-input" />
                 </div>
-                <button onclick="toggleAspectRatioLock('${item.id}')" title="Toggle Aspect Ratio Lock" class="mt-4 p-1.5 rounded border border-slate-700 text-slate-400 hover:text-teal-300">
+                <button onclick="toggleAspectRatioLock('${item.id}')" title="Toggle Aspect Ratio Lock" class="mt-4 p-1.5 rounded border border uh-muted-text hover:uh-accent-text">
                   ${item.lockAspectRatio ? '🔒' : '🔓'}
                 </button>
                 <div class="flex-1">
-                  <label class="text-slate-400 uppercase text-[10px] block mb-1">Height (px)</label>
-                  <input type="number" id="height_${item.id}" value="${item.targetHeight}" onchange="updateItemDimension('${item.id}', 'height', this.value)" class="w-full bg-[#0e1c2b] border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-teal-400" />
+                  <label class="uh-muted-text uppercase text-[10px] block mb-1">Height (px)</label>
+                  <input type="number" id="height_${item.id}" value="${item.targetHeight}" onchange="updateItemDimension('${item.id}', 'height', this.value)" class="w-full uh-panel border border rounded px-2 py-1 uh-text focus:outline-none focus:uh-accent-border uh-input" />
                 </div>
               </div>
             </div>
 
             ${hasConverted ? `
-              <div class="bg-[#0e1c2b] border border-slate-800 rounded p-3 flex flex-wrap items-center justify-between gap-2 text-xs mono">
+              <div class="uh-panel border border rounded p-3 flex flex-wrap items-center justify-between gap-2 text-xs mono">
                 <div class="flex items-center gap-4">
-                  <span class="text-slate-400">Current Output: <span class="text-teal-300 font-bold uppercase">${getExtension(item.targetFormat)}</span></span>
-                  <span class="text-slate-400">New Size: <span class="text-white font-bold">${formatBytes(item.convertedBlob.size)}</span></span>
-                  <span class="text-slate-400">Dimensions: <span class="text-white">${item.convertedDimensions.width}x${item.convertedDimensions.height}px</span></span>
+                  <span class="uh-muted-text">Current Output: <span class="uh-accent-text font-bold uppercase">${getExtension(item.targetFormat)}</span></span>
+                  <span class="uh-muted-text">New Size: <span class="uh-bg-text font-bold">${formatBytes(item.convertedBlob.size)}</span></span>
+                  <span class="uh-muted-text">Dimensions: <span class="uh-bg-text">${item.convertedDimensions.width}x${item.convertedDimensions.height}px</span></span>
                 </div>
-                <div class="font-bold ${isSmaller ? 'text-emerald-400' : 'text-rose-400'}">
+                <div class="font-bold ${isSmaller ? 'uh-success-text' : 'uh-danger-text'}">
                   ${isSmaller ? 'Reduced by ' + Math.abs(percentChange) + '%' : 'Increased by +' + percentChange + '%'}
                 </div>
               </div>

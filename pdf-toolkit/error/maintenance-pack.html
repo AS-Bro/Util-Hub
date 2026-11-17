@@ -4,18 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>System Maintenance & Error Hub — Utility Hub</title>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="System Maintenance & Error Hub"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
-    body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-    .mono { font-family:'IBM Plex Mono',monospace; }
-    .display { font-family:'Space Grotesk',sans-serif; }
-    .card { background:#14283b; border:1px solid rgba(143,176,204,.16); }
-    .input-field { background:#0e1c2b; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-    .input-field:focus { border-color:#6fd8cb; outline:none; }
-    .btn-action { background:#6fd8cb; color:#0e1c2b; font-weight:600; transition: all 0.15s ease; }
-    .btn-action:hover { background:#5bc4b7; transform: translateY(-1px); }
+    body { font-family: var(--uh-font-body); }
+    .card { background:var(--uh-panel); border:1px solid var(--uh-line); }
+    .input-field { background:var(--uh-panel); border:1px solid var(--uh-line-strong); color:var(--uh-text); }
+    .input-field:focus { border-color:var(--uh-accent); outline:none; }
+    .btn-action { background:var(--uh-accent); color:var(--uh-bg); font-weight:600; transition: all var(--uh-transition); }
+    .btn-action:hover { background:var(--uh-accent-strong); transform: translateY(-1px); }
     .btn-action:active { transform: translateY(0); }
+    .err-tab-btn { border:1px solid var(--uh-line-strong); background:var(--uh-elevated); color:var(--uh-muted); }
+    .err-tab-btn.active { border-color:var(--uh-accent); background:var(--uh-panel); color:var(--uh-accent); }
+    .err-tab-btn:not(.active) { color:var(--uh-muted); }
     
     /* Gear Animations */
     @keyframes spin-clockwise {
@@ -34,25 +36,25 @@
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(143,176,204,0.2); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--uh-line-strong) 40%, transparent); border-radius: 4px; }
   </style>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-5xl px-6 py-10">
-    
-    <div class="flex justify-between items-center mb-6">
-      <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-      <div class="flex items-center gap-2">
-        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 pulse-glow"></span>
-        <span id="systemStatusBadge" class="mono text-xs text-amber-400 uppercase font-semibold">Service Degraded</span>
-      </div>
+<body class="uh-tool">
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <span id="systemStatusBadge" class="uh-badge">Service Degraded</span>
+      <span class="uh-label" id="errCategory">HTTP STATUS 503</span>
+      <h1 id="errTitle" class="uh-page-title">Scheduled System Maintenance</h1>
+      <p id="errDesc" class="uh-page-sub">
+        We are performing routine infrastructure upgrades to improve system scalability and security. Core services will resume shortly.
+      </p>
     </div>
 
-    <div class="flex flex-wrap gap-2 mb-8 bg-[#14283b]/60 p-1.5 rounded-lg border border-white/10 mono text-xs">
-      <button class="err-tab-btn active border-teal-300 text-teal-300 px-3 py-1.5 rounded bg-[#0e1c2b]" data-code="503">503 Maintenance</button>
-      <button class="err-tab-btn text-slate-400 hover:text-teal-300 px-3 py-1.5 rounded" data-code="404">404 Not Found</button>
-      <button class="err-tab-btn text-slate-400 hover:text-teal-300 px-3 py-1.5 rounded" data-code="403">403 Forbidden</button>
-      <button class="err-tab-btn text-slate-400 hover:text-teal-300 px-3 py-1.5 rounded" data-code="500">500 Server Error</button>
+    <div class="uh-toolbar uh-panel mb-8 mono text-xs">
+      <button class="err-tab-btn active px-3 py-1.5 rounded" data-code="503">503 Maintenance</button>
+      <button class="err-tab-btn px-3 py-1.5 rounded" data-code="404">404 Not Found</button>
+      <button class="err-tab-btn px-3 py-1.5 rounded" data-code="403">403 Forbidden</button>
+      <button class="err-tab-btn px-3 py-1.5 rounded" data-code="500">500 Server Error</button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -64,40 +66,34 @@
           <div class="flex justify-center items-center my-4 h-32 relative">
             <svg id="errGraphic" class="w-32 h-32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               <g class="gear-main" transform-origin="50 50">
-                <path d="M50 20V10M50 90V80M20 50H10M90 50H80M28.78 28.78L21.71 21.71M78.28 78.28L71.21 71.21M28.78 71.21L21.71 78.28M78.28 21.71L71.21 28.78" stroke="#6fd8cb" stroke-width="4" stroke-linecap="round"/>
-                <circle cx="50" cy="50" r="25" stroke="#6fd8cb" stroke-width="4"/>
+                <path d="M50 20V10M50 90V80M20 50H10M90 50H80M28.78 28.78L21.71 21.71M78.28 78.28L71.21 71.21M28.78 71.21L21.71 78.28M78.28 21.71L71.21 28.78" stroke="var(--uh-accent)" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="50" cy="50" r="25" stroke="var(--uh-accent)" stroke-width="4"/>
               </g>
               <g class="gear-sub" transform-origin="68 32">
-                <circle cx="68" cy="32" r="12" stroke="#e8a33d" stroke-width="3"/>
-                <path d="M68 16V20M68 44V40M52 32H56M84 32H80" stroke="#e8a33d" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="68" cy="32" r="12" stroke="var(--uh-warning)" stroke-width="3"/>
+                <path d="M68 16V20M68 44V40M52 32H56M84 32H80" stroke="var(--uh-warning)" stroke-width="3" stroke-linecap="round"/>
               </g>
             </svg>
           </div>
 
-          <div class="mono text-xs text-amber-400 uppercase tracking-widest font-bold mb-1" id="errCategory">HTTP STATUS 503</div>
-          <h1 id="errTitle" class="display text-3xl sm:text-4xl font-bold mb-3">Scheduled System Maintenance</h1>
-          <p id="errDesc" class="text-slate-400 text-sm max-w-lg mx-auto mb-6">
-            We are performing routine infrastructure upgrades to improve system scalability and security. Core services will resume shortly.
-          </p>
-
-          <div id="countdownBox" class="bg-[#0e1c2b] p-4 rounded border border-white/10 max-w-md mx-auto mb-6">
-            <span class="mono text-[10px] uppercase text-slate-400 block mb-2">Estimated System Uptime In</span>
+          <div id="countdownBox" class="uh-bg-bg p-4 rounded border uh-line-border max-w-md mx-auto mb-6">
+            <span class="mono text-[10px] uppercase uh-muted-text block mb-2">Estimated System Uptime In</span>
             <div class="grid grid-cols-4 gap-2 text-center">
               <div>
-                <span id="cdHours" class="display text-2xl font-bold text-teal-300">01</span>
-                <span class="mono text-[9px] uppercase text-slate-400 block">Hours</span>
+                <span id="cdHours" class="display text-2xl font-bold uh-accent-text">01</span>
+                <span class="mono text-[9px] uppercase uh-muted-text block">Hours</span>
               </div>
               <div>
-                <span id="cdMinutes" class="display text-2xl font-bold text-teal-300">45</span>
-                <span class="mono text-[9px] uppercase text-slate-400 block">Mins</span>
+                <span id="cdMinutes" class="display text-2xl font-bold uh-accent-text">45</span>
+                <span class="mono text-[9px] uppercase uh-muted-text block">Mins</span>
               </div>
               <div>
-                <span id="cdSeconds" class="display text-2xl font-bold text-teal-300">30</span>
-                <span class="mono text-[9px] uppercase text-slate-400 block">Secs</span>
+                <span id="cdSeconds" class="display text-2xl font-bold uh-accent-text">30</span>
+                <span class="mono text-[9px] uppercase uh-muted-text block">Secs</span>
               </div>
               <div>
-                <span id="cdMs" class="display text-2xl font-bold text-teal-300">00</span>
-                <span class="mono text-[9px] uppercase text-slate-400 block">MS</span>
+                <span id="cdMs" class="display text-2xl font-bold uh-accent-text">00</span>
+                <span class="mono text-[9px] uppercase uh-muted-text block">MS</span>
               </div>
             </div>
           </div>
@@ -107,20 +103,20 @@
               <span id="retrySpinner" class="hidden animate-spin">↻</span>
               <span>Check Server Status</span>
             </button>
-            <button id="copyDiagBtn" class="mono text-xs text-slate-300 hover:text-teal-300 border border-white/10 px-4 py-2.5 rounded hover:bg-white/5 transition-colors">
+            <button id="copyDiagBtn" class="mono text-xs uh-text hover:uh-accent-text border uh-line-border px-4 py-2.5 rounded hover:uh-elevated-bg transition-colors">
               Copy Diagnostics
             </button>
           </div>
 
-          <div id="pingStatus" class="hidden mt-4 mono text-xs text-teal-300 bg-teal-500/10 border border-teal-500/30 p-2.5 rounded max-w-md mx-auto">
+          <div id="pingStatus" class="hidden mt-4 mono text-xs uh-accent-text uh-accent-bg-soft border uh-accent-border p-2.5 rounded max-w-md mx-auto">
             Checking backend ping response...
           </div>
         </div>
 
         <div class="card p-5 rounded-md flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
-            <h3 class="display text-sm font-bold text-slate-200">Get Notified On Completion</h3>
-            <p class="text-xs text-slate-400">Receive an automatic alert the moment services are back online.</p>
+            <h3 class="display text-sm font-bold uh-text">Get Notified On Completion</h3>
+            <p class="text-xs uh-muted-text">Receive an automatic alert the moment services are back online.</p>
           </div>
           <div class="flex w-full sm:w-auto gap-2">
             <input type="email" id="notifyEmail" placeholder="developer@example.com" class="input-field rounded px-3 py-2 text-xs mono w-full sm:w-60" />
@@ -133,35 +129,35 @@
       <div class="space-y-6">
         
         <div class="card p-4 rounded-md">
-          <span class="mono text-xs uppercase font-bold text-slate-400 block mb-3">Service Health Metrics</span>
+          <span class="mono text-xs uppercase font-bold uh-muted-text block mb-3">Service Health Metrics</span>
           <div class="space-y-3 mono text-xs">
             <div>
               <div class="flex justify-between text-[11px] mb-1">
-                <span class="text-slate-400">API Gateway</span>
-                <span class="text-teal-300 font-bold">100% Operational</span>
+                <span class="uh-muted-text">API Gateway</span>
+                <span class="uh-accent-text font-bold">100% Operational</span>
               </div>
-              <div class="w-full bg-[#0e1c2b] h-1.5 rounded overflow-hidden">
-                <div class="bg-teal-300 h-full w-full"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="flex justify-between text-[11px] mb-1">
-                <span class="text-slate-400">Database Cluster</span>
-                <span id="dbHealthText" class="text-amber-400 font-bold">Maintenance In Progress</span>
-              </div>
-              <div class="w-full bg-[#0e1c2b] h-1.5 rounded overflow-hidden">
-                <div id="dbHealthBar" class="bg-amber-400 h-full w-2/3 transition-all duration-500"></div>
+              <div class="w-full uh-bg-bg h-1.5 rounded overflow-hidden">
+                <div class="uh-accent-bg h-full w-full"></div>
               </div>
             </div>
 
             <div>
               <div class="flex justify-between text-[11px] mb-1">
-                <span class="text-slate-400">Utility Storage & CDN</span>
-                <span class="text-teal-300 font-bold">100% Operational</span>
+                <span class="uh-muted-text">Database Cluster</span>
+                <span id="dbHealthText" class="uh-warning-text font-bold">Maintenance In Progress</span>
               </div>
-              <div class="w-full bg-[#0e1c2b] h-1.5 rounded overflow-hidden">
-                <div class="bg-teal-300 h-full w-full"></div>
+              <div class="w-full uh-bg-bg h-1.5 rounded overflow-hidden">
+                <div id="dbHealthBar" class="uh-warning-bg-soft h-full w-2/3 transition-all duration-500"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="uh-muted-text">Utility Storage & CDN</span>
+                <span class="uh-accent-text font-bold">100% Operational</span>
+              </div>
+              <div class="w-full uh-bg-bg h-1.5 rounded overflow-hidden">
+                <div class="uh-accent-bg h-full w-full"></div>
               </div>
             </div>
           </div>
@@ -169,21 +165,21 @@
 
         <div class="card p-4 rounded-md flex flex-col h-[300px]">
           <div class="flex justify-between items-center mb-3">
-            <span class="mono text-xs uppercase font-bold text-slate-400">Maintenance Timeline</span>
-            <span class="mono text-[10px] text-teal-300">Live Feed</span>
+            <span class="mono text-xs uppercase font-bold uh-muted-text">Maintenance Timeline</span>
+            <span class="mono text-[10px] uh-accent-text">Live Feed</span>
           </div>
           <div id="incidentLog" class="flex-1 overflow-y-auto space-y-3 pr-1 mono text-xs">
-            <div class="bg-[#0e1c2b] p-2.5 rounded border border-white/5">
-              <div class="text-amber-400 text-[10px] font-bold">20:25 UTC — IN PROGRESS</div>
-              <div class="text-slate-300 text-xs mt-0.5">Database migration and index optimization initiated.</div>
+            <div class="uh-bg-bg p-2.5 rounded border uh-line-border">
+              <div class="uh-warning-text text-[10px] font-bold">20:25 UTC — IN PROGRESS</div>
+              <div class="uh-text text-xs mt-0.5">Database migration and index optimization initiated.</div>
             </div>
-            <div class="bg-[#0e1c2b] p-2.5 rounded border border-white/5">
-              <div class="text-slate-400 text-[10px]">20:00 UTC — SCHEDULED</div>
-              <div class="text-slate-300 text-xs mt-0.5">Maintenance window started. Read-only mode activated.</div>
+            <div class="uh-bg-bg p-2.5 rounded border uh-line-border">
+              <div class="uh-muted-text text-[10px]">20:00 UTC — SCHEDULED</div>
+              <div class="uh-text text-xs mt-0.5">Maintenance window started. Read-only mode activated.</div>
             </div>
-            <div class="bg-[#0e1c2b] p-2.5 rounded border border-white/5">
-              <div class="text-teal-300 text-[10px]">19:45 UTC — PREPARATION</div>
-              <div class="text-slate-300 text-xs mt-0.5">Automated backups completed successfully.</div>
+            <div class="uh-bg-bg p-2.5 rounded border uh-line-border">
+              <div class="uh-accent-text text-[10px]">19:45 UTC — PREPARATION</div>
+              <div class="uh-text text-xs mt-0.5">Automated backups completed successfully.</div>
             </div>
           </div>
         </div>
@@ -191,7 +187,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <script>
     // Configuration Data for Various Error States
@@ -199,53 +195,53 @@
       '503': {
         category: 'HTTP STATUS 503',
         badge: 'Service Degraded',
-        badgeColor: 'text-amber-400',
+        badgeColor: 'uh-warning-text',
         title: 'Scheduled System Maintenance',
         desc: 'We are performing routine infrastructure upgrades to improve system scalability and security. Core services will resume shortly.',
         showCountdown: true,
         graphic: `
           <g class="gear-main" transform-origin="50 50">
-            <path d="M50 20V10M50 90V80M20 50H10M90 50H80M28.78 28.78L21.71 21.71M78.28 78.28L71.21 71.21M28.78 71.21L21.71 78.28M78.28 21.71L71.21 28.78" stroke="#6fd8cb" stroke-width="4" stroke-linecap="round"/>
-            <circle cx="50" cy="50" r="25" stroke="#6fd8cb" stroke-width="4"/>
+            <path d="M50 20V10M50 90V80M20 50H10M90 50H80M28.78 28.78L21.71 21.71M78.28 78.28L71.21 71.21M28.78 71.21L21.71 78.28M78.28 21.71L71.21 28.78" stroke="var(--uh-accent)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="50" cy="50" r="25" stroke="var(--uh-accent)" stroke-width="4"/>
           </g>
           <g class="gear-sub" transform-origin="68 32">
-            <circle cx="68" cy="32" r="12" stroke="#e8a33d" stroke-width="3"/>
-            <path d="M68 16V20M68 44V40M52 32H56M84 32H80" stroke="#e8a33d" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="68" cy="32" r="12" stroke="var(--uh-warning)" stroke-width="3"/>
+            <path d="M68 16V20M68 44V40M52 32H56M84 32H80" stroke="var(--uh-warning)" stroke-width="3" stroke-linecap="round"/>
           </g>`
       },
       '404': {
         category: 'HTTP STATUS 404',
         badge: 'Resource Missing',
-        badgeColor: 'text-rose-400',
+        badgeColor: 'uh-danger-text',
         title: 'Page Not Found',
         desc: 'The utility module or resource you requested could not be found. It may have been relocated, renamed, or temporarily offline.',
         showCountdown: false,
         graphic: `
-          <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="42" font-weight="bold" fill="#6fd8cb">404</text>
-          <circle cx="50" cy="50" r="42" stroke="#6fd8cb" stroke-width="2" stroke-dasharray="6 6"/>`
+          <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="42" font-weight="bold" fill="var(--uh-accent)">404</text>
+          <circle cx="50" cy="50" r="42" stroke="var(--uh-accent)" stroke-width="2" stroke-dasharray="6 6"/>`
       },
       '403': {
         category: 'HTTP STATUS 403',
         badge: 'Access Restricted',
-        badgeColor: 'text-rose-400',
+        badgeColor: 'uh-danger-text',
         title: 'Access Forbidden',
         desc: 'You do not have the necessary security permissions or authorization tokens to access this Utility Hub endpoint.',
         showCountdown: false,
         graphic: `
-          <rect x="30" y="45" width="40" height="32" rx="4" stroke="#e8a33d" stroke-width="3" fill="none"/>
-          <path d="M38 45V32a12 12 0 1 1 24 0v13" stroke="#6fd8cb" stroke-width="3" fill="none" stroke-linecap="round"/>
-          <circle cx="50" cy="61" r="3" fill="#e8a33d"/>`
+          <rect x="30" y="45" width="40" height="32" rx="4" stroke="var(--uh-warning)" stroke-width="3" fill="none"/>
+          <path d="M38 45V32a12 12 0 1 1 24 0v13" stroke="var(--uh-accent)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="50" cy="61" r="3" fill="var(--uh-warning)"/>`
       },
       '500': {
         category: 'HTTP STATUS 500',
         badge: 'Server Incident',
-        badgeColor: 'text-rose-400',
+        badgeColor: 'uh-danger-text',
         title: 'Internal Server Error',
         desc: 'An unexpected execution anomaly occurred on our primary worker instance. Our telemetry system has logged this incident automatically.',
         showCountdown: false,
         graphic: `
-          <path d="M50 15 L85 80 L15 80 Z" stroke="#e8a33d" stroke-width="3" fill="none" stroke-linejoin="round"/>
-          <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="28" font-weight="bold" fill="#e8a33d">!</text>`
+          <path d="M50 15 L85 80 L15 80 Z" stroke="var(--uh-warning)" stroke-width="3" fill="none" stroke-linejoin="round"/>
+          <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="28" font-weight="bold" fill="var(--uh-warning)">!</text>`
       }
     };
 
@@ -261,11 +257,11 @@
     document.querySelectorAll('.err-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.err-tab-btn').forEach(b => {
-          b.classList.remove('active', 'border-teal-300', 'text-teal-300', 'bg-[#0e1c2b]');
-          b.classList.add('text-slate-400');
+          b.classList.remove('active', 'uh-accent-border', 'uh-accent-text', 'uh-bg-bg');
+          b.classList.add('uh-muted-text');
         });
-        btn.classList.add('active', 'border-teal-300', 'text-teal-300', 'bg-[#0e1c2b]');
-        btn.classList.remove('text-slate-400');
+        btn.classList.add('active', 'uh-accent-border', 'uh-accent-text', 'uh-bg-bg');
+        btn.classList.remove('uh-muted-text');
 
         const code = btn.dataset.code;
         const config = errorConfigs[code];

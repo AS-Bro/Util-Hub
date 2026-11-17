@@ -9,22 +9,23 @@
 <style>
   .pos-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
   .pos-btn { aspect-ratio:1.4; background:var(--panel); border:1px solid var(--border-softer); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-dimmer); font-size:10px; }
-  .pos-btn.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  .pos-btn.active { border-color:var(--uh-accent); color:var(--uh-accent); background:color-mix(in srgb, var(--uh-accent) 8%, transparent); }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Add Page Numbers"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Add Page Numbers</h1>
-    <p class="page-sub">Stamp page numbers onto your document with full control over format, position and styling.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Add Page Numbers</h1>
+      <p class="uh-page-sub">Stamp page numbers onto your document with full control over format, position and styling.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">🔢</div>
       <div class="primary-txt">Click or drag a PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

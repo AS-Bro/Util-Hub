@@ -6,20 +6,6 @@
 <title>Font Previewer - Util-Hub</title>
 <link rel="icon" type="image/png" href="../images/UH_2.png" />
 
-<!-- Theme pre-loader -->
-<script>
-  (function () {
-    try {
-      var saved = localStorage.getItem('utilityhub:theme');
-      var theme = saved === 'light' || saved === 'dark'
-        ? saved
-        : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.classList.add(theme);
-      document.documentElement.style.colorScheme = theme;
-    } catch (e) {}
-  })();
-</script>
-
 <!-- Preconnect to Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,18 +22,18 @@
     theme: {
       extend: {
         colors: {
-          bg: 'var(--bg)',
-          panel: 'var(--bg-panel)',
-          elevated: 'var(--bg-elevated)',
-          line: 'var(--line)',
-          'line-strong': 'var(--line-strong)',
-          ink: 'var(--text)',
-          muted: 'var(--text-muted)',
-          faint: 'var(--text-faint)',
-          accent: 'var(--accent)',
-          'accent-strong': 'var(--accent-strong)',
-          signal: 'var(--signal)',
-          'signal-strong': 'var(--signal-strong)',
+          bg: 'var(--uh-bg)',
+          panel: 'var(--uh-panel)',
+          elevated: 'var(--uh-elevated)',
+          line: 'var(--uh-line)',
+          'line-strong': 'var(--uh-line-strong)',
+          ink: 'var(--uh-text)',
+          muted: 'var(--uh-muted)',
+          faint: 'var(--uh-faint)',
+          accent: 'var(--uh-accent)',
+          'accent-strong': 'var(--uh-accent-strong)',
+          signal: 'var(--uh-signal)',
+          'signal-strong': 'var(--uh-signal-strong)',
         },
         fontFamily: {
           display: ['"Space Grotesk"', 'sans-serif'],
@@ -64,122 +50,22 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 
 <style>
-  html.dark {
-    --bg: #0e1c2b;
-    --bg-panel: #14283b;
-    --bg-elevated: #17304a;
-    --line: rgba(143, 176, 204, 0.16);
-    --line-strong: rgba(143, 176, 204, 0.4);
-    --text: #e7eef4;
-    --text-muted: #93a9bd;
-    --text-faint: #5b7288;
-    --accent: #6fd8cb;
-    --accent-strong: #93e5da;
-    --signal: #e8a33d;
-    --signal-strong: #f2bc6b;
-  }
-  html.light {
-    --bg: #eef2f4;
-    --bg-panel: #ffffff;
-    --bg-elevated: #ffffff;
-    --line: rgba(24, 55, 79, 0.14);
-    --line-strong: rgba(24, 55, 79, 0.32);
-    --text: #142536;
-    --text-muted: #4f6779;
-    --text-faint: #869aab;
-    --accent: #0f8f80;
-    --accent-strong: #0c7267;
-    --signal: #b6741a;
-    --signal-strong: #93590f;
-  }
-
-  body {
-    background-color: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-  }
-
-  .blueprint-grid {
-    position: fixed;
-    inset: 0;
-    z-index: -10;
-    pointer-events: none;
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 44px 44px;
-    opacity: 0.5;
-  }
-
-  .card-frame { position: relative; }
-  .corner {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-color: var(--line-strong);
-    pointer-events: none;
-  }
-  .corner-tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
-  .corner-tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
-  .corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
-  .corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
-
-  .switch-track { background: var(--bg); border: 1px solid var(--line-strong); }
-  .switch-knob { background: var(--accent); transition: transform 0.2s ease; }
-  html.light .switch-knob { transform: translateX(18px); }
-
-  .spinner {
-    width: 1.5rem;
-    height: 1.5rem;
-    border: 2px solid var(--line);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width:1.5rem; height:1.5rem; border:2px solid var(--uh-line); border-top-color:var(--uh-accent); border-radius:50%; animation:font-preview-spin .8s linear infinite; }
+  @keyframes font-preview-spin { to { transform:rotate(360deg); } }
 </style>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Font Previewer"></script>
 </head>
 
-<body class="min-h-screen font-body antialiased flex flex-col justify-between">
-  <div class="blueprint-grid" aria-hidden="true"></div>
-
-  <!-- HEADER -->
-  <header class="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-      <div class="flex items-center gap-3">
-        <a class="flex items-center gap-3" href="../index.html" aria-label="Utility Hub home">
-          <img src="images/UH.png" alt="" width="38" height="38" />
-          <div class="leading-tight">
-            <h1 class="font-display text-lg font-semibold tracking-tight text-ink">Font Previewer</h1>
-            <p class="font-mono text-[11px] uppercase tracking-widest text-faint">Sheet — Typography Tool</p>
-          </div>
-        </a>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <div id="active-font-badge" class="hidden sm:inline-flex rounded-full border border-line bg-panel px-3 py-1 font-mono text-xs text-muted">No font loaded</div>
-        <button
-          id="theme-toggle"
-          type="button"
-          role="switch"
-          aria-checked="false"
-          aria-label="Toggle light and dark theme"
-          class="switch-track relative flex h-8 w-[52px] items-center rounded-full px-1"
-        >
-          <span class="switch-knob absolute left-1 flex h-6 w-6 items-center justify-center rounded-full text-bg">
-            <i data-lucide="moon" class="h-3.5 w-3.5 dark:block hidden" aria-hidden="true"></i>
-            <i data-lucide="sun" class="h-3.5 w-3.5 dark:hidden block" aria-hidden="true"></i>
-          </span>
-        </button>
-      </div>
-    </div>
-  </header>
+<body>
 
   <!-- MAIN TOOL SHELL -->
-  <main class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8 flex-1">
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head"><h1 class="uh-page-title">Font Previewer</h1><p class="uh-page-sub">Inspect uploaded fonts locally across scripts, weights, and multilingual specimens.</p></div>
+    <span id="active-font-badge" class="uh-badge hidden sm:inline-flex mb-4">No font loaded</span>
+    <button id="theme-toggle" type="button" class="hidden" aria-hidden="true" tabindex="-1"></button>
 
     <!-- Upload Section -->
-    <div id="upload-section" class="card-frame rounded-card border border-line bg-panel p-6 shadow-sm mb-6">
+    <div id="upload-section" class="uh-card mb-6">
       <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
       <div class="corner corner-bl"></div><div class="corner corner-br"></div>
 
@@ -204,14 +90,14 @@
         <span class="font-mono text-xs text-muted">Processing font file...</span>
       </div>
 
-      <div id="upload-error" class="hidden mt-4 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400 font-mono"></div>
+      <div id="upload-error" class="hidden mt-4 rounded-md border uh-danger-border uh-danger-bg-soft p-3 text-sm uh-danger-text font-mono"></div>
     </div>
 
     <!-- Workspace (Hidden initially) -->
     <div id="workspace" class="hidden space-y-6">
 
       <!-- Font Metadata & Management Bar -->
-      <div class="card-frame rounded-card border border-line bg-panel p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div class="uh-card flex flex-wrap items-center justify-between gap-4">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
 
@@ -223,20 +109,20 @@
           <p id="info-file-meta" class="font-mono text-xs text-faint mt-0.5">filename.woff2 • 45 KB</p>
         </div>
         <div class="flex items-center gap-2">
-          <button id="btn-replace" class="rounded-md border border-line bg-elevated px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">Replace Font</button>
-          <button id="btn-remove" class="rounded-md border border-red-500/40 bg-elevated px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-red-400 transition hover:bg-red-500/10">Remove Font</button>
+          <button id="btn-replace" class="uh-btn uh-btn--secondary font-mono text-xs uppercase tracking-wide">Replace Font</button>
+          <button id="btn-remove" class="uh-btn uh-btn--danger font-mono text-xs uppercase tracking-wide">Remove Font</button>
         </div>
       </div>
 
       <!-- Controls Panel -->
-      <div class="card-frame rounded-card border border-line bg-panel p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="uh-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
 
         <!-- Language Selector -->
         <div>
           <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Language / Script</label>
-          <select id="language-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent"></select>
+          <select id="language-select" class="uh-select w-full rounded-md px-3 py-2 text-sm"></select>
         </div>
 
         <!-- Font Size -->
@@ -245,13 +131,13 @@
             <span>Font Size</span>
             <span id="font-size-val" class="text-accent">36px</span>
           </div>
-          <input type="range" id="font-size-range" min="8" max="120" value="36" class="w-full accent-accent cursor-pointer">
+          <input type="range" id="font-size-range" min="8" max="120" value="36" class="uh-range w-full cursor-pointer">
         </div>
 
         <!-- Font Weight -->
         <div>
           <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Font Weight</label>
-          <select id="font-weight-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+          <select id="font-weight-select" class="uh-select w-full rounded-md px-3 py-2 text-sm">
             <option value="100">100 - Thin</option>
             <option value="200">200 - Extra Light</option>
             <option value="300">300 - Light</option>
@@ -270,7 +156,7 @@
             <span>Line Height</span>
             <span id="line-height-val" class="text-accent">1.4</span>
           </div>
-          <input type="range" id="line-height-range" min="0.8" max="3.0" step="0.1" value="1.4" class="w-full accent-accent cursor-pointer">
+          <input type="range" id="line-height-range" min="0.8" max="3.0" step="0.1" value="1.4" class="uh-range w-full cursor-pointer">
         </div>
 
         <!-- Letter Spacing -->
@@ -279,13 +165,13 @@
             <span>Letter Spacing</span>
             <span id="letter-spacing-val" class="text-accent">0px</span>
           </div>
-          <input type="range" id="letter-spacing-range" min="-5" max="20" step="0.5" value="0" class="w-full accent-accent cursor-pointer">
+          <input type="range" id="letter-spacing-range" min="-5" max="20" step="0.5" value="0" class="uh-range w-full cursor-pointer">
         </div>
 
         <!-- Text Alignment -->
         <div>
           <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Alignment</label>
-          <select id="text-align-select" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+          <select id="text-align-select" class="uh-select w-full rounded-md px-3 py-2 text-sm">
             <option value="left" selected>Left</option>
             <option value="center">Center</option>
             <option value="right">Right</option>
@@ -308,10 +194,10 @@
 
       <!-- Secondary Toggles & Reset Bar -->
       <div class="flex items-center justify-between px-1 flex-wrap gap-4">
-        <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
-          <input type="checkbox" id="toggle-italic" class="w-4 h-4 rounded border-line bg-elevated accent-accent"> Italic Style
+        <label class="flex items-center gap-2 text-sm text-[var(--uh-muted)] cursor-pointer select-none">
+          <input type="checkbox" id="toggle-italic" class="uh-checkbox"> Italic Style
         </label>
-        <button id="btn-reset-settings" class="rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-muted transition hover:border-accent hover:text-ink">Reset Preview Settings</button>
+        <button id="btn-reset-settings" class="uh-btn uh-btn--secondary font-mono text-xs uppercase tracking-wide">Reset Preview Settings</button>
       </div>
 
       <!-- Script Support Notice -->
@@ -329,21 +215,21 @@
       </div>
 
       <!-- Tab 1: Main Preview -->
-      <div id="tab-main" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm">
+      <div id="tab-main" class="preview-section uh-card">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
 
         <div class="flex items-center justify-between mb-3">
           <label class="font-mono text-xs uppercase tracking-wider text-faint">Editable Preview Text</label>
-          <button id="btn-reset-text" class="rounded border border-line bg-elevated px-2.5 py-1 font-mono text-[11px] text-muted hover:text-ink">Reset Sample</button>
+          <button id="btn-reset-text" class="uh-btn uh-btn--secondary font-mono text-[11px]">Reset Sample</button>
         </div>
-        <textarea id="preview-text-input" rows="3" class="w-full rounded-md border border-line bg-elevated p-3 text-sm text-ink outline-none focus:border-accent mb-4 resize-y"></textarea>
+        <textarea id="preview-text-input" rows="3" class="uh-textarea w-full p-3 text-sm mb-4 resize-y"></textarea>
         <label class="block font-mono text-xs uppercase tracking-wider text-faint mb-2">Rendered Output</label>
         <div id="main-preview-output" class="rounded-md border border-line bg-elevated p-6 min-h-[140px] overflow-x-auto break-words">Sample preview...</div>
       </div>
 
       <!-- Tab 2: Alphabet Preview -->
-      <div id="tab-alphabet" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-alphabet" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
         <h3 class="font-display text-sm font-semibold text-ink mb-1">Alphabet Glyphs</h3>
@@ -352,7 +238,7 @@
       </div>
 
       <!-- Tab 3: Numbers & Symbols -->
-      <div id="tab-symbols" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-symbols" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
         <h3 class="font-display text-sm font-semibold text-ink mb-1">Numbers & Punctuation</h3>
@@ -361,7 +247,7 @@
       </div>
 
       <!-- Tab 4: Paragraph Preview -->
-      <div id="tab-paragraph" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-paragraph" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
         <h3 class="font-display text-sm font-semibold text-ink mb-1">Paragraph Readability</h3>
@@ -370,7 +256,7 @@
       </div>
 
       <!-- Tab 5: Multilingual Comparison -->
-      <div id="tab-multilingual" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-multilingual" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
         <h3 class="font-display text-sm font-semibold text-ink mb-1">Simultaneous Multilingual Matrix</h3>
@@ -379,7 +265,7 @@
       </div>
 
       <!-- Tab 6: Font Info -->
-      <div id="tab-info" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-info" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
         <h3 class="font-display text-sm font-semibold text-ink mb-4">Font Metadata & Metrics</h3>
@@ -404,7 +290,7 @@
       </div>
 
       <!-- Tab 7: Export as PNG -->
-      <div id="tab-export" class="preview-section card-frame rounded-card border border-line bg-panel p-6 shadow-sm" style="display: none;">
+      <div id="tab-export" class="preview-section uh-card" style="display: none;">
         <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div><div class="corner corner-br"></div>
 
@@ -414,7 +300,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
             <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Export Content Preset</label>
-            <select id="export-content-type" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+            <select id="export-content-type" class="uh-select w-full rounded-md px-3 py-2 text-sm">
               <option value="main">Current Main Preview Text</option>
               <option value="alphabet">Full Alphabet (Upper & Lower)</option>
               <option value="numbers-symbols">Numbers & Symbols (0-9, Punctuation)</option>
@@ -424,7 +310,7 @@
           </div>
           <div>
             <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Resolution Scale</label>
-            <select id="export-scale" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+            <select id="export-scale" class="uh-select w-full rounded-md px-3 py-2 text-sm">
               <option value="1">1x (Standard)</option>
               <option value="2" selected>2x (Retina / High Quality)</option>
               <option value="3">3x (Ultra HD)</option>
@@ -432,7 +318,7 @@
           </div>
           <div>
             <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Padding</label>
-            <select id="export-padding" class="w-full rounded-md border border-line bg-elevated px-3 py-2 text-sm text-ink outline-none focus:border-accent">
+            <select id="export-padding" class="uh-select w-full rounded-md px-3 py-2 text-sm">
               <option value="20">Small (20px)</option>
               <option value="40" selected>Medium (40px)</option>
               <option value="80">Large (80px)</option>
@@ -442,18 +328,18 @@
 
         <div id="export-custom-container" class="hidden mb-4">
           <label class="block font-mono text-[11px] uppercase tracking-wider text-faint mb-1.5">Custom Text (Supports Malayalam, numbers, alphabets, symbols, etc.)</label>
-          <textarea id="export-custom-text" rows="3" class="w-full rounded-md border border-line bg-elevated p-3 text-sm text-ink outline-none focus:border-accent resize-y" placeholder="Type custom text to export..."></textarea>
+          <textarea id="export-custom-text" rows="3" class="uh-textarea w-full p-3 text-sm resize-y" placeholder="Type custom text to export..."></textarea>
         </div>
 
         <div class="flex items-center gap-4 mb-6 flex-wrap">
-          <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
-            <input type="checkbox" id="export-transparent-bg" class="w-4 h-4 rounded border-line bg-elevated accent-accent"> Transparent Background
+          <label class="flex items-center gap-2 text-sm text-[var(--uh-muted)] cursor-pointer select-none">
+            <input type="checkbox" id="export-transparent-bg" class="uh-checkbox"> Transparent Background
           </label>
         </div>
 
         <div class="flex items-center gap-3 mb-6 flex-wrap">
-          <button id="btn-generate-preview" class="rounded-md border border-line bg-elevated px-4 py-2 font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">Refresh Snapshot</button>
-          <button id="btn-download-png" class="rounded-md bg-accent px-4 py-2 font-mono text-xs uppercase tracking-wide text-bg font-semibold transition hover:bg-accent-strong">Download PNG Image</button>
+          <button id="btn-generate-preview" class="uh-btn uh-btn--secondary font-mono text-xs uppercase tracking-wide text-ink transition hover:border-accent hover:text-accent">Refresh Snapshot</button>
+          <button id="btn-download-png" class="uh-btn uh-btn--primary font-mono text-xs uppercase tracking-wide font-semibold">Download PNG Image</button>
         </div>
 
         <label class="block font-mono text-xs uppercase tracking-wider text-faint mb-2">Export Snapshot Preview</label>
@@ -465,16 +351,7 @@
     </div>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="border-t border-line bg-panel mt-12">
-    <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 flex items-center justify-between font-mono text-xs text-faint">
-      <div>Util-Hub Font Previewer</div>
-      <div>Running locally via FontFace API</div>
-    </div>
-  </footer>
-
   <!-- Script logic -->
-  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Font Previewer"></script>
   <script>
     (function() {
       'use strict';

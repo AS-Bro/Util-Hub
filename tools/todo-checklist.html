@@ -7,50 +7,46 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  input[type="text"], input[type="date"], select { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  input[type="text"]:focus, input[type="date"]:focus, select:focus { outline:none; border-color:#6fd8cb; }
-  li { border:1px solid rgba(143,176,204,.16); background:#14283b/30; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
   .done { text-decoration: line-through; opacity: 0.5; }
+  html body.uh-tool .filter-tab.active { background:var(--uh-accent); color:var(--uh-bg); }
+  .priority-high { color:var(--uh-danger); border-color:color-mix(in srgb, var(--uh-danger) 35%, transparent); background:color-mix(in srgb, var(--uh-danger) 12%, transparent); }
+  .priority-medium { color:var(--uh-warning); border-color:color-mix(in srgb, var(--uh-warning) 35%, transparent); background:color-mix(in srgb, var(--uh-warning) 12%, transparent); }
+  .priority-low { color:var(--uh-muted); border-color:var(--uh-line); background:var(--uh-panel); }
+  .uh-progress-track { background:var(--uh-elevated); }
+  .uh-progress-fill { background:var(--uh-success); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Todo Checklist"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-2xl px-6 py-10">
-    <!-- Navigation & Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Todo Checklist</h1>
-    <p class="text-sm text-slate-400 mb-6">Manage tasks with priorities, due dates, categories, and local autosave.</p>
+<body>
+  <main class="uh-container uh-container--narrow">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Todo Checklist</h1>
+      <p class="uh-page-sub">Manage tasks with priorities, due dates, categories, and local autosave.</p>
+    </div>
 
     <!-- Progress Bar -->
-    <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 mb-6">
+    <div class="uh-card mb-6">
       <div class="flex justify-between items-center mb-2">
-        <span class="mono text-xs text-slate-400 uppercase">Task Completion</span>
-        <span id="statsText" class="mono text-xs text-teal-300 font-bold">0% (0/0)</span>
+        <span class="uh-label mono text-xs uppercase">Task Completion</span>
+        <span id="statsText" class="mono text-xs text-[var(--uh-accent)] font-bold">0% (0/0)</span>
       </div>
-      <div class="w-full bg-[#17304a] h-2 rounded-full overflow-hidden">
-        <div id="progressBar" class="bg-teal-400 h-full transition-all duration-300" style="width: 0%"></div>
+      <div class="uh-progress-track w-full h-2 rounded-full overflow-hidden">
+        <div id="progressBar" class="uh-progress-fill h-full transition-all duration-300" style="width: 0%"></div>
       </div>
     </div>
 
     <!-- Task Input Form -->
-    <form id="form" class="flex flex-col gap-3 mb-6 bg-[#14283b]/30 p-4 rounded-md border border-white/10">
+    <form id="form" class="uh-card flex flex-col gap-3 mb-6">
       <div class="flex gap-2">
-        <input id="input" type="text" placeholder="What needs to be done?" class="flex-1 rounded-md p-3 text-sm" />
-        <button type="submit" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md font-semibold">Add Task</button>
+        <input id="input" type="text" placeholder="What needs to be done?" class="uh-input flex-1 rounded-md p-3 text-sm" />
+        <button type="submit" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2.5 rounded-md font-semibold">Add Task</button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
         <!-- Priority -->
         <div>
-          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Priority</label>
-          <select id="priority" class="w-full rounded-md p-2 text-xs mono">
+          <label class="uh-label mono text-[10px] uppercase block mb-1">Priority</label>
+          <select id="priority" class="uh-select w-full rounded-md p-2 text-xs mono">
             <option value="low">Low Priority</option>
             <option value="medium" selected>Medium Priority</option>
             <option value="high">High Priority</option>
@@ -59,8 +55,8 @@
 
         <!-- Category -->
         <div>
-          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Category</label>
-          <select id="category" class="w-full rounded-md p-2 text-xs mono">
+          <label class="uh-label mono text-[10px] uppercase block mb-1">Category</label>
+          <select id="category" class="uh-select w-full rounded-md p-2 text-xs mono">
             <option value="General" selected>General</option>
             <option value="Work">Work</option>
             <option value="Personal">Personal</option>
@@ -70,8 +66,8 @@
 
         <!-- Due Date -->
         <div>
-          <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Due Date</label>
-          <input id="dueDate" type="date" class="w-full rounded-md p-2 text-xs mono" />
+          <label class="uh-label mono text-[10px] uppercase block mb-1">Due Date</label>
+          <input id="dueDate" type="date" class="uh-input w-full rounded-md p-2 text-xs mono" />
         </div>
       </div>
     </form>
@@ -79,31 +75,31 @@
     <!-- Toolbar: Filters & Search -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <!-- Status Tabs -->
-      <div class="flex gap-1 bg-[#14283b] p-1 rounded-md border border-white/5">
-        <button data-filter="all" class="filter-tab active mono text-xs px-3 py-1 rounded text-teal-300 bg-[#17304a]">All</button>
-        <button data-filter="active" class="filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white">Active</button>
-        <button data-filter="completed" class="filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white">Completed</button>
+      <div class="uh-toolbar flex gap-1">
+        <button data-filter="all" class="uh-btn uh-btn--primary filter-tab active mono text-xs px-3 py-1">All</button>
+        <button data-filter="active" class="uh-btn uh-btn--secondary filter-tab mono text-xs px-3 py-1">Active</button>
+        <button data-filter="completed" class="uh-btn uh-btn--secondary filter-tab mono text-xs px-3 py-1">Completed</button>
       </div>
 
       <!-- Search Input -->
-      <input id="search" type="text" placeholder="Search tasks..." class="rounded-md px-3 py-1.5 text-xs mono w-full sm:w-48" />
+      <input id="search" type="text" placeholder="Search tasks..." class="uh-input rounded-md px-3 py-1.5 text-xs mono w-full sm:w-48" />
     </div>
 
     <!-- Task List -->
     <ul id="list" class="space-y-2.5 mb-6"></ul>
 
     <!-- Bottom Actions Toolbar -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-white/5">
+    <div class="uh-toolbar flex flex-wrap items-center justify-between gap-3 pt-3">
       <div class="flex gap-2">
-        <button id="toggleAll" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Mark All Completed</button>
-        <button id="clearCompleted" class="secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md text-rose-400 hover:text-rose-300">Clear Completed</button>
+        <button id="toggleAll" class="uh-btn uh-btn--secondary mono text-[11px] uppercase px-3 py-1.5 rounded-md">Mark All Completed</button>
+        <button id="clearCompleted" class="uh-btn uh-btn--danger mono text-[11px] uppercase px-3 py-1.5 rounded-md">Clear Completed</button>
       </div>
 
       <div class="flex gap-2">
         <input type="file" id="importFile" class="hidden" accept=".json" />
-        <button id="importBtn" class="secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Import</button>
-        <button id="exportBtn" class="secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Export</button>
-      </div>
+        <button id="importBtn" class="uh-btn uh-btn--secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Import</button>
+        <button id="exportBtn" class="uh-btn uh-btn--secondary mono text-[11px] uppercase px-2.5 py-1.5 rounded-md">Export</button>
+      </main>
     </div>
   </div>
 
@@ -127,9 +123,9 @@
     function save(items) { localStorage.setItem(KEY, JSON.stringify(items)); }
 
     function getPriorityBadge(priority) {
-      if (priority === 'high') return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">High</span>';
-      if (priority === 'medium') return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">Med</span>';
-      return '<span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-500/20 text-slate-300 border border-slate-500/30">Low</span>';
+      if (priority === 'high') return '<span class="uh-badge priority-high mono text-[9px] uppercase">High</span>';
+      if (priority === 'medium') return '<span class="uh-badge priority-medium mono text-[9px] uppercase">Med</span>';
+      return '<span class="uh-badge priority-low mono text-[9px] uppercase">Low</span>';
     }
 
     function render() {
@@ -157,7 +153,7 @@
       });
 
       if (filtered.length === 0) {
-        list.innerHTML = `<li class="border-dashed text-center text-sm text-slate-500 p-8 rounded-md bg-[#14283b]/10">No tasks found.</li>`;
+        list.innerHTML = `<li class="uh-card border-dashed text-center text-sm text-[var(--uh-muted)] p-8">No tasks found.</li>`;
         return;
       }
 
@@ -168,26 +164,26 @@
         const isOverdue = item.dueDate && item.dueDate < todayStr && !item.done;
 
         return `
-          <li class="flex items-center gap-3 rounded-md p-3.5 transition-all">
-            <input type="checkbox" data-i="${actualIndex}" class="check h-4 w-4 accent-teal-400 cursor-pointer" ${item.done ? 'checked' : ''} />
+          <li class="uh-panel flex items-center gap-3 p-3.5 transition-all">
+            <input type="checkbox" data-i="${actualIndex}" class="uh-checkbox check" ${item.done ? 'checked' : ''} />
             
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-0.5">
-                <span data-i="${actualIndex}" class="task-text text-sm cursor-pointer ${item.done ? 'done' : 'text-slate-100'} break-words">${item.text.replace(/</g, '&lt;')}</span>
+                <span data-i="${actualIndex}" class="task-text text-sm cursor-pointer ${item.done ? 'done' : ''} break-words">${item.text.replace(/</g, '&lt;')}</span>
               </div>
               
               <div class="flex flex-wrap items-center gap-2 mt-1">
                 ${getPriorityBadge(item.priority)}
-                <span class="mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-300 border border-teal-500/20">${item.category || 'General'}</span>
+                <span class="uh-badge mono text-[9px] uppercase">${item.category || 'General'}</span>
                 ${item.dueDate ? `
-                  <span class="mono text-[10px] ${isOverdue ? 'text-rose-400 font-bold' : 'text-slate-400'}">
+                  <span class="mono text-[10px] ${isOverdue ? 'text-[var(--uh-danger)] font-bold' : 'text-[var(--uh-muted)]'}">
                     📅 ${item.dueDate} ${isOverdue ? '(Overdue)' : ''}
                   </span>
                 ` : ''}
               </div>
             </div>
 
-            <button data-i="${actualIndex}" class="remove text-slate-400 hover:text-rose-400 mono text-xs p-1" title="Delete Task">✕</button>
+            <button data-i="${actualIndex}" class="uh-btn uh-btn--danger remove mono text-xs p-1" title="Delete Task">✕</button>
           </li>
         `;
       }).join('');
@@ -238,9 +234,9 @@
     document.querySelectorAll('.filter-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
         document.querySelectorAll('.filter-tab').forEach(t => {
-          t.className = 'filter-tab mono text-xs px-3 py-1 rounded text-slate-400 hover:text-white';
+          t.className = 'uh-btn uh-btn--secondary filter-tab mono text-xs px-3 py-1';
         });
-        e.target.className = 'filter-tab active mono text-xs px-3 py-1 rounded text-teal-300 bg-[#17304a]';
+        e.target.className = 'uh-btn uh-btn--primary filter-tab active mono text-xs px-3 py-1';
         currentFilter = e.target.dataset.filter;
         render();
       });

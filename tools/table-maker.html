@@ -1,25 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Table Maker — Util-Hub</title>
   <meta name="description" content="Parse, edit, style, calculate, and export professional tables in PNG, JPG, PDF, XLSX, CSV, JSON, HTML, and Markdown directly in your browser." />
-
-  <!-- Theme initialization before paint -->
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('utilityhub:theme');
-        var theme = saved === 'light' || saved === 'dark'
-          ? saved
-          : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(theme);
-        document.documentElement.style.colorScheme = theme;
-      } catch (e) {}
-    })();
-  </script>
 
   <!-- Util-Hub Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,70 +48,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 
   <style>
-    /* Util-Hub Blueprint / Schematic Console Tokens */
-    :root {
-      --uh-font-display: "Space Grotesk", Inter, sans-serif;
-      --uh-font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --uh-font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
-      --uh-radius-sm: 7px;
-      --uh-radius-md: 12px;
-      --uh-radius-lg: 18px;
-      --uh-transition: 190ms cubic-bezier(0.2, 0.75, 0.25, 1);
-    }
-
-    html.dark {
-      --uh-bg: #0e1c2b;
-      --uh-panel: #14283b;
-      --uh-elevated: #17304a;
-      --uh-line: rgba(143, 176, 204, 0.16);
-      --uh-line-strong: rgba(143, 176, 204, 0.38);
-      --uh-text: #e7eef4;
-      --uh-muted: #93a9bd;
-      --uh-faint: #5b7288;
-      --uh-accent: #6fd8cb;
-      --uh-accent-strong: #93e5da;
-      --uh-signal: #e8a33d;
-    }
-
-    html.light {
-      --uh-bg: #eef2f4;
-      --uh-panel: #ffffff;
-      --uh-elevated: #f8fafc;
-      --uh-line: rgba(24, 55, 79, 0.14);
-      --uh-line-strong: rgba(24, 55, 79, 0.32);
-      --uh-text: #142536;
-      --uh-muted: #4f6779;
-      --uh-faint: #7d92a4;
-      --uh-accent: #0f8f80;
-      --uh-accent-strong: #0c7267;
-      --uh-signal: #b6741a;
-    }
-
-    body.uh-tool {
-      background-color: var(--uh-bg);
-      color: var(--uh-text);
-      font-family: var(--uh-font-body);
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Subtle Blueprint Grid Backdrop */
-    .uh-blueprint-grid {
-      position: fixed;
-      inset: 0;
-      z-index: -10;
-      pointer-events: none;
-      background-image:
-        linear-gradient(var(--uh-line) 1px, transparent 1px),
-        linear-gradient(90deg, var(--uh-line) 1px, transparent 1px);
-      background-size: 40px 40px;
-      opacity: 0.55;
-    }
-
     /* Util-Hub Header & Theme Switch */
-    .uh-site-header {
+    .tm-app-toolbar {
       position: sticky;
       top: 0;
       z-index: 40;
@@ -187,7 +110,7 @@
     .uh-btn-primary {
       background: var(--uh-accent);
       border: 1px solid var(--uh-accent);
-      color: #0b1926;
+      color: var(--uh-bg);
       font-weight: 600;
       border-radius: var(--uh-radius-sm);
       transition: all var(--uh-transition);
@@ -199,15 +122,15 @@
     }
 
     .uh-btn-danger {
-      background: rgba(244, 63, 94, 0.1);
-      border: 1px solid rgba(244, 63, 94, 0.3);
-      color: #fb7185;
+      background: color-mix(in srgb, var(--uh-danger) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--uh-danger) 30%, transparent);
+      color: var(--uh-danger);
       border-radius: var(--uh-radius-sm);
       cursor: pointer;
     }
     .uh-btn-danger:hover {
-      background: rgba(244, 63, 94, 0.2);
-      border-color: #fb7185;
+      background: color-mix(in srgb, var(--uh-danger) 20%, transparent);
+      border-color: var(--uh-danger);
     }
 
     /* Tabs */
@@ -268,7 +191,7 @@
 
     .tm-cell-match {
       box-shadow: inset 0 0 0 2px var(--uh-signal) !important;
-      background-color: rgba(232, 163, 61, 0.22) !important;
+      background-color: color-mix(in srgb, var(--uh-signal) 22%, transparent) !important;
     }
 
     /* Column Resize Handle */
@@ -334,44 +257,32 @@
     @media print {
       body * { visibility: hidden !important; }
       #printMount, #printMount * { visibility: visible !important; }
-      #printMount {
+            #printMount {
         position: fixed !important;
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
-        background: #ffffff !important;
-        color: #000000 !important;
+        background: var(--uh-panel) !important;
+        color: var(--uh-text) !important;
         padding: 12mm !important;
       }
     }
   </style>
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Table Maker"></script>
 </head>
-<body class="uh-tool antialiased">
-  <div class="uh-blueprint-grid" aria-hidden="true"></div>
+<body>
 
   <!-- Util-Hub Shared Top Navigation Bar -->
-  <header class="uh-site-header">
+  <div class="tm-app-toolbar">
     <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
       <div class="flex items-center gap-3">
-        <a href="../index.html" aria-label="Utility Hub home" class="flex items-center gap-2.5 text-ink no-underline group">
-          <div class="flex h-9 w-9 items-center justify-center rounded-[7px] border border-line-strong bg-panel text-accent font-mono text-sm font-bold group-hover:border-accent transition">
-            ⊞
-          </div>
-          <div class="leading-tight">
-            <div class="flex items-center gap-2">
-              <span class="font-display text-base font-bold tracking-tight text-ink">Table Maker</span>
-              <span class="rounded border border-line-strong bg-panel px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-accent">Util-Hub</span>
-            </div>
-            <p class="font-mono text-[11px] text-muted hidden sm:block">Structured Text-to-Table Studio &amp; Multi-Format Exporter</p>
-          </div>
-        </a>
+        <span class="font-mono text-xs uppercase tracking-wide text-muted">Table Maker Studio</span>
       </div>
 
       <!-- Global Quick Actions -->
       <div class="flex flex-wrap items-center gap-2">
         <span id="autosaveBadge" class="hidden md:inline-flex items-center gap-1.5 rounded border border-line bg-panel px-2.5 py-1 font-mono text-[11px] text-muted">
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+          <span class="h-1.5 w-1.5 rounded-full uh-success-bg-soft"></span>
           <span>Autosaved</span>
         </span>
 
@@ -400,7 +311,7 @@
           aria-label="Toggle light and dark theme"
           class="switch-track relative flex h-8 w-[50px] items-center rounded-full px-1 ml-1"
         >
-          <span class="switch-knob absolute left-1 flex h-6 w-6 items-center justify-center rounded-full text-[#0e1c2b] font-bold text-xs">
+          <span class="switch-knob absolute left-1 flex h-6 w-6 items-center justify-center rounded-full text-bg font-bold text-xs">
             <span class="dark:inline hidden">☾</span>
             <span class="dark:hidden inline">☀</span>
           </span>
@@ -422,16 +333,20 @@
           <button type="button" onclick="openCopyRowsModal()" title="Copy rows from another table" class="uh-btn px-2 py-1 font-mono text-[11px]">
             Merge Table
           </button>
-          <button id="deleteTableBtn" type="button" onclick="deleteActiveTable()" title="Delete Current Table" class="uh-btn px-2 py-1 font-mono text-[11px] text-rose-400 hover:border-rose-400">
+          <button id="deleteTableBtn" type="button" onclick="deleteActiveTable()" title="Delete Current Table" class="uh-btn px-2 py-1 font-mono text-[11px] uh-danger-text hover:uh-danger-border">
             Delete
           </button>
         </div>
       </div>
     </div>
-  </header>
+  </div>
 
   <!-- Main Workspace -->
-  <main class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-5 sm:px-6 space-y-5">
+  <main class="uh-container uh-container--wide flex-1 space-y-5">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Table Maker</h1>
+      <p class="uh-page-sub">Parse, edit, style, calculate, and export tables directly in your browser.</p>
+    </div>
 
     <!-- Section 1: Input & Templates Drawer -->
     <section class="uh-card overflow-hidden">
@@ -494,7 +409,7 @@
             placeholder="Paste structured data here...&#10;Example:&#10;Product, Category, Price, Stock&#10;&quot;Mechanical Keyboard, Pro&quot;, Peripherals, $149.00, 42&#10;27&quot; 4K Monitor, Displays, $399.50, 18"
             class="uh-textarea w-full p-3 font-mono text-xs leading-relaxed resize-y"
           ></textarea>
-          <div id="parserWarningBox" class="hidden rounded border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 font-mono text-xs text-amber-300"></div>
+          <div id="parserWarningBox" class="hidden rounded border uh-warning-border uh-warning-bg-soft px-3 py-1.5 font-mono text-xs uh-warning-text"></div>
         </div>
 
         <!-- Conversion Settings & Controls -->
@@ -533,19 +448,19 @@
 
           <div class="grid grid-cols-2 gap-2 text-xs">
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="optFirstRowHeader" type="checkbox" checked onchange="analyzeRawInput()" class="accent-[#6fd8cb]" />
+              <input id="optFirstRowHeader" type="checkbox" checked onchange="analyzeRawInput()" class="accent-accent" />
               <span>First row as header</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="optFirstColHeader" type="checkbox" onchange="analyzeRawInput()" class="accent-[#6fd8cb]" />
+              <input id="optFirstColHeader" type="checkbox" onchange="analyzeRawInput()" class="accent-accent" />
               <span>First col as row header</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="optIgnoreEmpty" type="checkbox" checked onchange="analyzeRawInput()" class="accent-[#6fd8cb]" />
+              <input id="optIgnoreEmpty" type="checkbox" checked onchange="analyzeRawInput()" class="accent-accent" />
               <span>Ignore empty rows</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="optTrimSpaces" type="checkbox" checked onchange="analyzeRawInput()" class="accent-[#6fd8cb]" />
+              <input id="optTrimSpaces" type="checkbox" checked onchange="analyzeRawInput()" class="accent-accent" />
               <span>Trim whitespace</span>
             </label>
           </div>
@@ -593,8 +508,8 @@
 
               <button type="button" onclick="duplicateSelectedRow()" class="uh-btn px-2 py-1 font-mono text-[11px]" title="Duplicate Selected Row">Dup Row</button>
               <button type="button" onclick="duplicateSelectedCol()" class="uh-btn px-2 py-1 font-mono text-[11px]" title="Duplicate Selected Column">Dup Col</button>
-              <button type="button" onclick="deleteSelectedRows()" class="uh-btn px-2 py-1 font-mono text-[11px] text-rose-400 hover:border-rose-400" title="Delete Selected Rows">Del Row</button>
-              <button type="button" onclick="deleteSelectedCols()" class="uh-btn px-2 py-1 font-mono text-[11px] text-rose-400 hover:border-rose-400" title="Delete Selected Columns">Del Col</button>
+              <button type="button" onclick="deleteSelectedRows()" class="uh-btn px-2 py-1 font-mono text-[11px] uh-danger-text hover:uh-danger-border" title="Delete Selected Rows">Del Row</button>
+              <button type="button" onclick="deleteSelectedCols()" class="uh-btn px-2 py-1 font-mono text-[11px] uh-danger-text hover:uh-danger-border" title="Delete Selected Columns">Del Col</button>
 
               <div class="h-4 w-[1px] bg-line mx-0.5"></div>
 
@@ -693,7 +608,7 @@
 
               <button type="button" onclick="toggleFilterBar()" class="uh-btn px-2.5 py-1 font-mono text-xs flex items-center gap-1">
                 <span>Filter</span>
-                <span id="activeFilterCountBadge" class="hidden rounded-full bg-accent text-[#0e1c2b] px-1.5 text-[10px] font-bold">0</span>
+                <span id="activeFilterCountBadge" class="hidden rounded-full bg-accent text-bg px-1.5 text-[10px] font-bold">0</span>
               </button>
 
               <button type="button" onclick="toggleFullscreenCanvas()" title="Full-Screen Preview" class="uh-btn px-2 py-1 font-mono text-xs">
@@ -707,7 +622,7 @@
             <input id="findQueryInput" type="text" placeholder="Find text..." class="uh-input px-2.5 py-1 font-mono text-xs w-36 sm:w-44" />
             <input id="replaceQueryInput" type="text" placeholder="Replace with..." class="uh-input px-2.5 py-1 font-mono text-xs w-36 sm:w-44" />
             <label class="flex items-center gap-1.5 font-mono text-xs text-muted cursor-pointer">
-              <input id="findCaseSensitive" type="checkbox" class="accent-[#6fd8cb]" />
+              <input id="findCaseSensitive" type="checkbox" class="accent-accent" />
               <span>Match case</span>
             </label>
             <button type="button" onclick="findAndReplace(false)" class="uh-btn px-2.5 py-1 font-mono text-xs">Replace Next</button>
@@ -739,19 +654,19 @@
           <div class="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2 font-mono text-[11px] text-muted">
             <div class="flex flex-wrap items-center gap-3">
               <label class="flex items-center gap-1.5 cursor-pointer hover:text-ink">
-                <input id="viewShowRowNums" type="checkbox" checked onchange="toggleViewOption('showRowNumbers', this.checked)" class="accent-[#6fd8cb]" />
+                <input id="viewShowRowNums" type="checkbox" checked onchange="toggleViewOption('showRowNumbers', this.checked)" class="accent-accent" />
                 <span>Row #</span>
               </label>
               <label class="flex items-center gap-1.5 cursor-pointer hover:text-ink">
-                <input id="viewShowColLetters" type="checkbox" checked onchange="toggleViewOption('showColLetters', this.checked)" class="accent-[#6fd8cb]" />
+                <input id="viewShowColLetters" type="checkbox" checked onchange="toggleViewOption('showColLetters', this.checked)" class="accent-accent" />
                 <span>Col Letters</span>
               </label>
               <label class="flex items-center gap-1.5 cursor-pointer hover:text-ink">
-                <input id="viewShowGridlines" type="checkbox" checked onchange="toggleViewOption('showGridlines', this.checked)" class="accent-[#6fd8cb]" />
+                <input id="viewShowGridlines" type="checkbox" checked onchange="toggleViewOption('showGridlines', this.checked)" class="accent-accent" />
                 <span>Editor Guides</span>
               </label>
               <label class="flex items-center gap-1.5 cursor-pointer hover:text-ink">
-                <input id="viewFreezeCol" type="checkbox" onchange="toggleViewOption('freezeFirstCol', this.checked)" class="accent-[#6fd8cb]" />
+                <input id="viewFreezeCol" type="checkbox" onchange="toggleViewOption('freezeFirstCol', this.checked)" class="accent-accent" />
                 <span>Freeze 1st Col</span>
               </label>
               <button type="button" onclick="toggleDensityMode()" id="densityToggleBtn" class="uh-btn px-2 py-0.5 text-[10px]">
@@ -761,7 +676,7 @@
 
             <div class="flex items-center gap-2">
               <span>Zoom:</span>
-              <input id="zoomSlider" type="range" min="75" max="150" step="5" value="100" oninput="setTableZoom(this.value)" class="w-20 accent-[#6fd8cb] cursor-pointer" />
+              <input id="zoomSlider" type="range" min="75" max="150" step="5" value="100" oninput="setTableZoom(this.value)" class="w-20 accent-accent cursor-pointer" />
               <span id="zoomValLabel" class="text-ink w-9">100%</span>
             </div>
           </div>
@@ -890,8 +805,8 @@
                   <span id="lblCellPadding" class="text-ink">10px 14px</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                  <input id="stylePadY" type="range" min="2" max="28" value="10" oninput="updateStyle('padY', Number(this.value))" class="accent-[#6fd8cb]" />
-                  <input id="stylePadX" type="range" min="4" max="36" value="14" oninput="updateStyle('padX', Number(this.value))" class="accent-[#6fd8cb]" />
+                  <input id="stylePadY" type="range" min="2" max="28" value="10" oninput="updateStyle('padY', Number(this.value))" class="accent-accent" />
+                  <input id="stylePadX" type="range" min="4" max="36" value="14" oninput="updateStyle('padX', Number(this.value))" class="accent-accent" />
                 </div>
               </div>
 
@@ -900,7 +815,7 @@
                   <span>Corner Radius</span>
                   <span id="lblBorderRadius" class="text-ink">8px</span>
                 </div>
-                <input id="styleBorderRadius" type="range" min="0" max="24" value="8" oninput="updateStyle('borderRadius', Number(this.value))" class="w-full accent-[#6fd8cb]" />
+                <input id="styleBorderRadius" type="range" min="0" max="24" value="8" oninput="updateStyle('borderRadius', Number(this.value))" class="w-full accent-accent" />
               </div>
             </div>
 
@@ -939,11 +854,11 @@
 
               <div class="flex items-center gap-4 pt-1">
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleOuterBorder" type="checkbox" checked onchange="updateStyle('outerBorder', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleOuterBorder" type="checkbox" checked onchange="updateStyle('outerBorder', this.checked)" class="accent-accent" />
                   <span>Outer Table Border</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleInnerBorders" type="checkbox" checked onchange="updateStyle('innerBorders', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleInnerBorders" type="checkbox" checked onchange="updateStyle('innerBorders', this.checked)" class="accent-accent" />
                   <span>Inner Cell Borders</span>
                 </label>
               </div>
@@ -1016,11 +931,11 @@
               <div class="font-mono text-[10px] uppercase tracking-wider text-accent">Header Configuration</div>
               <div class="flex flex-wrap gap-4">
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleShowHeader" type="checkbox" checked onchange="updateStyle('showHeader', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleShowHeader" type="checkbox" checked onchange="updateStyle('showHeader', this.checked)" class="accent-accent" />
                   <span>Show Header Row</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleStickyHeader" type="checkbox" checked onchange="updateStyle('stickyHeader', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleStickyHeader" type="checkbox" checked onchange="updateStyle('stickyHeader', this.checked)" class="accent-accent" />
                   <span>Sticky Header</span>
                 </label>
               </div>
@@ -1057,23 +972,23 @@
               <div class="font-mono text-[10px] uppercase tracking-wider text-accent">Row &amp; Column Highlights</div>
               <div class="grid grid-cols-2 gap-2">
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleZebra" type="checkbox" checked onchange="updateStyle('zebraStripes', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleZebra" type="checkbox" checked onchange="updateStyle('zebraStripes', this.checked)" class="accent-accent" />
                   <span>Zebra Striping</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleHoverEffect" type="checkbox" checked onchange="updateStyle('hoverEffect', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleHoverEffect" type="checkbox" checked onchange="updateStyle('hoverEffect', this.checked)" class="accent-accent" />
                   <span>Row Hover Effect</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleHighlightFirstCol" type="checkbox" onchange="updateStyle('highlightFirstCol', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleHighlightFirstCol" type="checkbox" onchange="updateStyle('highlightFirstCol', this.checked)" class="accent-accent" />
                   <span>Highlight 1st Col</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleHighlightLastCol" type="checkbox" onchange="updateStyle('highlightLastCol', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleHighlightLastCol" type="checkbox" onchange="updateStyle('highlightLastCol', this.checked)" class="accent-accent" />
                   <span>Highlight Last Col</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-                  <input id="styleHighlightLastRow" type="checkbox" onchange="updateStyle('highlightLastRow', this.checked)" class="accent-[#6fd8cb]" />
+                  <input id="styleHighlightLastRow" type="checkbox" onchange="updateStyle('highlightLastRow', this.checked)" class="accent-accent" />
                   <span>Bold Total/Last Row</span>
                 </label>
               </div>
@@ -1098,7 +1013,7 @@
   </main>
 
   <!-- Util-Hub Shared Footer -->
-  <footer class="border-t border-line bg-panel mt-auto">
+  <div class="border-t border-line bg-panel mt-auto">
     <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 font-mono text-[11px] text-muted">
       <div class="flex items-center gap-3">
         <span class="text-ink font-semibold">Util-Hub</span>
@@ -1113,7 +1028,7 @@
         </label>
       </div>
     </div>
-  </footer>
+  </div>
 
   <!-- EXPORT & DOWNLOAD STUDIO MODAL -->
   <div id="exportModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
@@ -1175,7 +1090,7 @@
               <div class="flex items-center gap-2">
                 <input id="expImgBgColor" type="color" value="#ffffff" onchange="updateExportSummary()" />
                 <label class="flex items-center gap-1.5 font-mono text-xs text-muted cursor-pointer">
-                  <input id="expImgTransparent" type="checkbox" onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+                  <input id="expImgTransparent" type="checkbox" onchange="updateExportSummary()" class="accent-accent" />
                   <span>Transparent PNG</span>
                 </label>
               </div>
@@ -1184,11 +1099,11 @@
 
           <div class="flex flex-wrap gap-4 pt-1">
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expImgIncludeTitle" type="checkbox" onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expImgIncludeTitle" type="checkbox" onchange="updateExportSummary()" class="accent-accent" />
               <span>Include Table Title Banner</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expImgIncludeBorders" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expImgIncludeBorders" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Include Cell Borders</span>
             </label>
           </div>
@@ -1238,15 +1153,15 @@
 
           <div class="flex flex-wrap gap-4">
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expPdfRepeatHeader" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expPdfRepeatHeader" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Repeat Header on Every Page</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expPdfPageNums" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expPdfPageNums" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Include Page Numbers</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expPdfFitWidth" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expPdfFitWidth" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Fit Table to Page Width</span>
             </label>
           </div>
@@ -1262,15 +1177,15 @@
         <div id="exportTab-data" class="hidden space-y-4">
           <div class="flex flex-wrap items-center gap-4 rounded border border-line bg-bg/60 p-3">
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expDataIncludeHeaders" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expDataIncludeHeaders" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Include Header Row</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expDataFilteredOnly" type="checkbox" checked onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expDataFilteredOnly" type="checkbox" checked onchange="updateExportSummary()" class="accent-accent" />
               <span>Respect Active Filters/Sort</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-muted hover:text-ink">
-              <input id="expDataAllSheets" type="checkbox" onchange="updateExportSummary()" class="accent-[#6fd8cb]" />
+              <input id="expDataAllSheets" type="checkbox" onchange="updateExportSummary()" class="accent-accent" />
               <span>Export All Workspace Tables (XLSX / JSON)</span>
             </label>
           </div>
@@ -1809,7 +1724,7 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
         const badge = document.getElementById('autosaveBadge');
         if (badge) {
-          badge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span><span>Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>';
+          badge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full uh-success-bg-soft"></span><span>Saved ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>';
         }
       } catch (e) {
         console.warn('Autosave skipped:', e);
@@ -2508,7 +2423,7 @@
         return {
           text: truthy ? '✓ Yes' : '✗ No',
           html: `<span class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold ${
-            truthy ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
+            truthy ? 'uh-success-bg-soft uh-success-text' : 'uh-danger-bg-soft uh-danger-text'
           }">${truthy ? '✓' : '✗'}</span>`,
           raw: rawVal
         };
@@ -2528,7 +2443,7 @@
         const mail = String(evaluated).trim();
         return {
           text: mail,
-          html: `<a href="mailto:${escapeHtml(mail)}" onclick="event.stopPropagation()" class="underline text-teal-400 hover:text-teal-300">${escapeHtml(mail)}</a>`,
+          html: `<a href="mailto:${escapeHtml(mail)}" onclick="event.stopPropagation()" class="underline uh-accent-text hover:uh-accent-text">${escapeHtml(mail)}</a>`,
           raw: rawVal
         };
       }

@@ -7,27 +7,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .drop-zone { border: 2px dashed var(--uh-line-strong); transition: var(--uh-transition); }
+  .drop-zone.active { border-color: var(--uh-accent); }
   .picker-img { max-width: 100%; max-height: 200px; cursor: crosshair; object-fit: contain; image-rendering: pixelated; }
   .native-color-picker {
     width: 38px; height: 34px; padding: 0; cursor: pointer;
-    border: 1px solid rgba(143,176,204,.2); border-radius: 6px; background: none;
+    border: 1px solid var(--uh-line); border-radius: var(--uh-radius-sm); background: transparent;
   }
   .native-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
   .native-color-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
   .checkerboard-preview {
-    background-color: #0b1622;
-    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
+    background-color: var(--uh-panel);
+    background-image: linear-gradient(45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(-45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--uh-elevated) 75%), linear-gradient(-45deg, transparent 75%, var(--uh-elevated) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
@@ -36,33 +27,33 @@
     image-rendering: crisp-edges;
   }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Chroma Key Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Chroma Key Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Professional real-time green screen removal, spill suppression, and matte refinement studio.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Chroma Key Studio</h1>
+      <p class="uh-page-sub">Professional real-time green screen removal, spill suppression, and matte refinement studio.</p>
+    </div>
 
     <!-- Initial Upload Zone -->
-    <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer mb-6">
+    <div id="dropZone" class="drop-zone rounded-md p-10 text-center uh-panel cursor-pointer mb-6">
       <input type="file" id="fileUpload" accept="image/*" class="hidden" />
-      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop green/blue screen image here or click to browse</div>
-      <div class="text-xs text-slate-400">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
+      <div class="mono uh-accent-text text-sm font-semibold mb-1">Drop green/blue screen image here or click to browse</div>
+      <div class="text-xs uh-muted-text">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
     </div>
 
     <!-- Studio Workspace -->
     <div id="studioControls" class="grid grid-cols-1 lg:grid-cols-12 gap-6 hidden">
       
       <!-- Left Config Sidebar -->
-      <div class="lg:col-span-5 space-y-4 bg-[#14283b]/30 p-5 rounded-md border border-white/10 max-h-[820px] overflow-y-auto">
+      <div class="lg:col-span-5 space-y-4 uh-panel p-5 rounded-md border uh-line-border max-h-[820px] overflow-y-auto">
         
         <!-- Tab Navigation -->
-        <div class="flex border-b border-white/10 pb-2 gap-2">
-          <button id="tabKeyBtn" onclick="switchTab('key')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">Chroma Key</button>
-          <button id="tabCompBtn" onclick="switchTab('comp')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Backdrop</button>
-          <button id="tabEngineBtn" onclick="switchTab('engine')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Engine</button>
+        <div class="flex border-b uh-line-border pb-2 gap-2">
+          <button id="tabKeyBtn" onclick="switchTab('key')" class="mono text-xs uppercase font-bold uh-accent-text px-3 py-1 uh-panel rounded">Chroma Key</button>
+          <button id="tabCompBtn" onclick="switchTab('comp')" class="mono text-xs uppercase font-bold uh-muted-text px-3 py-1 hover:uh-text">Backdrop</button>
+          <button id="tabEngineBtn" onclick="switchTab('engine')" class="mono text-xs uppercase font-bold uh-muted-text px-3 py-1 hover:uh-text">Engine</button>
         </div>
 
         <!-- TAB 1: KEYING & MATTE CONTROLS -->
@@ -70,8 +61,8 @@
           
           <!-- Key Presets -->
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Key Preset Profile</label>
-            <select id="keyPreset" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Key Preset Profile</label>
+            <select id="keyPreset" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="custom" selected>Custom Eyedropper Sample</option>
               <option value="green">Standard Green Screen (#00FF00)</option>
               <option value="blue">Standard Blue Screen (#0000FF)</option>
@@ -81,15 +72,15 @@
 
           <!-- Color Sampler Picker -->
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Sample Backdrop Key Color</label>
-            <div class="bg-[#0e1c2b] p-2 rounded border border-white/10 text-center checkerboard-preview">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Sample Backdrop Key Color</label>
+            <div class="uh-panel p-2 rounded border uh-line-border text-center checkerboard-preview">
               <img id="sourcePreview" class="picker-img rounded mx-auto" title="Click anywhere on green screen to sample key color" />
             </div>
-            <div class="flex items-center justify-between mt-2 bg-[#0e1c2b]/50 p-2 rounded border border-white/5">
-              <span class="mono text-xs text-slate-400 uppercase">Selected Key Color:</span>
+            <div class="flex items-center justify-between mt-2 uh-panel p-2 rounded border uh-line-border">
+              <span class="mono text-xs uh-muted-text uppercase">Selected Key Color:</span>
               <div class="flex items-center gap-2">
                 <div id="keySwatch" class="w-5 h-5 rounded border border-white/20" style="background-color:#00FF00;"></div>
-                <span id="keyHex" class="mono text-xs text-teal-300 font-bold">#00FF00</span>
+                <span id="keyHex" class="mono text-xs uh-accent-text font-bold">#00FF00</span>
               </div>
             </div>
           </div>
@@ -97,34 +88,34 @@
           <!-- Cutoff Sensitivity Slider -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Color Clip Sensitivity (Cutoff)</label>
-              <span id="clipVal" class="mono text-xs text-teal-300 font-bold">45</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Color Clip Sensitivity (Cutoff)</label>
+              <span id="clipVal" class="mono text-xs uh-accent-text font-bold">45</span>
             </div>
-            <input id="clipSlider" type="range" min="5" max="150" value="45" class="w-full accent-teal-400" />
+            <input id="clipSlider" type="range" min="5" max="150" value="45" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <!-- Shadow / Feathering Range Slider -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Edge Feathering / Softness</label>
-              <span id="shadowVal" class="mono text-xs text-teal-300 font-bold">30</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Edge Feathering / Softness</label>
+              <span id="shadowVal" class="mono text-xs uh-accent-text font-bold">30</span>
             </div>
-            <input id="shadowSlider" type="range" min="1" max="100" value="30" class="w-full accent-teal-400" />
+            <input id="shadowSlider" type="range" min="1" max="100" value="30" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <!-- Spill Suppression Slider -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Spill Suppression (Removes Glow)</label>
-              <span id="spillVal" class="mono text-xs text-teal-300 font-bold">60%</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Spill Suppression (Removes Glow)</label>
+              <span id="spillVal" class="mono text-xs uh-accent-text font-bold">60%</span>
             </div>
-            <input id="spillSlider" type="range" min="0" max="100" value="60" class="w-full accent-teal-400" />
+            <input id="spillSlider" type="range" min="0" max="100" value="60" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <!-- Matte Alpha Mask Preview Mode -->
-          <div class="pt-2 border-t border-white/5">
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="showMatteMask" class="accent-teal-400 w-4 h-4 rounded" />
+          <div class="pt-2 border-t uh-line-border">
+            <label class="flex items-center gap-2 text-xs uh-text cursor-pointer">
+              <input type="checkbox" id="showMatteMask" class="accent-teal-400 w-4 h-4 rounded uh-checkbox" />
               <span class="mono text-xs">Preview Pure Alpha Matte Mask (B&W)</span>
             </label>
           </div>
@@ -134,8 +125,8 @@
         <!-- TAB 2: COMPOSITING & REPLACEMENT BACKDROP -->
         <div id="tabComp" class="space-y-3 hidden">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Replacement Fill Mode</label>
-            <select id="bgMode" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Replacement Fill Mode</label>
+            <select id="bgMode" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="transparent" selected>Transparent Alpha (None)</option>
               <option value="solid">Solid Replacement Color</option>
               <option value="customImage">Custom Replacement Background Image</option>
@@ -144,17 +135,17 @@
 
           <!-- Solid Replacement Color -->
           <div id="solidBgControls" class="hidden space-y-2">
-            <label class="mono text-xs text-slate-400 uppercase block">Fill Color</label>
+            <label class="mono text-xs uh-muted-text uppercase block">Fill Color</label>
             <div class="flex items-center gap-2">
               <input type="color" id="bgColor" class="native-color-picker" value="#17304A" />
-              <span id="bgHex" class="mono text-xs text-teal-300 font-bold uppercase">#17304A</span>
+              <span id="bgHex" class="mono text-xs uh-accent-text font-bold uppercase">#17304A</span>
             </div>
           </div>
 
           <!-- Custom Image Fill -->
-          <div id="customBgControls" class="hidden space-y-2 bg-[#0e1c2b]/50 p-3 rounded border border-white/5">
-            <label class="mono text-xs text-teal-300 uppercase block font-bold">Upload Custom Background</label>
-            <button onclick="document.getElementById('bgFileUpload').click()" class="secondary w-full mono text-xs p-2 rounded">Choose Background Image...</button>
+          <div id="customBgControls" class="hidden space-y-2 uh-panel p-3 rounded border uh-line-border">
+            <label class="mono text-xs uh-accent-text uppercase block font-bold">Upload Custom Background</label>
+            <button onclick="document.getElementById('bgFileUpload').click()" class="uh-btn uh-btn--secondary w-full mono text-xs p-2 rounded">Choose Background Image...</button>
             <input type="file" id="bgFileUpload" accept="image/*" class="hidden" />
           </div>
         </div>
@@ -162,16 +153,16 @@
         <!-- TAB 3: ENGINE & RESOLUTION SETTINGS -->
         <div id="tabEngine" class="space-y-3 hidden">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Pixel Rendering</label>
-            <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Pixel Rendering</label>
+            <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs uh-select">
               <option value="false" selected>Pixel Art Crisp (No Anti-aliasing Grid)</option>
               <option value="true">Smooth (For HD Photos)</option>
             </select>
           </div>
 
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Export Scale Resolution</label>
-            <select id="exportScale" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Export Scale Resolution</label>
+            <select id="exportScale" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="1" selected>1x (Original Size)</option>
               <option value="2">2x HD Scale</option>
               <option value="4">4x Ultra Scale</option>
@@ -185,30 +176,30 @@
       <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
         
         <!-- Live Result Canvas Preview Container -->
-        <div class="bg-[#14283b]/40 border border-white/10 p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
+        <div class="uh-panel border uh-line-border p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
           <img id="resultImg" class="max-h-[460px] max-w-full rounded shadow-2xl object-contain" />
         </div>
 
         <!-- Export Toolbar -->
-        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div class="uh-panel p-4 rounded-md border uh-line-border flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <label class="mono text-xs text-slate-400 uppercase">Export Format</label>
-            <select id="exportFormat" class="rounded p-2 text-xs font-semibold">
+            <label class="mono text-xs uh-muted-text uppercase">Export Format</label>
+            <select id="exportFormat" class="rounded p-2 text-xs font-semibold uh-select">
               <option value="image/png">PNG (.png)</option>
               <option value="image/webp">WEBP (.webp)</option>
             </select>
           </div>
           
           <div class="flex gap-2">
-            <button onclick="goBackToUpload()" class="secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Image</button>
-            <button id="downloadBtn" onclick="downloadKeyedAsset()" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Keyed Image</button>
+            <button onclick="goBackToUpload()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Image</button>
+            <button id="downloadBtn" onclick="downloadKeyedAsset()" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Keyed Image</button>
           </div>
         </div>
 
       </div>
 
     </div>
-  </div>
+  </main>
 
   <canvas id="hiddenCanvas" class="hidden"></canvas>
 
@@ -251,13 +242,13 @@
       ['key', 'comp', 'engine'].forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
-        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
-        btn.classList.add('text-slate-400');
+        btn.classList.remove('uh-accent-text', 'uh-panel');
+        btn.classList.add('uh-muted-text');
       });
 
       const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
-      activeBtn.classList.remove('text-slate-400');
-      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      activeBtn.classList.remove('uh-muted-text');
+      activeBtn.classList.add('uh-accent-text', 'uh-panel');
       document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
     };
 

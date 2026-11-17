@@ -7,35 +7,26 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  textarea, select { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  textarea:focus, select:focus { outline:none; border-color:#6fd8cb; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
-  .error { color:#f2a154; }
+  .error { color:var(--uh-warning); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="JSON Formatter"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <!-- Navigation Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">JSON Formatter</h1>
-    <p class="text-sm text-slate-400 mb-6">Validate, beautify, minify, repair, and convert JSON data with deep diagnostics.</p>
+<body>
+  <main class="uh-container">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">JSON Formatter</h1>
+      <p class="uh-page-sub">Validate, beautify, minify, repair, and convert JSON data with deep diagnostics.</p>
+    </div>
 
     <!-- Top Action & Toolbar -->
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-4 bg-[#14283b]/40 p-3 rounded-md border border-white/10">
+    <div class="uh-toolbar uh-panel flex flex-wrap items-center justify-between gap-3 mb-4 p-3">
       <div class="flex flex-wrap items-center gap-2">
-        <button id="beautify" class="primary mono text-xs uppercase px-3.5 py-2 rounded-md">Beautify</button>
-        <button id="minify" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Minify</button>
-        <button id="repair" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Auto-Fix Quotes</button>
-        <button id="sortKeys" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Sort Keys</button>
+        <button id="beautify" class="uh-btn uh-btn--primary mono text-xs uppercase px-3.5 py-2 rounded-md">Beautify</button>
+        <button id="minify" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Minify</button>
+        <button id="repair" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Auto-Fix Quotes</button>
+        <button id="sortKeys" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Sort Keys</button>
         
-        <select id="indent" class="mono text-xs p-2 rounded-md">
+        <select id="indent" class="mono text-xs p-2 rounded-md uh-select">
           <option value="2">2 Spaces</option>
           <option value="4">4 Spaces</option>
           <option value="tab">Tab Indent</option>
@@ -44,49 +35,49 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <input type="file" id="fileInput" class="hidden" accept=".json,.txt" />
-        <button id="uploadBtn" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Upload File</button>
-        <button id="toCsv" class="secondary mono text-xs uppercase px-3 py-2 rounded-md text-teal-300">Convert to CSV</button>
-        <button id="downloadBtn" class="secondary mono text-xs uppercase px-3 py-2 rounded-md">Download</button>
+        <button id="uploadBtn" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Upload File</button>
+        <button id="toCsv" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md uh-accent-text">Convert to CSV</button>
+        <button id="downloadBtn" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2 rounded-md">Download</button>
       </div>
     </div>
 
     <!-- Status & Statistics Banner -->
-    <div class="flex flex-wrap items-center justify-between gap-2 bg-[#14283b]/20 px-4 py-2 rounded-md border border-white/5 mb-4">
-      <p id="status" class="mono text-xs text-slate-400">Ready</p>
-      <div id="stats" class="mono text-[11px] text-slate-400 flex gap-4 hidden">
-        <span>Keys: <strong id="statKeys" class="text-teal-300">0</strong></span>
-        <span>Max Depth: <strong id="statDepth" class="text-teal-300">0</strong></span>
-        <span>Size: <strong id="statSize" class="text-teal-300">0 B</strong></span>
+    <div class="uh-panel flex flex-wrap items-center justify-between gap-2 px-4 py-2 mb-4">
+      <p id="status" class="mono text-xs uh-muted-text">Ready</p>
+      <div id="stats" class="mono text-[11px] uh-muted-text flex gap-4 hidden">
+        <span>Keys: <strong id="statKeys" class="uh-accent-text">0</strong></span>
+        <span>Max Depth: <strong id="statDepth" class="uh-accent-text">0</strong></span>
+        <span>Size: <strong id="statSize" class="uh-accent-text">0 B</strong></span>
       </div>
     </div>
 
     <!-- Main Dual Editors -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="uh-grid-2">
       <!-- Input Panel -->
       <div class="flex flex-col">
         <div class="flex justify-between items-center mb-1.5">
-          <label class="mono text-xs text-slate-400 uppercase">Input JSON</label>
+          <label class="mono text-xs uh-muted-text uppercase">Input JSON</label>
           <div class="flex gap-2">
-            <button id="pasteBtn" class="mono text-[10px] text-teal-300 hover:underline uppercase">Paste</button>
-            <button id="clearBtn" class="mono text-[10px] text-rose-400 hover:underline uppercase">Clear</button>
+            <button id="pasteBtn" class="uh-btn uh-btn--ghost mono text-[10px] uppercase">Paste</button>
+            <button id="clearBtn" class="uh-btn uh-btn--danger mono text-[10px] uppercase">Clear</button>
           </div>
         </div>
-        <textarea id="input" rows="18" class="w-full rounded-md p-4 text-sm mono leading-relaxed" placeholder='{"hello": "world", "items": [1, 2, 3]}' spellcheck="false"></textarea>
+        <textarea id="input" rows="18" class="w-full rounded-md p-4 text-sm mono leading-relaxed uh-input" placeholder='{"hello": "world", "items": [1, 2, 3]}' spellcheck="false"></textarea>
       </div>
 
       <!-- Output Panel -->
       <div class="flex flex-col">
         <div class="flex justify-between items-center mb-1.5">
-          <label class="mono text-xs text-slate-400 uppercase">Output Result</label>
+          <label class="mono text-xs uh-muted-text uppercase">Output Result</label>
           <div class="flex gap-2">
-            <span id="copiedNotice" class="mono text-[10px] text-teal-300 hidden">Copied!</span>
-            <button id="copyBtn" class="mono text-[10px] text-teal-300 hover:underline uppercase">Copy Output</button>
+            <span id="copiedNotice" class="mono text-[10px] uh-accent-text hidden">Copied!</span>
+            <button id="copyBtn" class="uh-btn uh-btn--ghost mono text-[10px] uppercase">Copy Output</button>
           </div>
         </div>
-        <textarea id="output" rows="18" readonly class="w-full rounded-md p-4 text-sm mono leading-relaxed bg-[#0f1f2e] text-teal-200" placeholder="Formatted output will appear here..."></textarea>
+        <textarea id="output" rows="18" readonly class="w-full rounded-md p-4 text-sm mono leading-relaxed uh-panel uh-accent-text uh-input" placeholder="Formatted output will appear here..."></textarea>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     const input = document.getElementById('input');
@@ -138,7 +129,7 @@
       if (!input.value.trim()) {
         output.value = '';
         status.textContent = 'Ready';
-        status.className = 'mono text-xs text-slate-400';
+        status.className = 'mono text-xs uh-muted-text';
         statsEl.classList.add('hidden');
         return;
       }
@@ -148,7 +139,7 @@
         const result = fn(parsed);
         output.value = result;
         status.textContent = 'Valid JSON';
-        status.className = 'mono text-xs text-teal-300 font-semibold';
+        status.className = 'mono text-xs uh-accent-text font-semibold';
         updateStats(result, parsed);
       } catch (err) {
         output.value = '';
@@ -228,7 +219,7 @@
         const csv = jsonToCsv(input.value);
         output.value = csv;
         status.textContent = 'Converted to CSV Successfully!';
-        status.className = 'mono text-xs text-teal-300';
+        status.className = 'mono text-xs uh-accent-text';
       } catch (err) {
         status.textContent = `Conversion Error — ${err.message}`;
         status.className = 'mono text-xs error';
@@ -266,7 +257,7 @@
       input.value = '';
       output.value = '';
       status.textContent = 'Ready';
-      status.className = 'mono text-xs text-slate-400';
+      status.className = 'mono text-xs uh-muted-text';
       statsEl.classList.add('hidden');
     });
 

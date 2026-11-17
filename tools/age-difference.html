@@ -6,82 +6,61 @@
   <title>Age Difference & Comparison Hub — Utility Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-    .mono { font-family:'IBM Plex Mono',monospace; }
-    .display { font-family:'Space Grotesk',sans-serif; }
-    .card { background:#14283b; border:1px solid rgba(143,176,204,.16); }
-    .input-field { background:#0e1c2b; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-    .input-field:focus { border-color:#6fd8cb; outline:none; }
-    .btn-action { background:#6fd8cb; color:#0e1c2b; font-weight:600; transition: all 0.15s ease; }
-    .btn-action:hover { background:#5bc4b7; transform: translateY(-1px); }
-    .btn-action:active { transform: translateY(0); }
-    
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(143,176,204,0.2); border-radius: 4px; }
-  </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Age Difference &amp; Comparison Hub"></script>
 </head>
-<body class="min-h-screen pb-12">
-  <div class="mx-auto max-w-6xl px-6 py-8">
-    
-    <div class="flex justify-between items-center mb-6">
-      <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-      <span class="mono text-xs text-slate-400 bg-white/5 px-2.5 py-1 rounded border border-white/10">v3.0 Comparison Suite</span>
-    </div>
-
-    <div class="mb-6">
-      <h1 class="display text-3xl font-bold mb-1">Age Difference & Compatibility Hub</h1>
-      <p class="text-sm text-slate-400">Precision gap analytics, generational overlap, half-age convergence milestones, and timeline projections.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <span class="uh-badge">v3.0 Comparison Suite</span>
+      <h1 class="uh-page-title">Age Difference &amp; Compatibility Hub</h1>
+      <p class="uh-page-sub">Precision gap analytics, generational overlap, half-age convergence milestones, and timeline projections.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       <div class="lg:col-span-1 space-y-6">
         
-        <div class="card p-5 rounded-md space-y-5">
-          <span class="mono text-xs uppercase font-bold text-teal-300 block">1. Person Profiles</span>
+        <div class="uh-card p-5 rounded-md space-y-5">
+          <span class="mono text-xs uppercase font-bold uh-accent-text block">1. Person Profiles</span>
 
-          <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/10 space-y-3">
-            <span class="mono text-xs uppercase font-bold text-teal-300 flex items-center justify-between">
+          <div class="uh-panel p-3.5 rounded border  space-y-3">
+            <span class="mono text-xs uppercase font-bold uh-accent-text flex items-center justify-between">
               <span>Person 1</span>
-              <span id="p1ZodiacBadge" class="text-[10px] text-slate-400 font-normal"></span>
+              <span id="p1ZodiacBadge" class="text-[10px] uh-muted-text font-normal"></span>
             </span>
             <div>
-              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Name / Label</label>
-              <input type="text" id="p1Name" value="Alex" class="input-field w-full rounded px-3 py-1.5 text-xs mono" />
+              <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Name / Label</label>
+              <input type="text" id="p1Name" value="Alex" class="uh-input w-full rounded px-3 py-1.5 text-xs mono" />
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div class="col-span-2">
-                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Date</label>
-                <input type="date" id="p1Dob" value="1995-05-15" class="input-field w-full rounded px-2 py-1.5 text-xs mono" />
+                <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Birth Date</label>
+                <input type="date" id="p1Dob" value="1995-05-15" class="uh-input w-full rounded px-2 py-1.5 text-xs mono" />
               </div>
               <div>
-                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Time</label>
-                <input type="time" id="p1Time" value="08:00" class="input-field w-full rounded px-1.5 py-1.5 text-xs mono" />
+                <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Time</label>
+                <input type="time" id="p1Time" value="08:00" class="uh-input rounded px-1.5 py-1.5 text-xs mono" />
               </div>
             </div>
           </div>
 
-          <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/10 space-y-3">
-            <span class="mono text-xs uppercase font-bold text-amber-400 flex items-center justify-between">
+          <div class="uh-panel p-3.5 rounded border  space-y-3">
+            <span class="mono text-xs uppercase font-bold uh-warning-text flex items-center justify-between">
               <span>Person 2</span>
-              <span id="p2ZodiacBadge" class="text-[10px] text-slate-400 font-normal"></span>
+              <span id="p2ZodiacBadge" class="text-[10px] uh-muted-text font-normal"></span>
             </span>
             <div>
-              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Name / Label</label>
-              <input type="text" id="p2Name" value="Sam" class="input-field w-full rounded px-3 py-1.5 text-xs mono" />
+              <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Name / Label</label>
+              <input type="text" id="p2Name" value="Sam" class="uh-input w-full rounded px-3 py-1.5 text-xs mono" />
             </div>
             <div class="grid grid-cols-3 gap-2">
               <div class="col-span-2">
-                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Birth Date</label>
-                <input type="date" id="p2Dob" value="2000-11-20" class="input-field w-full rounded px-2 py-1.5 text-xs mono" />
+                <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Birth Date</label>
+                <input type="date" id="p2Dob" value="2000-11-20" class="uh-input w-full rounded px-2 py-1.5 text-xs mono" />
               </div>
               <div>
-                <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Time</label>
-                <input type="time" id="p2Time" value="14:30" class="input-field w-full rounded px-1.5 py-1.5 text-xs mono" />
+                <label class="mono text-[10px] uppercase uh-muted-text block mb-1">Time</label>
+                <input type="time" id="p2Time" value="14:30" class="uh-input rounded px-1.5 py-1.5 text-xs mono" />
               </div>
             </div>
           </div>
@@ -89,21 +68,21 @@
           <div class="space-y-2 pt-1">
             <div class="flex items-center gap-2">
               <input type="checkbox" id="liveTick" class="rounded accent-teal-400 h-4 w-4" checked />
-              <label for="liveTick" class="mono text-xs text-slate-300 cursor-pointer">Live Precision Clock</label>
+              <label for="liveTick" class="mono text-xs uh-text cursor-pointer">Live Precision Clock</label>
             </div>
-            <button id="calcBtn" class="btn-action w-full py-2.5 rounded text-xs display uppercase tracking-wider">Analyze Difference</button>
-            <button id="swapBtn" class="mono text-xs text-slate-400 hover:text-teal-300 w-full py-1.5 border border-white/10 rounded">Swap Profiles ⇄</button>
+            <button id="calcBtn" class="uh-btn uh-btn--primary w-full py-2.5 rounded text-xs display uppercase tracking-wider">Analyze Difference</button>
+            <button id="swapBtn" class="mono text-xs uh-muted-text hover:uh-accent-text w-full py-1.5 border  rounded">Swap Profiles ⇄</button>
           </div>
 
         </div>
 
-        <div class="card p-4 rounded-md flex flex-col h-[230px]">
+        <div class="uh-card p-4 rounded-md flex flex-col h-[230px]">
           <div class="flex justify-between items-center mb-3">
-            <span class="mono text-xs uppercase font-bold text-slate-400">Comparison Log</span>
-            <button id="clearHistory" class="mono text-[10px] text-slate-500 hover:text-rose-400">Clear</button>
+            <span class="mono text-xs uppercase font-bold uh-muted-text">Comparison Log</span>
+            <button id="clearHistory" class="mono text-[10px] uh-faint-text hover:uh-danger-text">Clear</button>
           </div>
           <div id="historyList" class="flex-1 overflow-y-auto space-y-2 pr-1 mono text-xs">
-            <div class="text-slate-500 text-center py-6 text-xs">No saved comparisons</div>
+            <div class="uh-faint-text text-center py-6 text-xs">No saved comparisons</div>
           </div>
         </div>
 
@@ -111,138 +90,138 @@
 
       <div class="lg:col-span-2 space-y-6">
         
-        <div class="card p-6 rounded-md relative overflow-hidden">
-          <span class="mono text-xs uppercase tracking-wider text-teal-300 block mb-2">Age Gap Headline</span>
-          <div id="primaryHeadline" class="display text-2xl sm:text-3xl font-bold mb-4 text-slate-100">
+        <div class="uh-card p-6 rounded-md relative overflow-hidden">
+          <span class="mono text-xs uppercase tracking-wider uh-accent-text block mb-2">Age Gap Headline</span>
+          <div id="primaryHeadline" class="display text-2xl sm:text-3xl font-bold mb-4 uh-text">
             Alex is older than Sam
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center mb-4">
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapYears" class="display text-2xl font-bold text-teal-300 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Years</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapYears" class="display text-2xl font-bold uh-accent-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Years</span>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapMonths" class="display text-2xl font-bold text-teal-300 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Months</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapMonths" class="display text-2xl font-bold uh-accent-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Months</span>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapDays" class="display text-2xl font-bold text-teal-300 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Days</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapDays" class="display text-2xl font-bold uh-accent-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Days</span>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapHours" class="display text-2xl font-bold text-amber-400 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Hours</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapHours" class="display text-2xl font-bold uh-warning-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Hours</span>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapMins" class="display text-2xl font-bold text-amber-400 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Mins</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapMins" class="display text-2xl font-bold uh-warning-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Mins</span>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5">
-              <span id="gapSecs" class="display text-2xl font-bold text-amber-400 block">0</span>
-              <span class="mono text-[9px] uppercase text-slate-400">Secs</span>
+            <div class="uh-panel p-3 rounded border ">
+              <span id="gapSecs" class="display text-2xl font-bold uh-warning-text block">0</span>
+              <span class="mono text-[9px] uppercase uh-muted-text">Secs</span>
             </div>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-xs">
-            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
-              <span class="text-slate-400 text-[10px] uppercase block">Total Days Gap</span>
-              <span id="totDaysGap" class="font-bold text-slate-200 text-sm">0</span>
+            <div class="uh-panel p-2.5 rounded">
+              <span class="uh-muted-text text-[10px] uppercase block">Total Days Gap</span>
+              <span id="totDaysGap" class="font-bold uh-text text-sm">0</span>
             </div>
-            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
-              <span class="text-slate-400 text-[10px] uppercase block">Total Hours Gap</span>
-              <span id="totHoursGap" class="font-bold text-slate-200 text-sm">0</span>
+            <div class="uh-panel p-2.5 rounded">
+              <span class="uh-muted-text text-[10px] uppercase block">Total Hours Gap</span>
+              <span id="totHoursGap" class="font-bold uh-text text-sm">0</span>
             </div>
-            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
-              <span class="text-slate-400 text-[10px] uppercase block">Current Age Ratio</span>
-              <span id="ageRatio" class="font-bold text-teal-300 text-sm">1.00x</span>
+            <div class="uh-panel p-2.5 rounded">
+              <span class="uh-muted-text text-[10px] uppercase block">Current Age Ratio</span>
+              <span id="ageRatio" class="font-bold uh-accent-text text-sm">1.00x</span>
             </div>
-            <div class="bg-[#0e1c2b]/60 p-2.5 rounded">
-              <span class="text-slate-400 text-[10px] uppercase block">Percentage Gap</span>
-              <span id="pctGap" class="font-bold text-amber-400 text-sm">0%</span>
+            <div class="uh-panel p-2.5 rounded">
+              <span class="uh-muted-text text-[10px] uppercase block">Percentage Gap</span>
+              <span id="pctGap" class="font-bold uh-warning-text text-sm">0%</span>
             </div>
           </div>
         </div>
 
-        <div class="card p-5 rounded-md">
+        <div class="uh-card p-5 rounded-md">
           <div class="flex justify-between items-center mb-3">
-            <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold">Standard Social Rules & Half-Age Thresholds</span>
-            <span class="mono text-[10px] bg-teal-500/10 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded">Rule: (Age / 2) + 7</span>
+            <span class="mono text-xs uppercase tracking-wider uh-muted-text font-bold">Standard Social Rules & Half-Age Thresholds</span>
+            <span class="mono text-[10px] uh-accent-bg-soft uh-accent-text border uh-accent-border px-2 py-0.5 rounded">Rule: (Age / 2) + 7</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mono text-xs">
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5 space-y-1">
-              <div class="text-teal-300 font-bold" id="p1SocialStatus">Checking rule...</div>
-              <div class="text-slate-400 text-[11px]" id="p1SocialDesc">Minimum socially standard age for older partner.</div>
+            <div class="uh-panel p-3 rounded border  space-y-1">
+              <div class="uh-accent-text font-bold" id="p1SocialStatus">Checking rule...</div>
+              <div class="uh-muted-text text-[11px]" id="p1SocialDesc">Minimum socially standard age for older partner.</div>
             </div>
-            <div class="bg-[#0e1c2b] p-3 rounded border border-white/5 space-y-1">
-              <div class="text-amber-400 font-bold" id="convergenceDate">Calculating Convergence...</div>
-              <div class="text-slate-400 text-[11px]" id="convergenceDesc">Date when older person will be exactly twice the younger person's age.</div>
+            <div class="uh-panel p-3 rounded border  space-y-1">
+              <div class="uh-warning-text font-bold" id="convergenceDate">Calculating Convergence...</div>
+              <div class="uh-muted-text text-[11px]" id="convergenceDesc">Date when older person will be exactly twice the younger person's age.</div>
             </div>
           </div>
         </div>
 
-        <div class="card p-5 rounded-md">
-          <span class="mono text-xs uppercase tracking-wider text-slate-400 block mb-3 font-bold">Generational & Demographic Profiles</span>
+        <div class="uh-card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider uh-muted-text block mb-3 font-bold">Generational & Demographic Profiles</span>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5 space-y-2 mono text-xs">
-              <div class="font-bold text-teal-300 text-sm" id="p1Header">Alex</div>
-              <div class="flex justify-between"><span class="text-slate-400">Current Age:</span> <span id="p1CurrentAge" class="font-semibold">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Generation:</span> <span id="p1Gen" class="text-amber-400 font-semibold">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Zodiac:</span> <span id="p1Zodiac">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Chinese Sign:</span> <span id="p1ChineseSign">-</span></div>
+            <div class="uh-panel p-3.5 rounded border  space-y-2 mono text-xs">
+              <div class="font-bold uh-accent-text text-sm" id="p1Header">Alex</div>
+              <div class="flex justify-between"><span class="uh-muted-text">Current Age:</span> <span id="p1CurrentAge" class="font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Generation:</span> <span id="p1Gen" class="uh-warning-text font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Zodiac:</span> <span id="p1Zodiac">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Chinese Sign:</span> <span id="p1ChineseSign">-</span></div>
             </div>
 
-            <div class="bg-[#0e1c2b] p-3.5 rounded border border-white/5 space-y-2 mono text-xs">
-              <div class="font-bold text-amber-400 text-sm" id="p2Header">Sam</div>
-              <div class="flex justify-between"><span class="text-slate-400">Current Age:</span> <span id="p2CurrentAge" class="font-semibold">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Generation:</span> <span id="p2Gen" class="text-amber-400 font-semibold">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Zodiac:</span> <span id="p2Zodiac">-</span></div>
-              <div class="flex justify-between"><span class="text-slate-400">Chinese Sign:</span> <span id="p2ChineseSign">-</span></div>
+            <div class="uh-panel p-3.5 rounded border  space-y-2 mono text-xs">
+              <div class="font-bold uh-warning-text text-sm" id="p2Header">Sam</div>
+              <div class="flex justify-between"><span class="uh-muted-text">Current Age:</span> <span id="p2CurrentAge" class="font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Generation:</span> <span id="p2Gen" class="uh-warning-text font-semibold">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Zodiac:</span> <span id="p2Zodiac">-</span></div>
+              <div class="flex justify-between"><span class="uh-muted-text">Chinese Sign:</span> <span id="p2ChineseSign">-</span></div>
             </div>
 
           </div>
         </div>
 
-        <div class="card p-5 rounded-md">
-          <span class="mono text-xs uppercase tracking-wider text-slate-400 block mb-3 font-bold">Relative Life Milestone Comparison</span>
+        <div class="uh-card p-5 rounded-md">
+          <span class="mono text-xs uppercase tracking-wider uh-muted-text block mb-3 font-bold">Relative Life Milestone Comparison</span>
           <div class="overflow-x-auto">
             <table class="w-full text-left mono text-xs">
               <thead>
-                <tr class="border-b border-white/10 text-slate-400 text-[11px] uppercase">
+                <tr class="border-b  uh-muted-text text-[11px] uppercase">
                   <th class="pb-2">Milestone / Event</th>
                   <th class="pb-2" id="thP1">Alex's Age</th>
                   <th class="pb-2" id="thP2">Sam's Age</th>
                   <th class="pb-2">Calendar Year</th>
                 </tr>
               </thead>
-              <tbody id="milestoneTable" class="divide-y divide-white/5 text-slate-300">
+              <tbody id="milestoneTable" class="divide-y divide-uh-line uh-text">
                 </tbody>
             </table>
           </div>
         </div>
 
-        <div class="card p-5 rounded-md">
+        <div class="uh-card p-5 rounded-md">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <span class="mono text-xs uppercase tracking-wider text-slate-400 font-bold block">Future & Historical Projection</span>
-              <span class="text-xs text-slate-400">Calculate how old both people were or will be on any target date.</span>
+              <span class="mono text-xs uppercase tracking-wider uh-muted-text font-bold block">Future & Historical Projection</span>
+              <span class="text-xs uh-muted-text">Calculate how old both people were or will be on any target date.</span>
             </div>
-            <input type="date" id="targetProjDate" value="2035-01-01" class="input-field rounded px-3 py-1.5 text-xs mono" />
+            <input type="date" id="targetProjDate" value="2035-01-01" class="uh-input rounded px-3 py-1.5 text-xs mono" />
           </div>
 
-          <div id="projectionBox" class="bg-[#0e1c2b] p-4 rounded border border-teal-500/20 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mono text-xs">
+          <div id="projectionBox" class="uh-panel p-4 rounded border uh-accent-border grid grid-cols-1 sm:grid-cols-3 gap-3 text-center mono text-xs">
             <div>
-              <span class="text-slate-400 text-[10px] uppercase block" id="projP1Label">Alex in 2035</span>
-              <span id="projP1Age" class="display text-xl font-bold text-teal-300">0 yrs</span>
+              <span class="uh-muted-text text-[10px] uppercase block" id="projP1Label">Alex in 2035</span>
+              <span id="projP1Age" class="display text-xl font-bold uh-accent-text">0 yrs</span>
             </div>
             <div>
-              <span class="text-slate-400 text-[10px] uppercase block" id="projP2Label">Sam in 2035</span>
-              <span id="projP2Age" class="display text-xl font-bold text-amber-400">0 yrs</span>
+              <span class="uh-muted-text text-[10px] uppercase block" id="projP2Label">Sam in 2035</span>
+              <span id="projP2Age" class="display text-xl font-bold uh-warning-text">0 yrs</span>
             </div>
             <div>
-              <span class="text-slate-400 text-[10px] uppercase block">Age Ratio Then</span>
-              <span id="projRatio" class="display text-xl font-bold text-slate-200">1.00x</span>
+              <span class="uh-muted-text text-[10px] uppercase block">Age Ratio Then</span>
+              <span id="projRatio" class="display text-xl font-bold uh-text">1.00x</span>
             </div>
           </div>
         </div>
@@ -250,7 +229,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <script>
     // State & References
@@ -322,7 +301,7 @@
 
       // Main Headline
       document.getElementById('primaryHeadline').innerHTML = `
-        <span class="text-teal-300">${olderName}</span> is older than <span class="text-amber-400">${youngerName}</span>
+        <span class="uh-accent-text">${olderName}</span> is older than <span class="uh-warning-text">${youngerName}</span>
       `;
 
       // Year/Month/Day Breakdown
@@ -380,10 +359,10 @@
       const p1SocialStatus = document.getElementById('p1SocialStatus');
       if (youngerAgeYrs >= minAgeLimit) {
         p1SocialStatus.textContent = `✓ Socially Compatible Rule Pass`;
-        p1SocialStatus.className = 'text-teal-300 font-bold';
+        p1SocialStatus.className = 'uh-accent-text font-bold';
       } else {
         p1SocialStatus.textContent = `! Below Standard (Age/2 + 7 = ${minAgeLimit.toFixed(1)} yrs)`;
-        p1SocialStatus.className = 'text-amber-400 font-bold';
+        p1SocialStatus.className = 'uh-warning-text font-bold';
       }
 
       // Age Convergence (When older is exactly 2x younger)
@@ -438,10 +417,10 @@
 
         html += `
           <tr>
-            <td class="py-2 text-slate-300">${name1} turns ${m}</td>
-            <td class="py-2 text-teal-300 font-bold">${m} yrs</td>
-            <td class="py-2 ${p2Age < 0 ? 'text-slate-500' : 'text-amber-400 font-bold'}">${p2Age < 0 ? 'Not Born' : p2Age + ' yrs'}</td>
-            <td class="py-2 text-slate-400">${targetYearP1}</td>
+            <td class="py-2 uh-text">${name1} turns ${m}</td>
+            <td class="py-2 uh-accent-text font-bold">${m} yrs</td>
+            <td class="py-2 ${p2Age < 0 ? 'uh-faint-text' : 'uh-warning-text font-bold'}">${p2Age < 0 ? 'Not Born' : p2Age + ' yrs'}</td>
+            <td class="py-2 uh-muted-text">${targetYearP1}</td>
           </tr>
         `;
       });
@@ -518,13 +497,13 @@
     function renderHistory() {
       const historyList = document.getElementById('historyList');
       if (history.length === 0) {
-        historyList.innerHTML = `<div class="text-slate-500 text-center py-6 text-xs">No saved comparisons</div>`;
+        historyList.innerHTML = `<div class="uh-faint-text text-center py-6 text-xs">No saved comparisons</div>`;
         return;
       }
       historyList.innerHTML = history.map((item) => `
-        <div class="bg-[#0e1c2b] p-2 rounded border border-white/5 flex justify-between items-center">
-          <span class="text-slate-300 font-semibold">${item.label}</span>
-          <span class="text-teal-300 font-bold">${item.gap}</span>
+        <div class="uh-panel p-2 rounded border  flex justify-between items-center">
+          <span class="uh-text font-semibold">${item.label}</span>
+          <span class="uh-accent-text font-bold">${item.gap}</span>
         </div>
       `).join('');
     }

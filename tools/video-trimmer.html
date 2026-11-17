@@ -7,32 +7,30 @@
   <title>Utility Hub / Video Trimmer & Cutter Pro</title>
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Video Trimmer"></script>
   <style>
-    .uh-video-shell { max-width: 960px; margin: 0 auto; }
-    .uh-video-dropzone { border: 2px dashed rgba(143, 176, 204, 0.3); border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(0,0,0,0.15); }
-    .uh-video-dropzone:hover { border-color: var(--accent); background: rgba(111, 216, 203, 0.05); }
+    .uh-video-dropzone { border: 2px dashed var(--uh-line-strong); border-radius: var(--uh-radius-md); padding: 32px; text-align: center; cursor: pointer; transition: all var(--uh-transition); background: color-mix(in srgb, var(--uh-panel) 65%, transparent); }
+    .uh-video-dropzone:hover { border-color: var(--uh-accent); background: color-mix(in srgb, var(--uh-accent) 6%, transparent); }
     .uh-video-preview-wrap { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
     .uh-video-preview-wrap video { max-width: 100%; max-height: 100%; outline: none; }
-    .uh-timeline-slider { width: 100%; accent-color: var(--accent); margin: 12px 0; }
+    .uh-timeline-slider { width: 100%; accent-color: var(--uh-accent); margin: 12px 0; }
     .uh-time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
-    .uh-meta-badge { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 4px; }
-    .uh-export-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
-    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+    .uh-meta-badge { font-family: var(--uh-font-mono); font-size: 0.8rem; background: var(--uh-elevated); color: var(--uh-muted); padding: 4px 8px; border-radius: var(--uh-radius-sm); }
+    .uh-export-progress { width: 100%; height: 6px; background: var(--uh-line); border-radius: var(--uh-radius-sm); overflow: hidden; margin-top: 12px; display: none; }
+    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--uh-accent); transition: width 0.1s linear; }
     .uh-toolbar-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
     .uh-download-btn { text-decoration: none !important; display: inline-flex; align-items: center; justify-content: center; }
   </style>
 </head>
-<body class="uh-time-tool uh-video-page">
-  <main class="uh-time-shell uh-video-shell" id="video-app">
-    <section class="uh-time-heading">
-      <span class="uh-time-kicker">Media tools / Precision editor Pro</span>
-      <h1>Video Trimmer & Cutter Pro</h1>
-      <p>Upload a video, preview clips, set precise timestamps, control speed, and export segments cleanly.</p>
+<body>
+  <main class="uh-container uh-container--narrow" id="video-app">
+    <section class="uh-page-head">
+      <h1 class="uh-page-title">Video Trimmer & Cutter Pro</h1>
+      <p class="uh-page-sub">Upload a video, preview clips, set precise timestamps, control speed, and export segments cleanly.</p>
     </section>
 
     <!-- Upload Card -->
-    <section class="uh-time-card" id="upload-card">
-      <div class="uh-time-card-head">
-        <div><span class="uh-time-label">01 / Source</span><h2>Upload video file</h2></div>
+    <section class="uh-card mb-4" id="upload-card">
+      <div class="uh-card-title">
+        <div><span class="uh-label">01 / Source</span><h2>Upload video file</h2></div>
       </div>
       <div class="uh-video-dropzone" id="dropzone">
         <p style="font-weight: 600; margin-bottom: 6px;">Drag & drop video here, or click to browse</p>
@@ -42,11 +40,11 @@
     </section>
 
     <!-- Editor Workspace -->
-    <section class="uh-time-card" id="editor-card" style="display: none;">
-      <div class="uh-time-card-head">
-        <div><span class="uh-time-label">02 / Workspace</span><h2 id="video-title-header">Editing Video</h2></div>
-        <div class="uh-time-actions">
-          <button type="button" id="new-video-btn" class="uh-time-button quiet">Change video</button>
+    <section class="uh-card mb-4" id="editor-card" style="display: none;">
+      <div class="uh-card-title">
+        <div><span class="uh-label">02 / Workspace</span><h2 id="video-title-header">Editing Video</h2></div>
+        <div class="uh-actions">
+          <button type="button" id="new-video-btn" class="uh-btn uh-btn--secondary">Change video</button>
         </div>
       </div>
 
@@ -63,10 +61,10 @@
       </div>
 
       <!-- Playback Controls Toolbar -->
-      <div class="uh-toolbar-row">
+      <div class="uh-toolbar uh-toolbar-row">
         <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
           Speed:
-          <select id="playback-speed" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 4px 8px; border-radius: 4px;">
+          <select id="playback-speed" class="uh-select">
             <option value="0.5">0.5x</option>
             <option value="1" selected>1.0x (Normal)</option>
             <option value="1.5">1.5x</option>
@@ -75,7 +73,7 @@
         </label>
         <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
           Format:
-          <select id="export-format" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 4px 8px; border-radius: 4px;">
+          <select id="export-format" class="uh-select">
             <option value="webm">WebM (High Quality)</option>
             <option value="slice">Original Stream Slicing</option>
           </select>
@@ -96,23 +94,23 @@
         <div class="uh-time-field">
           <label for="start-time-input">Start Timestamp (sec)</label>
           <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <input type="number" id="start-time-input" min="0" step="0.01" value="0" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 6px; border-radius: 4px; width: 100%;">
-            <button type="button" id="set-start-btn" class="uh-time-button quiet" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
+            <input type="number" id="start-time-input" class="uh-input" min="0" step="0.01" value="0">
+            <button type="button" id="set-start-btn" class="uh-btn uh-btn--secondary" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
           </div>
         </div>
         <div class="uh-time-field">
           <label for="end-time-input">End Timestamp (sec)</label>
           <div style="display: flex; gap: 8px; margin-top: 4px;">
-            <input type="number" id="end-time-input" min="0" step="0.01" value="0" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); color: inherit; padding: 6px; border-radius: 4px; width: 100%;">
-            <button type="button" id="set-end-btn" class="uh-time-button quiet" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
+            <input type="number" id="end-time-input" class="uh-input" min="0" step="0.01" value="0">
+            <button type="button" id="set-end-btn" class="uh-btn uh-btn--secondary" style="font-size: 0.8rem; white-space: nowrap;">Set Current</button>
           </div>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="uh-time-actions" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
-        <button type="button" id="preview-segment-btn" class="uh-time-button">Preview Segment (Loop)</button>
-        <button type="button" id="export-segment-btn" class="uh-time-button primary">Export Trimmed Video</button>
+      <div class="uh-actions" style="margin-top: 20px;">
+        <button type="button" id="preview-segment-btn" class="uh-btn uh-btn--secondary">Preview Segment (Loop)</button>
+        <button type="button" id="export-segment-btn" class="uh-btn uh-btn--primary">Export Trimmed Video</button>
       </div>
 
       <!-- Export Progress & Cancel -->
@@ -121,25 +119,24 @@
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
         <p id="export-status-text" style="font-size: 0.85rem; opacity: 0.8;" hidden></p>
-        <button type="button" id="cancel-export-btn" class="uh-time-button quiet" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Export</button>
+        <button type="button" id="cancel-export-btn" class="uh-btn uh-btn--secondary" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Export</button>
       </div>
     </section>
 
     <!-- Exported Results Card -->
-    <section class="uh-time-section uh-time-card" id="results-card" style="display: none;">
-      <div class="uh-time-section-head">
-        <div><span class="uh-time-label">03 / Output</span><h2>Trimmed video ready</h2></div>
+    <section class="uh-card" id="results-card" style="display: none;">
+      <div class="uh-card-title">
+        <div><span class="uh-label">03 / Output</span><h2>Trimmed video ready</h2></div>
       </div>
       <div style="text-align: center; padding: 16px 0;">
         <video id="result-video" controls playsinline style="max-width: 100%; max-height: 360px; border-radius: 6px; margin-bottom: 20px;"></video>
-        <div class="uh-time-actions" style="justify-content: center; gap: 12px; display: flex; flex-wrap: wrap;">
-          <a id="download-link" class="uh-time-button primary uh-download-btn" download="trimmed-video.webm">Download Trimmed File</a>
-          <button type="button" id="trim-again-btn" class="uh-time-button quiet">Trim Another Segment</button>
+        <div class="uh-actions" style="justify-content: center;">
+          <a id="download-link" class="uh-btn uh-btn--primary uh-download-btn" download="trimmed-video.webm">Download Trimmed File</a>
+          <button type="button" id="trim-again-btn" class="uh-btn uh-btn--secondary">Trim Another Segment</button>
         </div>
       </div>
     </section>
 
-    <footer class="uh-time-footer">VIDEO TRIMMER & CUTTER PRO / CLIENT-SIDE HTML5 & MEDIARECORDER · NO SERVER UPLOADS</footer>
   </main>
 
   <script>

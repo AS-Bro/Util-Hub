@@ -7,44 +7,28 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover:not(:disabled) { background:#93e5da; }
-  button.primary:disabled { opacity:0.5; cursor:not-allowed; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
-  button.secondary:disabled { opacity:0.5; cursor:not-allowed; }
-  canvas { width: 100%; height: 80px; background: #08111a; border-radius: 6px; }
-  /* Custom styled scrollbars */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0e1c2b; }
-  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+  .drop-zone { border: 2px dashed var(--uh-line-strong); transition: var(--uh-transition); }
+  .drop-zone.active { border-color: var(--uh-accent); }
+  canvas { width: 100%; height: 80px; background: var(--uh-panel); border-radius: var(--uh-radius-sm); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Video to Audio Extractor"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-5xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Video to Audio Extractor Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Extract, trim, normalize, and export high-quality audio tracks directly in your browser offline.</p>
+<body>
+  <main class="uh-container">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Video to Audio Extractor Studio</h1>
+      <p class="uh-page-sub">Extract, trim, normalize, and export high-quality audio tracks directly in your browser offline.</p>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       <!-- Upload Panel -->
       <div id="uploadPanel" class="lg:col-span-12">
-        <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer">
+        <div id="dropZone" class="drop-zone rounded-md p-10 text-center uh-panel cursor-pointer">
           <input type="file" id="videoUploader" accept="video/*" class="hidden" />
           <div class="text-4xl mb-3">🎬</div>
-          <div class="mono text-teal-300 text-sm font-semibold mb-1">Click or drag video file here</div>
-          <div class="text-xs text-slate-400">Supports MP4, WebM, MOV, OGG, AVI, MKV</div>
+          <div class="mono uh-accent-text text-sm font-semibold mb-1">Click or drag video file here</div>
+          <div class="text-xs uh-muted-text">Supports MP4, WebM, MOV, OGG, AVI, MKV</div>
         </div>
       </div>
 
@@ -55,27 +39,27 @@
         <div class="lg:col-span-5 space-y-4">
           
           <!-- File Overview Info Box -->
-          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex items-center justify-between">
+          <div class="uh-panel p-4 rounded-md border uh-line-border flex items-center justify-between">
             <div>
               <div id="fileNameLabel" class="font-semibold text-sm truncate max-w-[220px]">video.mp4</div>
-              <div id="fileMetaLabel" class="mono text-[11px] text-slate-400 mt-0.5">0 MB | 00:00</div>
+              <div id="fileMetaLabel" class="mono text-[11px] uh-muted-text mt-0.5">0 MB | 00:00</div>
             </div>
-            <button onclick="resetStudio()" class="secondary text-xs px-3 py-1.5 rounded mono">Change Video</button>
+            <button onclick="resetStudio()" class="uh-btn uh-btn--secondary text-xs px-3 py-1.5 rounded mono">Change Video</button>
           </div>
 
           <!-- Configuration & Filters Card -->
-          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-4">
-            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Export Settings</span>
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-4">
+            <span class="mono text-xs uppercase uh-accent-text font-bold block border-b uh-line-border pb-2">Export Settings</span>
 
             <!-- Output File Name Customization -->
             <div>
-              <label class="mono text-xs text-slate-400 block mb-1">Output File Name</label>
-              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono" placeholder="audio_YYYYMMDD_HHMMSS" />
+              <label class="mono text-xs uh-muted-text block mb-1">Output File Name</label>
+              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono uh-input" placeholder="audio_YYYYMMDD_HHMMSS" />
             </div>
 
             <div>
-              <label class="mono text-xs text-slate-400 block mb-1">Format</label>
-              <select id="audioFormat" class="auto-process w-full rounded-md p-2 text-xs">
+              <label class="mono text-xs uh-muted-text block mb-1">Format</label>
+              <select id="audioFormat" class="auto-process w-full rounded-md p-2 text-xs uh-select">
                 <option value="mp3" selected>MP3 (MPEG Audio)</option>
                 <option value="wav">WAV (Uncompressed PCM - Best Quality)</option>
                 <option value="ogg">OGG (Vorbis Audio)</option>
@@ -84,8 +68,8 @@
 
             <!-- Bitrate Selection (For Lossy Formats) -->
             <div id="bitrateContainer">
-              <label class="mono text-xs text-slate-400 block mb-1">Target Quality / Bitrate</label>
-              <select id="audioBitrate" class="auto-process w-full rounded-md p-2 text-xs">
+              <label class="mono text-xs uh-muted-text block mb-1">Target Quality / Bitrate</label>
+              <select id="audioBitrate" class="auto-process w-full rounded-md p-2 text-xs uh-select">
                 <option value="320">320 kbps (Extreme Quality)</option>
                 <option value="256">256 kbps (Very High Quality)</option>
                 <option value="192" selected>192 kbps (Standard Quality)</option>
@@ -95,47 +79,47 @@
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="mono text-xs text-slate-400 block mb-1">Trim Start (s)</label>
-                <input type="number" id="trimStart" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono" />
+                <label class="mono text-xs uh-muted-text block mb-1">Trim Start (s)</label>
+                <input type="number" id="trimStart" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono uh-input" />
               </div>
               <div>
-                <label class="mono text-xs text-slate-400 block mb-1">Trim End (s)</label>
-                <input type="number" id="trimEnd" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono" />
+                <label class="mono text-xs uh-muted-text block mb-1">Trim End (s)</label>
+                <input type="number" id="trimEnd" min="0" value="0" step="0.1" class="auto-process w-full rounded p-2 text-xs mono uh-input" />
               </div>
             </div>
 
-            <div class="space-y-2 pt-2 border-t border-white/5">
-              <span class="mono text-[11px] text-teal-300 uppercase block font-semibold">Audio Enhancements</span>
+            <div class="space-y-2 pt-2 border-t uh-line-border">
+              <span class="mono text-[11px] uh-accent-text uppercase block font-semibold">Audio Enhancements</span>
               
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="normalizeAudio" checked class="auto-process accent-teal-400 w-4 h-4 rounded" />
+              <label class="flex items-center gap-2 text-xs uh-text cursor-pointer">
+                <input type="checkbox" id="normalizeAudio" checked class="auto-process accent-teal-400 w-4 h-4 rounded uh-checkbox" />
                 <span>Normalize Volume Levels</span>
               </label>
 
               <div class="grid grid-cols-2 gap-2 pl-6">
                 <div>
-                  <label class="mono text-[10px] text-slate-400 block mb-0.5">Fade In (s)</label>
-                  <input type="number" id="fadeInDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono" />
+                  <label class="mono text-[10px] uh-muted-text block mb-0.5">Fade In (s)</label>
+                  <input type="number" id="fadeInDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono uh-input" />
                 </div>
                 <div>
-                  <label class="mono text-[10px] text-slate-400 block mb-0.5">Fade Out (s)</label>
-                  <input type="number" id="fadeOutDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono" />
+                  <label class="mono text-[10px] uh-muted-text block mb-0.5">Fade Out (s)</label>
+                  <input type="number" id="fadeOutDuration" min="0" max="10" value="0" step="0.5" class="auto-process w-full rounded p-1.5 text-xs mono uh-input" />
                 </div>
               </div>
 
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="forceMono" class="auto-process accent-teal-400 w-4 h-4 rounded" />
+              <label class="flex items-center gap-2 text-xs uh-text cursor-pointer">
+                <input type="checkbox" id="forceMono" class="auto-process accent-teal-400 w-4 h-4 rounded uh-checkbox" />
                 <span>Mix Down to Mono Track</span>
               </label>
 
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="invertPhase" class="auto-process accent-teal-400 w-4 h-4 rounded" />
+              <label class="flex items-center gap-2 text-xs uh-text cursor-pointer">
+                <input type="checkbox" id="invertPhase" class="auto-process accent-teal-400 w-4 h-4 rounded uh-checkbox" />
                 <span>Invert Audio Phase (Vocal Cut Utility)</span>
               </label>
 
               <div>
-                <label class="mono text-[11px] text-slate-400 block mb-1">Playback Speed Multiplier</label>
-                <select id="playbackSpeed" class="auto-process w-full rounded-md p-1.5 text-xs">
+                <label class="mono text-[11px] uh-muted-text block mb-1">Playback Speed Multiplier</label>
+                <select id="playbackSpeed" class="auto-process w-full rounded-md p-1.5 text-xs uh-select">
                   <option value="0.5">0.5x (Half Speed)</option>
                   <option value="0.75">0.75x</option>
                   <option value="1.0" selected>1.0x (Normal Speed)</option>
@@ -147,8 +131,8 @@
             </div>
 
             <!-- Single Dedicated Download Action -->
-            <div class="pt-2 border-t border-white/5">
-              <button id="downloadBtn" onclick="downloadExportedAudio()" disabled class="primary w-full mono text-xs uppercase py-3 rounded-md shadow-lg transition-transform active:scale-95">
+            <div class="pt-2 border-t uh-line-border">
+              <button id="downloadBtn" onclick="downloadExportedAudio()" disabled class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-3 rounded-md shadow-lg transition-transform active:scale-95">
                 💾 Download Processed Audio
               </button>
             </div>
@@ -160,18 +144,18 @@
         <div class="lg:col-span-7 space-y-4">
           
           <!-- Status HUD -->
-          <div id="statusHud" class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 hidden space-y-2">
-            <div id="statusText" class="mono text-xs text-teal-300">Decoding audio track...</div>
-            <div class="w-full bg-[#0e1c2b] rounded-full h-2 overflow-hidden border border-white/10">
-              <div id="progressElement" class="bg-teal-300 h-full w-0 transition-all duration-200"></div>
+          <div id="statusHud" class="uh-panel p-4 rounded-md border uh-line-border hidden space-y-2">
+            <div id="statusText" class="mono text-xs uh-accent-text">Decoding audio track...</div>
+            <div class="w-full uh-panel rounded-full h-2 overflow-hidden border uh-line-border">
+              <div id="progressElement" class="uh-accent-bg h-full w-0 transition-all duration-200"></div>
             </div>
           </div>
 
           <!-- Waveform Visualizer & Player -->
-          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-3">
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-3">
             <div class="flex justify-between items-center">
-              <span class="mono text-xs uppercase text-teal-300 font-bold">Processed Audio Preview</span>
-              <span id="currentTimeDisplay" class="mono text-xs text-slate-400">00:00 / 00:00</span>
+              <span class="mono text-xs uppercase uh-accent-text font-bold">Processed Audio Preview</span>
+              <span id="currentTimeDisplay" class="mono text-xs uh-muted-text">00:00 / 00:00</span>
             </div>
 
             <!-- Interactive Waveform Canvas -->
@@ -182,25 +166,25 @@
             <!-- Custom Audio Element with Dedicated Player UI -->
             <audio id="audioPreviewPlayer" class="hidden"></audio>
             
-            <div class="flex items-center gap-3 bg-[#0e1c2b] p-3 rounded-md border border-white/5">
-              <button id="playPauseBtn" onclick="togglePlayPause()" class="primary text-xs px-4 py-2 rounded mono font-semibold">▶ Play</button>
+            <div class="flex items-center gap-3 uh-panel p-3 rounded-md border uh-line-border">
+              <button id="playPauseBtn" onclick="togglePlayPause()" class="uh-btn uh-btn--primary text-xs px-4 py-2 rounded mono font-semibold">▶ Play</button>
               <div class="flex-grow flex items-center gap-2">
-                <input type="range" id="seekSlider" min="0" value="0" step="0.01" oninput="seekAudio(this.value)" class="w-full accent-teal-400 h-1.5 bg-[#14283b] rounded-lg cursor-pointer" />
+                <input type="range" id="seekSlider" min="0" value="0" step="0.01" oninput="seekAudio(this.value)" class="w-full accent-teal-400 h-1.5 uh-panel rounded-lg cursor-pointer uh-range" />
               </div>
-              <button onclick="toggleMute()" id="muteBtn" class="secondary text-xs px-2.5 py-1.5 rounded mono">🔊</button>
+              <button onclick="toggleMute()" id="muteBtn" class="uh-btn uh-btn--secondary text-xs px-2.5 py-1.5 rounded mono">🔊</button>
             </div>
           </div>
 
           <!-- Technical Audio Metadata Card -->
-          <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 space-y-2">
-            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-1.5">Track Details</span>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mono text-xs text-slate-300">
-              <div><span class="text-slate-500 block text-[10px]">SAMPLE RATE</span> <span id="metaSampleRate">-- Hz</span></div>
-              <div><span class="text-slate-500 block text-[10px]">CHANNELS</span> <span id="metaChannels">--</span></div>
-              <div><span class="text-slate-500 block text-[10px]">EST. FILE SIZE</span> <span id="metaEstSize">-- MB</span></div>
-              <div><span class="text-slate-500 block text-[10px]">TRIMMED DURATION</span> <span id="metaDuration">--s</span></div>
-              <div><span class="text-slate-500 block text-[10px]">FORMAT</span> <span id="metaFormat">MP3</span></div>
-              <div><span class="text-slate-500 block text-[10px]">PEAK AMPLITUDE</span> <span id="metaPeak">-- dB</span></div>
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-2">
+            <span class="mono text-xs uppercase uh-accent-text font-bold block border-b uh-line-border pb-1.5">Track Details</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mono text-xs uh-text">
+              <div><span class="uh-faint-text block text-[10px]">SAMPLE RATE</span> <span id="metaSampleRate">-- Hz</span></div>
+              <div><span class="uh-faint-text block text-[10px]">CHANNELS</span> <span id="metaChannels">--</span></div>
+              <div><span class="uh-faint-text block text-[10px]">EST. FILE SIZE</span> <span id="metaEstSize">-- MB</span></div>
+              <div><span class="uh-faint-text block text-[10px]">TRIMMED DURATION</span> <span id="metaDuration">--s</span></div>
+              <div><span class="uh-faint-text block text-[10px]">FORMAT</span> <span id="metaFormat">MP3</span></div>
+              <div><span class="uh-faint-text block text-[10px]">PEAK AMPLITUDE</span> <span id="metaPeak">-- dB</span></div>
             </div>
           </div>
 
@@ -209,7 +193,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <script>
     const videoUploader = document.getElementById('videoUploader');

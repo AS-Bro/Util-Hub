@@ -7,27 +7,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .drop-zone { border: 2px dashed var(--uh-line-strong); transition: var(--uh-transition); }
+  .drop-zone.active { border-color: var(--uh-accent); }
   .picker-img { max-width: 100%; max-height: 180px; cursor: crosshair; object-fit: contain; image-rendering: pixelated; }
   .native-color-picker {
     width: 38px; height: 34px; padding: 0; cursor: pointer;
-    border: 1px solid rgba(143,176,204,.2); border-radius: 6px; background: none;
+    border: 1px solid var(--uh-line); border-radius: var(--uh-radius-sm); background: transparent;
   }
   .native-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
   .native-color-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
   .checkerboard-preview {
-    background-color: #0b1622;
-    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
+    background-color: var(--uh-panel);
+    background-image: linear-gradient(45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(-45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--uh-elevated) 75%), linear-gradient(-45deg, transparent 75%, var(--uh-elevated) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
@@ -36,40 +27,40 @@
     image-rendering: crisp-edges;
   }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Background Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Background Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Add custom backgrounds, colors, gradients, or blurred backdrop fills to your images.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Background Studio</h1>
+      <p class="uh-page-sub">Add custom backgrounds, colors, gradients, or blurred backdrop fills to your images.</p>
+    </div>
 
     <!-- Initial Upload Zone -->
-    <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer mb-6">
+    <div id="dropZone" class="drop-zone rounded-md p-10 text-center uh-panel cursor-pointer mb-6">
       <input type="file" id="fileUpload" accept="image/*" class="hidden" />
-      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop main subject image here or click to browse</div>
-      <div class="text-xs text-slate-400">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
+      <div class="mono uh-accent-text text-sm font-semibold mb-1">Drop main subject image here or click to browse</div>
+      <div class="text-xs uh-muted-text">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
     </div>
 
     <!-- Studio Workspace -->
     <div id="studioControls" class="grid grid-cols-1 lg:grid-cols-12 gap-6 hidden">
       
       <!-- Left Config Sidebar -->
-      <div class="lg:col-span-5 space-y-4 bg-[#14283b]/30 p-5 rounded-md border border-white/10 max-h-[820px] overflow-y-auto">
+      <div class="lg:col-span-5 space-y-4 uh-panel p-5 rounded-md border uh-line-border max-h-[820px] overflow-y-auto">
         
         <!-- Tab Navigation -->
-        <div class="flex border-b border-white/10 pb-2 gap-2">
-          <button id="tabBgBtn" onclick="switchTab('bg')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">Background</button>
-          <button id="tabFgBtn" onclick="switchTab('fg')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Foreground</button>
-          <button id="tabCanvasBtn" onclick="switchTab('canvas')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Canvas</button>
+        <div class="flex border-b uh-line-border pb-2 gap-2">
+          <button id="tabBgBtn" onclick="switchTab('bg')" class="mono text-xs uppercase font-bold uh-accent-text px-3 py-1 uh-panel rounded">Background</button>
+          <button id="tabFgBtn" onclick="switchTab('fg')" class="mono text-xs uppercase font-bold uh-muted-text px-3 py-1 hover:uh-text">Foreground</button>
+          <button id="tabCanvasBtn" onclick="switchTab('canvas')" class="mono text-xs uppercase font-bold uh-muted-text px-3 py-1 hover:uh-text">Canvas</button>
         </div>
 
         <!-- TAB 1: BACKGROUND OPTIONS -->
         <div id="tabBg" class="space-y-4">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Background Mode</label>
-            <select id="bgMode" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Background Mode</label>
+            <select id="bgMode" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="solid">Solid Color</option>
               <option value="gradient">Linear Gradient</option>
               <option value="customImage">Custom Background Image</option>
@@ -79,69 +70,69 @@
 
           <!-- Color Sampler Picker -->
           <div id="samplerGroup">
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Sample Color from Image</label>
-            <div class="bg-[#0e1c2b] p-2 rounded border border-white/10 text-center checkerboard-preview">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Sample Color from Image</label>
+            <div class="uh-panel p-2 rounded border uh-line-border text-center checkerboard-preview">
               <img id="sourcePreview" class="picker-img rounded mx-auto" title="Click to sample color" />
             </div>
-            <p class="mono text-[10px] text-slate-400 mt-1">Click anywhere on image above to pick background color</p>
+            <p class="mono text-[10px] uh-muted-text mt-1">Click anywhere on image above to pick background color</p>
           </div>
 
           <!-- Solid / Gradient Colors -->
           <div id="colorControls" class="space-y-2">
-            <label class="mono text-xs text-slate-400 uppercase block">Palette Colors</label>
+            <label class="mono text-xs uh-muted-text uppercase block">Palette Colors</label>
             <div class="flex items-center gap-2">
               <input type="color" id="bgColorPrimary" class="native-color-picker" value="#0772e4" />
               <input type="color" id="bgColorSecondary" class="native-color-picker hidden" value="#17304a" />
-              <span id="colorHexCode" class="mono text-xs text-teal-300 font-bold uppercase">#0772E4</span>
+              <span id="colorHexCode" class="mono text-xs uh-accent-text font-bold uppercase">#0772E4</span>
             </div>
           </div>
 
           <!-- Gradient Angle -->
           <div id="gradientAngleGroup" class="hidden">
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Gradient Angle</label>
-              <span id="gradAngleVal" class="mono text-xs text-teal-300 font-bold">135°</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Gradient Angle</label>
+              <span id="gradAngleVal" class="mono text-xs uh-accent-text font-bold">135°</span>
             </div>
-            <input id="gradAngle" type="range" min="0" max="360" value="135" class="w-full accent-teal-400" />
+            <input id="gradAngle" type="range" min="0" max="360" value="135" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <!-- Custom Background Image Upload -->
-          <div id="customBgGroup" class="hidden space-y-3 bg-[#0e1c2b]/50 p-3 rounded border border-white/5">
-            <label class="mono text-xs text-teal-300 uppercase block font-bold">Upload Custom Background</label>
-            <button onclick="document.getElementById('bgFileUpload').click()" class="secondary w-full mono text-xs p-2 rounded">Choose Background Image...</button>
+          <div id="customBgGroup" class="hidden space-y-3 uh-panel p-3 rounded border uh-line-border">
+            <label class="mono text-xs uh-accent-text uppercase block font-bold">Upload Custom Background</label>
+            <button onclick="document.getElementById('bgFileUpload').click()" class="uh-btn uh-btn--secondary w-full mono text-xs p-2 rounded">Choose Background Image...</button>
             <input type="file" id="bgFileUpload" accept="image/*" class="hidden" />
             
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="mono text-[10px] text-slate-400 uppercase block mb-1">BG Fit Mode</label>
-                <select id="bgFitMode" class="w-full rounded p-1.5 text-xs">
+                <label class="mono text-[10px] uh-muted-text uppercase block mb-1">BG Fit Mode</label>
+                <select id="bgFitMode" class="w-full rounded p-1.5 text-xs uh-select">
                   <option value="cover">Cover (Fill)</option>
                   <option value="contain">Contain (Fit)</option>
                   <option value="stretch">Stretch</option>
                 </select>
               </div>
               <div>
-                <label class="mono text-[10px] text-slate-400 uppercase block mb-1">BG Blur</label>
-                <input id="bgImgBlur" type="range" min="0" max="40" value="0" class="w-full accent-teal-400 mt-2" />
+                <label class="mono text-[10px] uh-muted-text uppercase block mb-1">BG Blur</label>
+                <input id="bgImgBlur" type="range" min="0" max="40" value="0" class="w-full accent-teal-400 mt-2 uh-range" />
               </div>
             </div>
 
             <div>
               <div class="flex justify-between items-center mb-1">
-                <label class="mono text-[10px] text-slate-400 uppercase">Overlay Darkness</label>
-                <span id="bgOverlayVal" class="mono text-xs text-teal-300 font-bold">0%</span>
+                <label class="mono text-[10px] uh-muted-text uppercase">Overlay Darkness</label>
+                <span id="bgOverlayVal" class="mono text-xs uh-accent-text font-bold">0%</span>
               </div>
-              <input id="bgOverlayOpacity" type="range" min="0" max="90" value="0" class="w-full accent-teal-400" />
+              <input id="bgOverlayOpacity" type="range" min="0" max="90" value="0" class="w-full accent-teal-400 uh-range" />
             </div>
           </div>
 
           <!-- Blur Auto-Fill Slider -->
           <div id="autoBlurGroup" class="hidden">
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Backdrop Blur Strength</label>
-              <span id="autoBlurVal" class="mono text-xs text-teal-300 font-bold">30px</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Backdrop Blur Strength</label>
+              <span id="autoBlurVal" class="mono text-xs uh-accent-text font-bold">30px</span>
             </div>
-            <input id="autoBlur" type="range" min="5" max="80" value="30" class="w-full accent-teal-400" />
+            <input id="autoBlur" type="range" min="5" max="80" value="30" class="w-full accent-teal-400 uh-range" />
           </div>
         </div>
 
@@ -149,16 +140,16 @@
         <div id="tabFg" class="space-y-3 hidden">
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Subject Scale</label>
-              <span id="scaleVal" class="mono text-xs text-teal-300 font-bold">80%</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Subject Scale</label>
+              <span id="scaleVal" class="mono text-xs uh-accent-text font-bold">80%</span>
             </div>
-            <input id="imageScale" type="range" min="10" max="120" value="80" class="w-full accent-teal-400" />
+            <input id="imageScale" type="range" min="10" max="120" value="80" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Pixel Smoothing</label>
-              <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs">
+              <label class="mono text-[11px] uh-muted-text uppercase">Pixel Smoothing</label>
+              <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs uh-select">
                 <option value="false" selected>Pixel Art Crisp (No Anti-aliasing Grid)</option>
                 <option value="true">Smooth (For HD Photos)</option>
               </select>
@@ -167,45 +158,45 @@
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Border Radius</label>
-              <span id="radiusVal" class="mono text-xs text-teal-300 font-bold">0px</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Border Radius</label>
+              <span id="radiusVal" class="mono text-xs uh-accent-text font-bold">0px</span>
             </div>
-            <input id="borderRadius" type="range" min="0" max="100" value="0" class="w-full accent-teal-400" />
+            <input id="borderRadius" type="range" min="0" max="100" value="0" class="w-full accent-teal-400 uh-range" />
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Drop Shadow</label>
-              <span id="shadowVal" class="mono text-xs text-teal-300 font-bold">0px</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Drop Shadow</label>
+              <span id="shadowVal" class="mono text-xs uh-accent-text font-bold">0px</span>
             </div>
-            <input id="dropShadow" type="range" min="0" max="80" value="0" class="w-full accent-teal-400" />
+            <input id="dropShadow" type="range" min="0" max="80" value="0" class="w-full accent-teal-400 uh-range" />
           </div>
 
-          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t uh-line-border">
             <div>
-              <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Position Offset X</label>
-              <input id="offsetX" type="range" min="-200" max="200" value="0" class="w-full accent-teal-400" />
+              <label class="mono text-[10px] uh-muted-text uppercase block mb-1">Position Offset X</label>
+              <input id="offsetX" type="range" min="-200" max="200" value="0" class="w-full accent-teal-400 uh-range" />
             </div>
             <div>
-              <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Position Offset Y</label>
-              <input id="offsetY" type="range" min="-200" max="200" value="0" class="w-full accent-teal-400" />
+              <label class="mono text-[10px] uh-muted-text uppercase block mb-1">Position Offset Y</label>
+              <input id="offsetY" type="range" min="-200" max="200" value="0" class="w-full accent-teal-400 uh-range" />
             </div>
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Rotation Angle</label>
-              <span id="rotateVal" class="mono text-xs text-teal-300 font-bold">0°</span>
+              <label class="mono text-[11px] uh-muted-text uppercase">Rotation Angle</label>
+              <span id="rotateVal" class="mono text-xs uh-accent-text font-bold">0°</span>
             </div>
-            <input id="rotation" type="range" min="-180" max="180" value="0" class="w-full accent-teal-400" />
+            <input id="rotation" type="range" min="-180" max="180" value="0" class="w-full accent-teal-400 uh-range" />
           </div>
         </div>
 
         <!-- TAB 3: CANVAS & ASPECT RATIO -->
         <div id="tabCanvas" class="space-y-3 hidden">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Aspect Ratio</label>
-            <select id="aspectPreset" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Aspect Ratio</label>
+            <select id="aspectPreset" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="1:1">Square (1:1)</option>
               <option value="9:16">Story / Reel (9:16)</option>
               <option value="16:9">Widescreen (16:9)</option>
@@ -216,13 +207,13 @@
           </div>
 
           <div id="customRatioBox" class="hidden">
-            <label class="mono text-[10px] text-slate-400 uppercase block mb-1">Custom Ratio (e.g. 21:9)</label>
-            <input type="text" id="customRatioVal" value="21:9" class="w-full rounded-md p-2 text-xs mono" />
+            <label class="mono text-[10px] uh-muted-text uppercase block mb-1">Custom Ratio (e.g. 21:9)</label>
+            <input type="text" id="customRatioVal" value="21:9" class="w-full rounded-md p-2 text-xs mono uh-input" />
           </div>
 
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Export Resolution Quality</label>
-            <select id="exportScale" class="w-full rounded-md p-2 text-xs">
+            <label class="mono text-xs uh-muted-text uppercase block mb-1">Export Resolution Quality</label>
+            <select id="exportScale" class="w-full rounded-md p-2 text-xs uh-select">
               <option value="1">1x (Standard Resolution)</option>
               <option value="2" selected>2x (High Definition)</option>
               <option value="4">4x (Ultra HD 4K)</option>
@@ -236,15 +227,15 @@
       <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
         
         <!-- Live Result Canvas Preview Container -->
-        <div class="bg-[#14283b]/40 border border-white/10 p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
+        <div class="uh-panel border uh-line-border p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
           <img id="resultImg" class="max-h-[460px] max-w-full rounded shadow-2xl object-contain" />
         </div>
 
         <!-- Export Toolbar -->
-        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div class="uh-panel p-4 rounded-md border uh-line-border flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <label class="mono text-xs text-slate-400 uppercase">Export Format</label>
-            <select id="exportFormat" class="rounded p-2 text-xs font-semibold">
+            <label class="mono text-xs uh-muted-text uppercase">Export Format</label>
+            <select id="exportFormat" class="rounded p-2 text-xs font-semibold uh-select">
               <option value="image/png">PNG (.png)</option>
               <option value="image/jpeg">JPG (.jpg)</option>
               <option value="image/webp">WEBP (.webp)</option>
@@ -252,15 +243,15 @@
           </div>
           
           <div class="flex gap-2">
-            <button onclick="document.getElementById('fileUpload').click()" class="secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Subject</button>
-            <button id="downloadBtn" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Image</button>
+            <button onclick="document.getElementById('fileUpload').click()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Subject</button>
+            <button id="downloadBtn" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Image</button>
           </div>
         </div>
 
       </div>
 
     </div>
-  </div>
+  </main>
 
   <canvas id="hiddenCanvas" class="hidden"></canvas>
 
@@ -320,13 +311,13 @@
       ['bg', 'fg', 'canvas'].forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
-        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
-        btn.classList.add('text-slate-400');
+        btn.classList.remove('uh-accent-text', 'uh-panel');
+        btn.classList.add('uh-muted-text');
       });
 
       const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
-      activeBtn.classList.remove('text-slate-400');
-      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      activeBtn.classList.remove('uh-muted-text');
+      activeBtn.classList.add('uh-accent-text', 'uh-panel');
       document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
     };
 

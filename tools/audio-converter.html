@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -7,35 +7,29 @@
   <title>Utility Hub / Audio Format Converter</title>
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Audio Converter"></script>
   <style>
-    .uh-audio-shell { max-width: 960px; margin: 0 auto; }
-    .uh-audio-dropzone { border: 2px dashed rgba(143, 176, 204, 0.3); border-radius: 10px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s ease; background: rgba(0,0,0,0.15); }
-    .uh-audio-dropzone:hover { border-color: var(--accent); background: rgba(111, 216, 203, 0.05); }
-    .uh-audio-preview-wrap { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center; }
+    .uh-audio-dropzone { border: 2px dashed var(--uh-line-strong); border-radius: var(--uh-radius-md); padding: 32px; text-align: center; cursor: pointer; transition: var(--uh-transition); background: var(--uh-panel); }
+    .uh-audio-dropzone:hover { border-color: var(--uh-accent); }
+    .uh-audio-preview-wrap { background: var(--uh-panel); border: 1px solid var(--uh-line); border-radius: var(--uh-radius-md); padding: 16px; margin-bottom: 16px; text-align: center; }
     .uh-audio-preview-wrap audio { width: 100%; outline: none; margin-top: 8px; }
-    .uh-time-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
-    .uh-meta-badge { font-family: monospace; font-size: 0.8rem; background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 4px; display: inline-block; }
-    .uh-export-progress { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 12px; display: none; }
-    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
-    .uh-toolbar-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .uh-meta-badge { font-family: var(--uh-font-mono); font-size: 0.8rem; background: var(--uh-elevated); color: var(--uh-muted); padding: 4px 8px; border: 1px solid var(--uh-line); border-radius: var(--uh-radius-sm); display: inline-block; }
+    .uh-export-progress { width: 100%; height: 6px; background: var(--uh-elevated); border-radius: var(--uh-radius-sm); overflow: hidden; margin-top: 12px; display: none; }
+    .uh-export-progress-bar { width: 0%; height: 100%; background: var(--uh-accent); transition: width 0.1s linear; }
     .uh-download-btn { text-decoration: none !important; display: inline-flex; align-items: center; justify-content: center; }
 
-    /* Fix for dropdown option visibility */
-    select { background-color: rgba(0,0,0,0.3) !important; color: var(--text) !important; }
-    select option { background-color: #14283b; color: #e7eef4; padding: 8px; }
+    select option { background-color: var(--uh-panel); color: var(--uh-text); padding: 8px; }
   </style>
 </head>
-<body class="uh-time-tool uh-audio-page">
-  <main class="uh-time-shell uh-audio-shell" id="audio-app">
-    <section class="uh-time-heading">
-      <span class="uh-time-kicker">Media tools / Audio processor</span>
-      <h1>Audio Format Converter</h1>
-      <p>Convert audio files between WAV, MP3, OGG, and AAC with adjustable bitrate and sample rate settings.</p>
+<body>
+  <main class="uh-container" id="audio-app">
+    <section class="uh-page-head">
+      <h1 class="uh-page-title">Audio Format Converter</h1>
+      <p class="uh-page-sub">Convert audio files between WAV, MP3, OGG, and AAC with adjustable bitrate and sample rate settings.</p>
     </section>
 
     <!-- Upload Card -->
-    <section class="uh-time-card" id="upload-card">
-      <div class="uh-time-card-head">
-        <div><span class="uh-time-label">01 / Source</span><h2>Upload audio file</h2></div>
+    <section class="uh-card" id="upload-card">
+      <div>
+        <div><span class="uh-label">01 / Source</span><h2 class="uh-card-title">Upload audio file</h2></div>
       </div>
       <div class="uh-audio-dropzone" id="dropzone">
         <p style="font-weight: 600; margin-bottom: 6px;">Drag & drop audio here, or click to browse</p>
@@ -45,11 +39,11 @@
     </section>
 
     <!-- Editor Workspace -->
-    <section class="uh-time-card" id="editor-card" style="display: none;">
-      <div class="uh-time-card-head">
-        <div><span class="uh-time-label">02 / Workspace</span><h2 id="audio-title-header">Configuring Audio</h2></div>
-        <div class="uh-time-actions">
-          <button type="button" id="new-audio-btn" class="uh-time-button quiet">Change audio</button>
+    <section class="uh-card" id="editor-card" style="display: none;">
+      <div>
+        <div><span class="uh-label">02 / Workspace</span><h2 id="audio-title-header" class="uh-card-title">Configuring Audio</h2></div>
+        <div class="uh-actions">
+          <button type="button" id="new-audio-btn" class="uh-btn uh-btn--secondary">Change audio</button>
         </div>
       </div>
 
@@ -68,19 +62,19 @@
       </div>
 
       <!-- Conversion Settings Grid -->
-      <div class="uh-time-grid">
-        <div class="uh-time-field">
-          <label for="output-format">Output Format</label>
-          <select id="output-format" style="border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; width: 100%;">
+      <div class="uh-grid-2">
+        <div class="uh-field">
+          <label class="uh-label" for="output-format">Output Format</label>
+          <select id="output-format" class="uh-select" style="width: 100%;">
             <option value="wav">WAV (Uncompressed PCM)</option>
             <option value="mp3">MP3 / WebM (Compressed)</option>
             <option value="ogg">OGG (Vorbis / Opus)</option>
             <option value="aac">AAC (Advanced Audio)</option>
           </select>
         </div>
-        <div class="uh-time-field">
-          <label for="output-bitrate">Target Bitrate / Quality</label>
-          <select id="output-bitrate" style="border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; width: 100%;">
+        <div class="uh-field">
+          <label class="uh-label" for="output-bitrate">Target Bitrate / Quality</label>
+          <select id="output-bitrate" class="uh-select" style="width: 100%;">
             <option value="128000">128 kbps (Standard)</option>
             <option value="192000" selected>192 kbps (High)</option>
             <option value="256000">256 kbps (Very High)</option>
@@ -90,8 +84,8 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="uh-time-actions" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
-        <button type="button" id="convert-btn" class="uh-time-button primary">Start Conversion</button>
+      <div class="uh-actions" style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+        <button type="button" id="convert-btn" class="uh-btn uh-btn--primary">Start Conversion</button>
       </div>
 
       <!-- Export Progress & Cancel -->
@@ -100,28 +94,27 @@
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
         <p id="export-status-text" style="font-size: 0.85rem; opacity: 0.8;" hidden></p>
-        <button type="button" id="cancel-export-btn" class="uh-time-button quiet" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Conversion</button>
+        <button type="button" id="cancel-export-btn" class="uh-btn uh-btn--secondary" style="font-size: 0.8rem; display: none; margin-left: auto;">Cancel Conversion</button>
       </div>
     </section>
 
     <!-- Exported Results Card -->
-    <section class="uh-time-section uh-time-card" id="results-card" style="display: none;">
-      <div class="uh-time-section-head">
-        <div><span class="uh-time-label">03 / Output</span><h2>Converted audio ready</h2></div>
+    <section class="uh-card" id="results-card" style="display: none;">
+      <div>
+        <div><span class="uh-label">03 / Output</span><h2 class="uh-card-title">Converted audio ready</h2></div>
       </div>
       <div style="text-align: center; padding: 16px 0;">
         <div class="uh-audio-preview-wrap" style="margin-bottom: 20px;">
           <span style="font-size: 0.85rem; font-family: monospace; opacity: 0.8;">Converted Audio Preview</span>
           <audio id="result-audio" controls></audio>
         </div>
-        <div class="uh-time-actions" style="justify-content: center; gap: 12px; display: flex; flex-wrap: wrap;">
-          <a id="download-link" class="uh-time-button primary uh-download-btn" download="converted-audio.wav">Download Converted File</a>
-          <button type="button" id="convert-again-btn" class="uh-time-button quiet">Convert Another File</button>
+        <div class="uh-actions" style="justify-content: center; gap: 12px; display: flex; flex-wrap: wrap;">
+          <a id="download-link" class="uh-btn uh-btn--primary uh-download-btn" download="converted-audio.wav">Download Converted File</a>
+          <button type="button" id="convert-again-btn" class="uh-btn uh-btn--secondary">Convert Another File</button>
         </div>
       </div>
     </section>
 
-    <footer class="uh-time-footer">AUDIO FORMAT CONVERTER / CLIENT-SIDE WEB AUDIO API · NO SERVER UPLOADS</footer>
   </main>
 
   <script>

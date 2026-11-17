@@ -8,43 +8,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  
-  select, input[type="text"], textarea { 
-    background:#14283b; 
-    border:1px solid rgba(143,176,204,.16); 
-    color:#e7eef4; 
-  }
-  select:focus, input:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
-  
-  /* Buttons */
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
-  button.primary:hover:not(:disabled) { background:#93e5da; box-shadow: 0 0 15px rgba(111,216,203,0.3); }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
-
-  /* Match Slot Styling */
   .match-card {
-    background: #14283b;
-    border: 1px solid rgba(143,176,204,0.2);
-    transition: all 0.2s ease;
+    background: var(--uh-panel);
+    border: 1px solid var(--uh-line);
+    transition: all var(--uh-transition);
   }
   .match-card:hover {
-    border-color: #6fd8cb;
-    box-shadow: 0 4px 12px rgba(111,216,203,0.1);
+    border-color: var(--uh-accent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--uh-accent) 12%, transparent);
   }
   .match-card.completed {
-    border-color: rgba(111,216,203,0.4);
-    background: #0f2234;
+    border-color: color-mix(in srgb, var(--uh-success) 50%, transparent);
+    background: var(--uh-elevated);
   }
+  .match-choice { transition: background var(--uh-transition); }
+  .match-choice:hover { background:color-mix(in srgb, var(--uh-accent) 8%, transparent); }
+  .match-winner { background:color-mix(in srgb, var(--uh-success) 18%, transparent); color:var(--uh-success); font-weight:700; }
 
   /* Podium Overlay Blur Modal */
   .modal-screen {
     position: fixed;
     inset: 0;
-    background-color: rgba(8, 17, 26, 0.94);
+    background-color: color-mix(in srgb, var(--uh-bg) 94%, transparent);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -65,101 +50,102 @@
 
   /* Custom scrollbars */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0e1c2b; }
-  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+  ::-webkit-scrollbar-track { background: var(--uh-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--uh-elevated); border-radius: var(--uh-radius-sm); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--uh-accent); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Tournament Arena Studio"></script>
 </head>
-<body class="min-h-screen py-8 px-4">
-  <div class="mx-auto max-w-6xl">
+<body>
+  <main class="uh-container uh-container--wide">
     
     <!-- Header -->
-    <div class="border-b border-white/10 pb-4 mb-6 flex flex-wrap justify-between items-end gap-3">
+    <div class="flex flex-wrap justify-between items-end gap-3">
       <div>
-        <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-        <h1 class="display text-2xl font-bold mt-2">Tournament Arena Studio</h1>
-        <p class="text-xs text-slate-400 mt-1">Live bracket generator, auto-seeding, match score tracking, and podium celebrations.</p>
+        <div class="uh-page-head">
+          <h1 class="uh-page-title">Tournament Arena Studio</h1>
+          <p class="uh-page-sub">Live bracket generator, auto-seeding, match score tracking, and podium celebrations.</p>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3 bg-[#14283b]/50 p-2 rounded-md border border-white/10 text-xs mono">
-        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
-          <input type="checkbox" id="soundToggle" checked class="accent-teal-400 w-4 h-4 rounded" />
+      <div class="uh-toolbar flex items-center gap-3 text-xs mono">
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" id="soundToggle" checked class="uh-checkbox" />
           <span>Audio FX</span>
         </label>
       </div>
     </div>
 
     <!-- Main Workspace Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="uh-grid uh-grid-2 gap-6">
       
       <!-- Left Configurator Panel -->
-      <div class="lg:col-span-4 space-y-4">
+      <div class="space-y-4">
         
         <!-- Roster & Setup Panel -->
-        <div class="bg-[#14283b]/30 p-5 rounded-lg border border-white/10 space-y-4">
-          <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Roster & Tournament Setup</span>
+        <div class="uh-card p-5 space-y-4">
+          <span class="uh-card-title mono text-xs uppercase font-bold block pb-2">Roster & Tournament Setup</span>
 
           <!-- Add Player Form -->
           <div>
-            <label class="mono text-[11px] text-slate-400 block mb-1">Add Competitors (comma separated)</label>
+            <label class="uh-label mono text-[11px] block mb-1">Add Competitors (comma separated)</label>
             <div class="flex gap-2">
-              <input type="text" id="playerInput" placeholder="Alpha, Bravo, Charlie..." class="w-full rounded-md p-2 text-xs mono" />
-              <button onclick="addPlayersFromInput()" class="primary px-3 rounded-md text-xs mono font-bold">Add</button>
+              <input type="text" id="playerInput" placeholder="Alpha, Bravo, Charlie..." class="uh-input w-full rounded-md p-2 text-xs mono" />
+              <button onclick="addPlayersFromInput()" class="uh-btn uh-btn--primary px-3 rounded-md text-xs mono font-bold">Add</button>
             </div>
           </div>
 
           <!-- Roster List Box -->
           <div>
             <div class="flex justify-between items-center mb-1 mono text-[11px]">
-              <span class="text-slate-400">Current Competitors</span>
-              <span id="playerCounter" class="text-teal-300 font-semibold">0 entered</span>
+              <span class="text-[var(--uh-muted)]">Current Competitors</span>
+              <span id="playerCounter" class="text-[var(--uh-accent)] font-semibold">0 entered</span>
             </div>
-            <div id="rosterList" class="flex flex-col gap-1.5 p-2 bg-[#08111a] border border-white/10 rounded-md max-h-[160px] overflow-y-auto">
+            <div id="rosterList" class="uh-panel flex flex-col gap-1.5 p-2 max-h-[160px] overflow-y-auto">
               <!-- Rendered via JS -->
             </div>
           </div>
 
           <!-- Quick Seed Utilities -->
-          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/5">
-            <button onclick="shuffleRoster()" class="secondary py-2 rounded-md text-xs mono">🔀 Shuffle Seeds</button>
-            <button onclick="clearRoster()" class="secondary py-2 rounded-md text-xs mono text-rose-300 border-rose-500/20 hover:border-rose-400">🗑️ Clear Roster</button>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t uh-line-border">
+            <button onclick="shuffleRoster()" class="uh-btn uh-btn--secondary py-2 rounded-md text-xs mono">🔀 Shuffle Seeds</button>
+            <button onclick="clearRoster()" class="uh-btn uh-btn--danger py-2 rounded-md text-xs mono">🗑️ Clear Roster</button>
           </div>
 
           <!-- Bracket Generate CTA -->
-          <button onclick="generateTournamentBracket()" class="primary w-full py-3 rounded-md mono text-xs uppercase tracking-wider shadow-lg">
+          <button onclick="generateTournamentBracket()" class="uh-btn uh-btn--primary w-full py-3 rounded-md mono text-xs uppercase tracking-wider shadow-lg">
             ⚡ Generate Tournament Bracket
           </button>
         </div>
 
         <!-- Activity Log -->
-        <div class="bg-[#14283b]/30 p-4 rounded-lg border border-white/10 space-y-2">
-          <div class="flex justify-between items-center border-b border-white/10 pb-2">
-            <span class="mono text-xs uppercase text-teal-300 font-bold">Match History</span>
-            <button onclick="clearMatchLog()" class="mono text-[10px] text-slate-400 hover:text-white">Clear</button>
+        <div class="uh-card p-4 space-y-2">
+          <div class="flex justify-between items-center border-b border-[var(--uh-line)] pb-2">
+            <span class="uh-card-title mono text-xs uppercase font-bold">Match History</span>
+            <button onclick="clearMatchLog()" class="uh-btn uh-btn--ghost mono text-[10px]">Clear</button>
           </div>
-          <div id="matchLog" class="mono text-xs space-y-1 max-h-[120px] overflow-y-auto text-slate-300">
-            <div class="text-slate-500 text-[11px]">No matches finished yet.</div>
+          <div id="matchLog" class="mono text-xs space-y-1 max-h-[120px] overflow-y-auto">
+            <div class="text-[var(--uh-muted)] text-[11px]">No matches finished yet.</div>
           </div>
         </div>
 
       </div>
 
       <!-- Right Interactive Bracket Arena -->
-      <div class="lg:col-span-8">
-        <div class="bg-[#14283b]/30 p-6 rounded-lg border border-white/10 min-h-[500px] flex flex-col justify-between">
+      <div>
+        <div class="uh-card p-6 min-h-[500px] flex flex-col justify-between">
           
-          <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
-            <span class="mono text-xs uppercase text-teal-300 font-bold" id="tournamentStatus">Bracket View</span>
-            <button onclick="resetTournament()" class="secondary px-3 py-1 text-xs mono">Reset Bracket</button>
+          <div class="flex justify-between items-center border-b border-[var(--uh-line)] pb-3 mb-4">
+            <span class="mono text-xs uppercase text-[var(--uh-accent)] font-bold" id="tournamentStatus">Bracket View</span>
+            <button onclick="resetTournament()" class="uh-btn uh-btn--secondary px-3 py-1 text-xs mono">Reset Bracket</button>
           </div>
 
           <!-- Bracket Flow Canvas Container -->
           <div id="bracketDisplay" class="flex gap-6 overflow-x-auto pb-4 items-center justify-start min-h-[380px]">
-            <div class="m-auto text-center text-slate-500 mono text-xs">
+            <div class="m-auto text-center text-[var(--uh-muted)] mono text-xs">
               Add at least 2 competitors and click <strong>Generate Tournament Bracket</strong> to begin.
             </div>
-          </div>
+          </main>
 
         </div>
       </div>
@@ -170,15 +156,15 @@
   <!-- Winner Celebration Overlay Modal -->
   <div id="podiumOverlay" class="modal-screen">
     <div class="text-center space-y-4 max-w-md w-full">
-      <span class="mono text-xs uppercase tracking-widest text-teal-300 font-bold block">👑 Tournament Champion</span>
+      <span class="mono text-xs uppercase tracking-widest text-[var(--uh-accent)] font-bold block">👑 Tournament Champion</span>
       
-      <div class="bg-gradient-to-br from-[#17304a] to-[#0e1c2b] p-8 rounded-xl border border-teal-400/30 shadow-[0_0_50px_rgba(111,216,203,0.2)]">
+      <div class="uh-card p-8">
         <div class="text-5xl mb-3">🏆</div>
-        <h2 id="championName" class="display text-3xl sm:text-4xl font-extrabold text-teal-300 break-words">--</h2>
-        <p class="mono text-xs text-slate-400 mt-2">Undefeated Champion</p>
+        <h2 id="championName" class="display text-3xl sm:text-4xl font-extrabold text-[var(--uh-accent)] break-words">--</h2>
+        <p class="mono text-xs text-[var(--uh-muted)] mt-2">Undefeated Champion</p>
       </div>
 
-      <button onclick="closePodium()" class="primary w-full py-3 rounded-md mono text-xs uppercase">
+      <button onclick="closePodium()" class="uh-btn uh-btn--primary w-full py-3 rounded-md mono text-xs uppercase">
         Back To Arena
       </button>
     </div>
@@ -268,14 +254,14 @@
   function updateRosterUI() {
     rosterList.innerHTML = '';
     if (!roster.length) {
-      rosterList.innerHTML = `<span class="text-xs text-slate-500 p-2">Roster is empty.</span>`;
+      rosterList.innerHTML = `<span class="text-xs text-[var(--uh-muted)] p-2">Roster is empty.</span>`;
     }
     roster.forEach((player, idx) => {
       const item = document.createElement('div');
-      item.className = 'flex justify-between items-center bg-[#17304a] px-2.5 py-1.5 rounded border border-white/10 text-xs mono';
+      item.className = 'uh-panel flex justify-between items-center px-2.5 py-1.5 text-xs mono';
       item.innerHTML = `
         <span class="truncate max-w-[180px]">${escapeHtml(player)}</span>
-        <button onclick="removePlayer(${idx})" class="text-slate-400 hover:text-rose-400 font-bold">×</button>
+        <button onclick="removePlayer(${idx})" class="uh-btn uh-btn--danger font-bold">×</button>
       `;
       rosterList.appendChild(item);
     });
@@ -395,22 +381,22 @@
       col.className = 'flex flex-col justify-around gap-4 min-w-[200px]';
       
       const title = document.createElement('div');
-      title.className = 'mono text-[11px] text-teal-300 font-bold uppercase tracking-wider mb-2 text-center';
+      title.className = 'mono text-[11px] text-[var(--uh-accent)] font-bold uppercase tracking-wider mb-2 text-center';
       title.textContent = rIdx === tournamentTree.length - 1 ? '👑 Finals' : `Round ${rIdx + 1}`;
       col.appendChild(title);
 
       round.forEach((match, mIdx) => {
         const card = document.createElement('div');
-        card.className = `match-card p-3 rounded-md text-xs mono ${match.winner ? 'completed' : ''}`;
+        card.className = `uh-card match-card p-3 rounded-md text-xs mono ${match.winner ? 'completed' : ''}`;
         
         card.innerHTML = `
           <div class="space-y-1.5">
-            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 1)" class="flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p1 ? 'bg-teal-400/20 text-teal-300 font-bold' : 'hover:bg-white/5'}">
+            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 1)" class="match-choice flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p1 ? 'match-winner' : ''}">
               <span class="truncate max-w-[130px]">${escapeHtml(match.p1)}</span>
               ${match.winner === match.p1 ? '✓' : ''}
             </div>
-            <div class="border-t border-white/5"></div>
-            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 2)" class="flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p2 ? 'bg-teal-400/20 text-teal-300 font-bold' : 'hover:bg-white/5'}">
+            <div class="border-t border-[var(--uh-line)]"></div>
+            <div onclick="advanceWinner(${rIdx}, ${mIdx}, 2)" class="match-choice flex justify-between items-center p-1.5 rounded cursor-pointer ${match.winner === match.p2 ? 'match-winner' : ''}">
               <span class="truncate max-w-[130px]">${escapeHtml(match.p2)}</span>
               ${match.winner === match.p2 ? '✓' : ''}
             </div>
@@ -425,13 +411,13 @@
 
   function renderHistory() {
     if (!matchHistory.length) {
-      matchLog.innerHTML = `<div class="text-slate-500 text-[11px]">No matches finished yet.</div>`;
+      matchLog.innerHTML = `<div class="text-[var(--uh-muted)] text-[11px]">No matches finished yet.</div>`;
       return;
     }
     matchLog.innerHTML = matchHistory.map(item => `
-      <div class="flex justify-between items-center py-1 border-b border-white/5">
-        <span class="text-teal-300 font-medium truncate max-w-[180px]">${escapeHtml(item.text)}</span>
-        <span class="text-[10px] text-slate-400">${item.time}</span>
+      <div class="flex justify-between items-center py-1 border-b border-[var(--uh-line)]">
+        <span class="text-[var(--uh-accent)] font-medium truncate max-w-[180px]">${escapeHtml(item.text)}</span>
+        <span class="text-[10px] text-[var(--uh-muted)]">${item.time}</span>
       </div>
     `).join('');
   }
@@ -443,7 +429,7 @@
 
   function resetTournament() {
     tournamentTree = [];
-    bracketDisplay.innerHTML = `<div class="m-auto text-center text-slate-500 mono text-xs">Add competitors and generate a bracket to start.</div>`;
+    bracketDisplay.innerHTML = `<div class="m-auto text-center text-[var(--uh-muted)] mono text-xs">Add competitors and generate a bracket to start.</div>`;
     tournamentStatus.textContent = "Bracket View";
   }
 

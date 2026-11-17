@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,11 +8,11 @@
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Pomodoro & Focus Timer"></script>
 </head>
 <body class="uh-time-tool uh-pomodoro-page">
-  <main class="uh-time-shell" id="pomodoro-app">
-    <section class="uh-time-heading">
+  <main class="uh-time-shell uh-container uh-container--wide" id="pomodoro-app">
+    <section class="uh-time-heading uh-page-head">
       <span class="uh-time-kicker">Timers / Structured focus</span>
-      <h1>Pomodoro &amp; Focus Timer</h1>
-      <p>Make space for focused work and restorative breaks, one session at a time.</p>
+      <h1 class="uh-page-title">Pomodoro &amp; Focus Timer</h1>
+      <p class="uh-page-sub">Make space for focused work and restorative breaks, one session at a time.</p>
     </section>
     <section class="uh-time-card uh-pomodoro-console" aria-labelledby="phase-title">
       <div class="uh-time-label" id="phase-title">FOCUS SESSION</div>
@@ -24,14 +24,14 @@
       </div>
       <div id="pomodoro-status" class="uh-pomodoro-status">READY</div>
       <div class="uh-time-actions uh-pomodoro-actions">
-        <button type="button" class="uh-time-button primary" id="pomodoro-start">Start focus</button>
-        <button type="button" class="uh-time-button" id="pomodoro-skip">Skip session</button>
-        <button type="button" class="uh-time-button quiet" id="pomodoro-reset">Reset session</button>
+        <button type="button" class="uh-btn uh-btn--primary" id="pomodoro-start">Start focus</button>
+        <button type="button" class="uh-btn uh-btn--secondary" id="pomodoro-skip">Skip session</button>
+        <button type="button" class="uh-btn uh-btn--secondary" id="pomodoro-reset">Reset session</button>
       </div>
       <div class="uh-time-actions uh-pomodoro-tools">
         <label class="uh-time-switch"><input type="checkbox" id="pomodoro-sound"><span>Completion sound</span></label>
-        <button type="button" class="uh-time-button quiet" id="pomodoro-distraction">Distraction-free mode</button>
-        <button type="button" class="uh-time-button quiet" id="pomodoro-fullscreen">Fullscreen</button>
+        <button type="button" class="uh-btn uh-btn--secondary" id="pomodoro-distraction">Distraction-free mode</button>
+        <button type="button" class="uh-btn uh-btn--secondary" id="pomodoro-fullscreen">Fullscreen</button>
       </div>
     </section>
     <div class="uh-time-columns uh-pomodoro-lower">
@@ -42,7 +42,7 @@
           <label class="uh-time-field">Short break<input type="number" id="short-minutes" min="1" max="60" value="5" required></label>
           <label class="uh-time-field">Long break<input type="number" id="long-minutes" min="1" max="90" value="15" required></label>
           <label class="uh-time-field">Focus sessions before long break<input type="number" id="cycle-count" min="2" max="12" value="4" required></label>
-          <button type="submit" class="uh-time-button uh-time-field-wide">Save preferences</button>
+          <button type="submit" class="uh-btn uh-btn--secondary uh-time-field-wide">Save preferences</button>
           <p class="uh-time-error uh-time-field-wide" id="pomodoro-error" role="alert" hidden></p>
         </form>
         <p class="uh-time-hint">Changes apply to the next session. Preferences are saved on this device.</p>
@@ -56,7 +56,6 @@
         </div>
       </section>
     </div>
-    <footer class="uh-time-footer">POMODORO ENGINE / DEADLINE-BASED TIMING · PREFERENCES AND DAILY STATS STORED LOCALLY</footer>
   </main>
   <script>
   (function () {

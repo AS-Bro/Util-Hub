@@ -4,24 +4,24 @@
    ============================================================ */
 
 :root {
-  --bg: #0e1c2b;
-  --panel: #14283b;
-  --panel-soft: rgba(20, 40, 59, 0.3);
-  --panel-softer: rgba(20, 40, 59, 0.2);
-  --border: rgba(143, 176, 204, 0.16);
-  --border-soft: rgba(255, 255, 255, 0.1);
-  --border-softer: rgba(255, 255, 255, 0.05);
-  --text: #e7eef4;
-  --text-dim: #94a9bd;
-  --text-dimmer: #64798d;
-  --teal: #6fd8cb;
-  --teal-light: #93e5da;
-  --teal-dim: rgba(111, 216, 203, 0.16);
-  --danger: #e88a8a;
-  --danger-dim: rgba(232, 138, 138, 0.14);
-  --warn: #e8c98a;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --bg: var(--uh-bg);
+  --panel: var(--uh-panel);
+  --panel-soft: color-mix(in srgb, var(--uh-panel) 84%, transparent);
+  --panel-softer: color-mix(in srgb, var(--uh-panel) 68%, transparent);
+  --border: var(--uh-line);
+  --border-soft: var(--uh-line);
+  --border-softer: color-mix(in srgb, var(--uh-line) 55%, transparent);
+  --text: var(--uh-text);
+  --text-dim: var(--uh-muted);
+  --text-dimmer: var(--uh-faint);
+  --teal: var(--uh-accent);
+  --teal-light: var(--uh-accent-strong);
+  --teal-dim: color-mix(in srgb, var(--uh-accent) 16%, transparent);
+  --danger: var(--uh-danger);
+  --danger-dim: color-mix(in srgb, var(--uh-danger) 14%, transparent);
+  --warn: var(--uh-warning);
+  --radius: var(--uh-radius-md);
+  --radius-sm: var(--uh-radius-sm);
 }
 
 * { box-sizing: border-box; }
@@ -29,7 +29,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: var(--bg);
+  background-color: var(--uh-bg);
   color: var(--text);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
@@ -117,7 +117,7 @@ a { color: inherit; text-decoration: none; }
   cursor: pointer;
   transition: all .18s ease;
 }
-.drop-zone.active { border-color: var(--teal); background: rgba(111,216,203,.06); }
+.drop-zone.active { border-color: var(--teal); background: color-mix(in srgb, var(--uh-accent) 6%, transparent); }
 .drop-zone .icon { font-size: 38px; margin-bottom: 10px; }
 .drop-zone .primary-txt { font-family: 'IBM Plex Mono', monospace; color: var(--teal); font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .drop-zone .sub-txt { font-size: 12px; color: var(--text-dim); }
@@ -156,7 +156,7 @@ input[type="color"] { padding: 3px; height: 36px; cursor: pointer; }
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #d3dde6;
+  color: var(--uh-text);
   cursor: pointer;
   padding: 4px 0;
 }
@@ -189,7 +189,7 @@ button.primary:active:not(:disabled) { transform: scale(.97); }
 button.primary:disabled { opacity: .45; cursor: not-allowed; }
 
 button.secondary {
-  background: #17304a;
+  background: var(--uh-elevated);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: var(--radius-sm);
@@ -199,11 +199,11 @@ button.secondary {
 button.secondary:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
 button.secondary:disabled { opacity: .45; cursor: not-allowed; }
 
-button.danger-btn { background: var(--danger-dim); color: var(--danger); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; border: 1px solid rgba(232,138,138,.25); }
-button.danger-btn:hover { background: rgba(232,138,138,.24); }
+button.danger-btn { background: var(--danger-dim); color: var(--danger); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 12px; border: 1px solid color-mix(in srgb, var(--uh-danger) 25%, transparent); }
+button.danger-btn:hover { background: color-mix(in srgb, var(--uh-danger) 24%, transparent); }
 
 button.icon-btn {
-  background: #17304a;
+  background: var(--uh-elevated);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: var(--radius-sm);
@@ -251,29 +251,29 @@ button.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
   transition: border-color .12s ease;
   user-select: none;
 }
-.thumb-card.selected { border-color: var(--teal); background: rgba(111,216,203,.06); }
+.thumb-card.selected { border-color: var(--teal); background: color-mix(in srgb, var(--uh-accent) 6%, transparent); }
 .thumb-card.dragging { opacity: .4; }
 .thumb-card img, .thumb-card canvas { width: 100%; border-radius: 4px; display: block; background: #fff; }
 .thumb-card .page-num { text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-dim); margin-top: 6px; }
 .thumb-card .thumb-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; opacity: 0; transition: opacity .12s ease; }
 .thumb-card:hover .thumb-actions { opacity: 1; }
 .thumb-card .mini-btn {
-  width: 20px; height: 20px; border-radius: 4px; background: rgba(14,28,43,.85);
+  width: 20px; height: 20px; border-radius: 4px; background: color-mix(in srgb, var(--uh-bg) 85%, transparent);
   border: 1px solid var(--border); color: var(--text); font-size: 11px;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .thumb-card .mini-btn:hover { border-color: var(--teal); color: var(--teal); }
 .thumb-card .select-dot {
   position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; border-radius: 4px;
-  border: 1.5px solid var(--border); background: rgba(14,28,43,.7);
+  border: 1.5px solid var(--border); background: color-mix(in srgb, var(--uh-bg) 70%, transparent);
 }
 .thumb-card.selected .select-dot { background: var(--teal); border-color: var(--teal); }
-.thumb-card .rot-indicator { position: absolute; bottom: 22px; right: 6px; font-size: 11px; background: rgba(14,28,43,.85); border-radius: 4px; padding: 1px 4px; color: var(--teal); }
+.thumb-card .rot-indicator { position: absolute; bottom: 22px; right: 6px; font-size: 11px; background: color-mix(in srgb, var(--uh-bg) 85%, transparent); border-radius: 4px; padding: 1px 4px; color: var(--teal); }
 
 /* ---------- results ---------- */
 .result-box {
-  background: rgba(111,216,203,.07);
-  border: 1px solid rgba(111,216,203,.3);
+  background: color-mix(in srgb, var(--uh-accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--uh-accent) 30%, transparent);
   border-radius: var(--radius);
   padding: 16px;
   margin-top: 14px;
@@ -292,7 +292,7 @@ button.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
 .hub-hero p { color: var(--text-dim); font-size: 15px; max-width: 620px; }
 .hub-badge {
   display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-  color: var(--teal); background: var(--teal-dim); border: 1px solid rgba(111,216,203,.3);
+  color: var(--teal); background: var(--teal-dim); border: 1px solid color-mix(in srgb, var(--uh-accent) 30%, transparent);
   padding: 4px 10px; border-radius: 99px; margin-bottom: 14px;
 }
 .category-title {
@@ -321,16 +321,16 @@ button.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
 
 .hint { font-size: 11.5px; color: var(--text-dimmer); margin-top: 4px; line-height: 1.4; }
 .warn-box {
-  background: rgba(232,201,138,.08); border: 1px solid rgba(232,201,138,.3);
+  background: color-mix(in srgb, var(--uh-warning) 8%, transparent); border: 1px solid color-mix(in srgb, var(--uh-warning) 30%, transparent);
   border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--warn); margin-top: 10px;
 }
 .error-box {
-  background: var(--danger-dim); border: 1px solid rgba(232,138,138,.3);
+  background: var(--danger-dim); border: 1px solid color-mix(in srgb, var(--uh-danger) 30%, transparent);
   border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12.5px; color: var(--danger); margin-top: 10px;
 }
 
 .canvas-stage {
-  background: #1a1a1a;
+  background: var(--uh-panel);
   border-radius: var(--radius);
   border: 1px solid var(--border-soft);
   display: flex;
@@ -342,7 +342,7 @@ button.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
   max-height: 620px;
   padding: 16px;
 }
-.canvas-stage canvas { box-shadow: 0 6px 24px rgba(0,0,0,.4); max-width: 100%; }
+.canvas-stage canvas { box-shadow: 0 6px 24px color-mix(in srgb, var(--uh-bg) 40%, transparent); max-width: 100%; }
 .page-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-dim); }
 
 footer.hub-footer { margin-top: 60px; text-align: center; color: var(--text-dimmer); font-size: 12px; font-family: 'IBM Plex Mono', monospace; }

@@ -8,28 +8,29 @@
 <link rel="stylesheet" href="../css/style.css" />
 <style>
   .stage-wrap { position: relative; display:inline-block; }
-  .crop-box { position:absolute; border:2px solid var(--teal); background:rgba(111,216,203,.12); cursor:move; box-sizing:border-box; }
+  .crop-box { position:absolute; border:2px solid var(--uh-accent); background:color-mix(in srgb, var(--uh-accent) 12%, transparent); cursor:move; box-sizing:border-box; }
   .crop-shade { position:absolute; background:rgba(0,0,0,.55); pointer-events:none; }
-  .crop-handle { position:absolute; width:12px; height:12px; background:var(--teal); border:1.5px solid #0e1c2b; border-radius:2px; }
+  .crop-handle { position:absolute; width:12px; height:12px; background:var(--uh-accent); border:1.5px solid var(--uh-bg); border-radius:2px; }
   .crop-handle.nw { top:-6px; left:-6px; cursor:nwse-resize; }
   .crop-handle.ne { top:-6px; right:-6px; cursor:nesw-resize; }
   .crop-handle.sw { bottom:-6px; left:-6px; cursor:nesw-resize; }
   .crop-handle.se { bottom:-6px; right:-6px; cursor:nwse-resize; }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Crop PDF"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Crop PDF</h1>
-    <p class="page-sub">Drag the crop box (or set exact margins) to trim visible page margins — non-destructive, uses the PDF's native crop box.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Crop PDF</h1>
+      <p class="uh-page-sub">Drag the crop box (or set exact margins) to trim visible page margins — non-destructive, uses the PDF's native crop box.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">🖼️</div>
       <div class="primary-txt">Click or drag a PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

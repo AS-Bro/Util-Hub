@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#0b132b] text-slate-100">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,28 +13,28 @@
         extend: {
           colors: {
             blueprint: {
-              900: '#0b132b',
-              800: '#1c2541',
-              700: '#2a3a5e',
-              600: '#3a506b',
-              500: '#5c768d',
+              900: 'var(--uh-bg)',
+              800: 'var(--uh-panel)',
+              700: 'var(--uh-elevated)',
+              600: 'var(--uh-line-strong)',
+              500: 'var(--uh-muted)',
             },
             cyanAccent: {
-              DEFAULT: '#4cc9f0',
-              hover: '#3aace0',
-              glow: '#00f5d4'
+              DEFAULT: 'var(--uh-accent)',
+              hover: 'var(--uh-accent-strong)',
+              glow: 'var(--uh-success)'
             },
             diffAdd: {
-              bg: 'rgba(16, 185, 129, 0.15)',
-              border: 'rgba(16, 185, 129, 0.4)',
-              text: '#34d399',
-              wordBg: 'rgba(16, 185, 129, 0.35)',
+              bg: 'color-mix(in srgb, var(--uh-success) 15%, transparent)',
+              border: 'color-mix(in srgb, var(--uh-success) 40%, transparent)',
+              text: 'var(--uh-success)',
+              wordBg: 'color-mix(in srgb, var(--uh-success) 35%, transparent)',
             },
             diffDel: {
-              bg: 'rgba(239, 68, 68, 0.15)',
-              border: 'rgba(239, 68, 68, 0.4)',
-              text: '#f87171',
-              wordBg: 'rgba(239, 68, 68, 0.35)',
+              bg: 'color-mix(in srgb, var(--uh-danger) 15%, transparent)',
+              border: 'color-mix(in srgb, var(--uh-danger) 40%, transparent)',
+              text: 'var(--uh-danger)',
+              wordBg: 'color-mix(in srgb, var(--uh-danger) 35%, transparent)',
             }
           },
           fontFamily: {
@@ -53,14 +53,14 @@
       height: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #0b132b;
+      background: var(--uh-bg);
     }
     ::-webkit-scrollbar-thumb {
-      background: #2a3a5e;
+      background: var(--uh-line-strong);
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #3a506b;
+      background: var(--uh-muted);
     }
     .diff-font {
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
@@ -69,111 +69,128 @@
     }
     /* Tab / space visual aid line */
     .blueprint-grid {
-      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-image: linear-gradient(to right, color-mix(in srgb, var(--uh-line) 30%, transparent) 1px, transparent 1px),
+                        linear-gradient(to bottom, color-mix(in srgb, var(--uh-line) 30%, transparent) 1px, transparent 1px);
       background-size: 20px 20px;
     }
+    .uh-diff-added {
+      background-color: color-mix(in srgb, var(--uh-success) 15%, transparent);
+      border-color: color-mix(in srgb, var(--uh-success) 40%, transparent);
+      color: var(--uh-success);
+    }
+    .uh-diff-removed {
+      background-color: color-mix(in srgb, var(--uh-danger) 15%, transparent);
+      border-color: color-mix(in srgb, var(--uh-danger) 40%, transparent);
+      color: var(--uh-danger);
+    }
+    .uh-diff-modified {
+      background-color: color-mix(in srgb, var(--uh-warning) 12%, transparent);
+      border-color: color-mix(in srgb, var(--uh-warning) 40%, transparent);
+      color: var(--uh-warning);
+    }
+    .uh-diff-error {
+      border-color: var(--uh-danger);
+      color: var(--uh-danger);
+    }
+    .code-diff-toolbar {
+      border-bottom: 1px solid var(--uh-line);
+      background: var(--uh-panel);
+    }
+    .uh-diff-added-text { color: var(--uh-success); }
+    .uh-diff-removed-text { color: var(--uh-danger); }
   </style>
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Code Diff Checker"></script>
 </head>
-<body class="h-full flex flex-col font-sans bg-[#0b132b] text-slate-200 antialiased overflow-x-hidden uh-code-diff-page">
+<body>
 
   <!-- ==================== UTILITY HUB HEADER ==================== -->
-  <header class="border-b border-blueprint-600/50 bg-[#0b132b]/95 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-blueprint-800 border border-cyanAccent/40 flex items-center justify-center text-cyanAccent shadow-[0_0_10px_rgba(76,201,240,0.2)]">
-          <i class="fa-solid fa-code-compare text-lg"></i>
-        </div>
-        <div>
-          <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
-            <span>Utility Hub</span>
-            <span class="text-blueprint-500 font-normal">/</span>
-            <span class="text-cyanAccent font-semibold">Code Diff Checker</span>
-          </h1>
-          <p class="text-xs text-slate-400 hidden sm:block">Side-by-side & unified source code comparison engine</p>
-        </div>
-      </div>
+  <div class="code-diff-toolbar">
+    <div class="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Header Actions / Menu Mock -->
       <div class="flex items-center space-x-3">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blueprint-800 text-cyanAccent border border-cyanAccent/30">
           <i class="fa-solid fa-bolt text-xs mr-1.5"></i> Client-Side Processing
         </span>
-        <button id="btnHelp" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-blueprint-800 transition" title="Keyboard Shortcuts & Info">
+        <button id="btnHelp" class="uh-btn uh-btn--ghost" title="Keyboard Shortcuts & Info">
           <i class="fa-solid fa-circle-question text-lg"></i>
         </button>
       </div>
     </div>
-  </header>
+  </div>
 
   <!-- ==================== MAIN TOOL WORKSPACE ==================== -->
-  <main class="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 sm:p-6 gap-4">
+  <main class="uh-container uh-container--wide flex flex-col gap-4">
+
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Code Diff Checker</h1>
+      <p class="uh-page-sub">Compare source snippets side by side or as a unified diff.</p>
+    </div>
 
     <!-- TOOLBAR & CONTROLS -->
-    <div class="bg-blueprint-800 border border-blueprint-600/60 rounded-xl p-3 sm:p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
+    <div class="uh-toolbar uh-panel p-3 sm:p-4 flex flex-wrap items-center justify-between gap-3">
       
       <!-- Primary Actions Group -->
       <div class="flex flex-wrap items-center gap-2">
-        <button id="btnCompare" class="bg-cyanAccent hover:bg-cyanAccent-hover text-blueprint-900 font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(76,201,240,0.3)] transition active:scale-95">
+        <button id="btnCompare" class="uh-btn uh-btn--primary text-sm flex items-center gap-2 active:scale-95">
           <i class="fa-solid fa-play"></i>
           <span>Compare Code</span>
         </button>
 
-        <button id="btnSample" class="bg-blueprint-700 hover:bg-blueprint-600 text-slate-200 border border-blueprint-600 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+        <button id="btnSample" class="uh-btn uh-btn--secondary text-sm flex items-center gap-2">
           <i class="fa-solid fa-vial"></i>
           <span class="hidden sm:inline">Load</span> Sample
         </button>
 
-        <button id="btnSwap" class="bg-blueprint-700 hover:bg-blueprint-600 text-slate-200 border border-blueprint-600 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition" title="Swap Before & After">
+        <button id="btnSwap" class="uh-btn uh-btn--secondary text-sm flex items-center gap-2" title="Swap Before & After">
           <i class="fa-solid fa-right-left"></i>
           <span class="hidden md:inline">Swap</span>
         </button>
 
-        <button id="btnClear" class="bg-blueprint-700/60 hover:bg-red-500/20 hover:text-red-300 text-slate-400 border border-blueprint-600/60 px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+        <button id="btnClear" class="uh-btn uh-btn--danger text-sm flex items-center gap-2">
           <i class="fa-solid fa-trash-can"></i>
           <span class="hidden md:inline">Clear</span>
         </button>
       </div>
 
       <!-- Comparison Toggles & Options -->
-      <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300">
-        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition">
-          <input type="checkbox" id="chkIgnoreWhitespace" class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+      <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm uh-text">
+        <label class="flex items-center space-x-2 cursor-pointer hover:uh-text transition">
+          <input type="checkbox" id="chkIgnoreWhitespace" class="uh-checkbox">
           <span>Ignore Whitespace</span>
         </label>
 
-        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition">
-          <input type="checkbox" id="chkIgnoreCase" class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+        <label class="flex items-center space-x-2 cursor-pointer hover:uh-text transition">
+          <input type="checkbox" id="chkIgnoreCase" class="uh-checkbox">
           <span>Ignore Case</span>
         </label>
 
-        <label class="flex items-center space-x-2 cursor-pointer hover:text-white transition" title="Keep both editor panels scrolled in sync">
-          <input type="checkbox" id="chkSyncScroll" checked class="w-4 h-4 rounded border-blueprint-600 text-cyanAccent focus:ring-cyanAccent bg-blueprint-900">
+        <label class="flex items-center space-x-2 cursor-pointer hover:uh-text transition" title="Keep both editor panels scrolled in sync">
+          <input type="checkbox" id="chkSyncScroll" checked class="uh-checkbox">
           <span>Sync Scroll</span>
         </label>
       </div>
     </div>
 
     <!-- METRICS & CHANGE SUMMARY BAR (Hidden before comparison) -->
-    <div id="diffSummaryBar" class="hidden bg-blueprint-800/80 border border-blueprint-600/60 rounded-lg p-3 flex flex-wrap items-center justify-between gap-4 text-sm">
+    <div id="diffSummaryBar" class="uh-panel hidden p-3 flex flex-wrap items-center justify-between gap-4 text-sm">
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-xs uppercase font-semibold text-slate-400">View Mode:</span>
+          <span class="text-xs uppercase font-semibold uh-muted-text">View Mode:</span>
           <div class="inline-flex p-1 bg-blueprint-900 rounded-lg border border-blueprint-600/80">
-            <button id="btnViewSide" class="px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition">Side-by-Side</button>
-            <button id="btnViewUnified" class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition">Unified Diff</button>
+            <button id="btnViewSide" class="uh-btn uh-btn--primary text-xs">Side-by-Side</button>
+            <button id="btnViewUnified" class="uh-btn uh-btn--secondary text-xs">Unified Diff</button>
           </div>
         </div>
 
         <!-- Jump Navigation -->
         <div class="flex items-center gap-1 border-l border-blueprint-600/80 pl-4">
-          <span class="text-xs text-slate-400 mr-1 hidden sm:inline">Nav:</span>
-          <button id="btnPrevChange" class="p-1.5 bg-blueprint-700 hover:bg-blueprint-600 rounded text-slate-300 hover:text-white border border-blueprint-600 text-xs flex items-center gap-1" title="Previous Change (Alt+Up)">
+          <span class="text-xs uh-muted-text mr-1 hidden sm:inline">Nav:</span>
+          <button id="btnPrevChange" class="uh-btn uh-btn--secondary text-xs" title="Previous Change (Alt+Up)">
             <i class="fa-solid fa-chevron-up"></i>
           </button>
           <span id="changeCounter" class="text-xs font-mono px-2 text-cyanAccent font-medium">0 / 0</span>
-          <button id="btnNextChange" class="p-1.5 bg-blueprint-700 hover:bg-blueprint-600 rounded text-slate-300 hover:text-white border border-blueprint-600 text-xs flex items-center gap-1" title="Next Change (Alt+Down)">
+          <button id="btnNextChange" class="uh-btn uh-btn--secondary text-xs" title="Next Change (Alt+Down)">
             <i class="fa-solid fa-chevron-down"></i>
           </button>
         </div>
@@ -181,13 +198,13 @@
 
       <!-- Diff Counters -->
       <div class="flex items-center gap-3 text-xs font-mono">
-        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded uh-diff-added">
           <i class="fa-solid fa-plus text-xs"></i> <strong id="countAdditions">0</strong> Added
         </span>
-        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400">
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded uh-diff-removed">
           <i class="fa-solid fa-minus text-xs"></i> <strong id="countDeletions">0</strong> Removed
         </span>
-        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-blueprint-700/50 border border-blueprint-600 text-slate-400 hidden sm:inline-flex">
+        <span class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-blueprint-700/50 border border-blueprint-600 uh-muted-text hidden sm:inline-flex">
           <strong id="countUnchanged">0</strong> Unchanged
         </span>
       </div>
@@ -197,7 +214,7 @@
         <button id="btnCopyDiff" class="bg-blueprint-700 hover:bg-blueprint-600 text-cyanAccent border border-cyanAccent/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-copy"></i> Copy Patch
         </button>
-        <button id="btnDownloadDiff" class="bg-blueprint-700 hover:bg-blueprint-600 text-white border border-blueprint-600 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+        <button id="btnDownloadDiff" class="bg-blueprint-700 hover:bg-blueprint-600 uh-bg-text border border-blueprint-600 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-download"></i> Export .diff
         </button>
       </div>
@@ -213,18 +230,18 @@
         <div class="flex flex-col bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg">
           <div class="bg-blueprint-900/90 border-b border-blueprint-600/60 px-4 py-2.5 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
-              <span class="font-semibold text-xs tracking-wider uppercase text-slate-300">Original / Before</span>
+              <span class="w-3 h-3 rounded-full uh-diff-removed inline-block"></span>
+              <span class="font-semibold text-xs tracking-wider uppercase uh-text">Original / Before</span>
             </div>
-            <div class="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+            <div class="flex items-center space-x-3 text-xs uh-muted-text font-mono">
               <button id="btnPasteOriginal" class="hover:text-cyanAccent transition" title="Paste clipboard text"><i class="fa-solid fa-paste mr-1"></i>Paste</button>
-              <button id="btnClearOriginal" class="hover:text-rose-400 transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
+              <button id="btnClearOriginal" class="uh-diff-removed-text transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
               <span id="statsOriginal" class="border-l border-blueprint-600 pl-3">0 lines | 0 chars</span>
             </div>
           </div>
           <div class="flex-1 relative flex">
             <textarea id="txtOriginal" spellcheck="false" placeholder="// Paste or type original code snippet here..."
-              class="w-full h-full min-h-[350px] p-4 bg-[#080d1e] text-slate-200 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
+              class="uh-input w-full h-full min-h-[350px] p-4 bg-blueprint-900 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
           </div>
         </div>
 
@@ -232,50 +249,50 @@
         <div class="flex flex-col bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg">
           <div class="bg-blueprint-900/90 border-b border-blueprint-600/60 px-4 py-2.5 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
-              <span class="font-semibold text-xs tracking-wider uppercase text-slate-300">Modified / After</span>
+              <span class="w-3 h-3 rounded-full uh-diff-added inline-block"></span>
+              <span class="font-semibold text-xs tracking-wider uppercase uh-text">Modified / After</span>
             </div>
-            <div class="flex items-center space-x-3 text-xs text-slate-400 font-mono">
+            <div class="flex items-center space-x-3 text-xs uh-muted-text font-mono">
               <button id="btnPasteModified" class="hover:text-cyanAccent transition" title="Paste clipboard text"><i class="fa-solid fa-paste mr-1"></i>Paste</button>
-              <button id="btnClearModified" class="hover:text-rose-400 transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
+              <button id="btnClearModified" class="uh-diff-removed-text transition" title="Clear text"><i class="fa-solid fa-xmark mr-1"></i>Clear</button>
               <span id="statsModified" class="border-l border-blueprint-600 pl-3">0 lines | 0 chars</span>
             </div>
           </div>
           <div class="flex-1 relative flex">
             <textarea id="txtModified" spellcheck="false" placeholder="// Paste or type modified code snippet here..."
-              class="w-full h-full min-h-[350px] p-4 bg-[#080d1e] text-slate-200 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
+              class="uh-input w-full h-full min-h-[350px] p-4 bg-blueprint-900 diff-font resize-none focus:outline-none focus:ring-1 focus:ring-cyanAccent/50 leading-relaxed border-none blueprint-grid"></textarea>
           </div>
         </div>
 
       </div>
 
       <!-- DIFF DISPLAY RENDERER (Shown after compare) -->
-      <div id="diffOutputContainer" class="hidden flex-1 bg-blueprint-800 border border-blueprint-600/60 rounded-xl overflow-hidden shadow-lg flex flex-col">
+      <div id="diffOutputContainer" class="uh-card hidden flex-1 overflow-hidden flex flex-col">
         <!-- RENDERED OUTPUT GOES HERE dynamically -->
-        <div id="diffDisplayArea" class="flex-1 overflow-auto bg-[#080d1e] relative"></div>
+        <div id="diffDisplayArea" class="flex-1 overflow-auto bg-blueprint-900 relative"></div>
       </div>
 
     </div>
 
     <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-blueprint-800 border border-cyanAccent text-white px-4 py-3 rounded-lg shadow-2xl flex items-center space-x-3">
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-blueprint-800 border border-cyanAccent uh-bg-text px-4 py-3 rounded-lg shadow-2xl flex items-center space-x-3">
       <i id="toastIcon" class="fa-solid fa-circle-check text-cyanAccent text-lg"></i>
       <span id="toastMsg" class="text-sm font-medium">Notification message</span>
     </div>
 
     <!-- HELP MODAL -->
-    <div id="helpModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-      <div class="bg-blueprint-800 border border-blueprint-600 rounded-xl max-w-lg w-full p-6 shadow-2xl text-slate-200">
+    <div id="helpModal" class="fixed inset-0 bg-blueprint-900/90 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-blueprint-800 border border-blueprint-600 rounded-xl max-w-lg w-full p-6 shadow-2xl uh-text">
         <div class="flex items-center justify-between border-b border-blueprint-600 pb-3 mb-4">
           <h3 class="text-lg font-bold text-cyanAccent flex items-center gap-2">
             <i class="fa-solid fa-keyboard"></i> Shortcuts & Information
           </h3>
-          <button id="btnCloseHelp" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+          <button id="btnCloseHelp" class="uh-muted-text hover:uh-text"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="space-y-4 text-sm">
           <div>
-            <h4 class="font-semibold text-white mb-1">Keyboard Shortcuts</h4>
-            <ul class="space-y-1 text-slate-300 font-mono text-xs">
+            <h4 class="font-semibold uh-bg-text mb-1">Keyboard Shortcuts</h4>
+            <ul class="space-y-1 uh-text font-mono text-xs">
               <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + C</span> : Trigger Compare</li>
               <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + Down</span> : Next Difference</li>
               <li><span class="bg-blueprint-900 px-1.5 py-0.5 rounded border border-blueprint-600">Alt + Up</span> : Previous Difference</li>
@@ -283,8 +300,8 @@
             </ul>
           </div>
           <div>
-            <h4 class="font-semibold text-white mb-1">Privacy & Processing</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">
+            <h4 class="font-semibold uh-bg-text mb-1">Privacy & Processing</h4>
+            <p class="text-xs uh-muted-text leading-relaxed">
               All code comparisons take place directly within your web browser using client-side JavaScript. No snippets or text data are transmitted over the network.
             </p>
           </div>
@@ -293,18 +310,6 @@
     </div>
 
   </main>
-
-  <!-- ==================== UTILITY HUB FOOTER ==================== -->
-  <footer class="border-t border-blueprint-600/40 bg-[#080d1e] py-4 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div>Utility Hub &copy; 2026 &bull; Professional Developer Utilities</div>
-      <div class="flex items-center space-x-4">
-        <span>Line-based & Word Diff Algorithm</span>
-        <span>&bull;</span>
-        <span class="text-cyanAccent font-mono">v2.4.0</span>
-      </div>
-    </div>
-  </footer>
 
   <!-- ==================== JSDIFF & CLIENT LOGIC ==================== -->
   <script>
@@ -460,9 +465,9 @@
 
           if (D > 0) {
             if (x === prevX) {
-              res2.push(`<mark class="bg-emerald-500/40 text-emerald-100 rounded px-0.5">${escapeHtml(w2[y - 1])}</mark>`);
+              res2.push(`<mark class="uh-diff-added rounded px-0.5">${escapeHtml(w2[y - 1])}</mark>`);
             } else if (y === prevY) {
-              res1.push(`<mark class="bg-rose-500/40 text-rose-100 rounded px-0.5">${escapeHtml(w1[x - 1])}</mark>`);
+              res1.push(`<mark class="uh-diff-removed rounded px-0.5">${escapeHtml(w1[x - 1])}</mark>`);
             }
           }
           x = prevX; y = prevY;
@@ -666,10 +671,10 @@ function calculateTotal(items = []) {
       toastMsg.textContent = message;
       if (isError) {
         toast.classList.remove('border-cyanAccent');
-        toast.classList.add('border-rose-500');
-        toastIcon.className = 'fa-solid fa-triangle-exclamation text-rose-500 text-lg';
+        toast.classList.add('uh-diff-error');
+        toastIcon.className = 'fa-solid fa-triangle-exclamation uh-diff-removed-text text-lg';
       } else {
-        toast.classList.remove('border-rose-500');
+        toast.classList.remove('uh-diff-error');
         toast.classList.add('border-cyanAccent');
         toastIcon.className = 'fa-solid fa-circle-check text-cyanAccent text-lg';
       }
@@ -834,10 +839,10 @@ function calculateTotal(items = []) {
       state.viewMode = mode;
       if (mode === 'side') {
         btnViewSide.className = "px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition";
-        btnViewUnified.className = "px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition";
+        btnViewUnified.className = "px-3 py-1 rounded text-xs font-semibold uh-muted-text hover:uh-text transition";
       } else {
         btnViewUnified.className = "px-3 py-1 rounded text-xs font-semibold bg-cyanAccent text-blueprint-900 transition";
-        btnViewSide.className = "px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition";
+        btnViewSide.className = "px-3 py-1 rounded text-xs font-semibold uh-muted-text hover:uh-text transition";
       }
       if (state.isComparing) {
         renderDiffView();
@@ -893,23 +898,23 @@ function calculateTotal(items = []) {
         const line1Num = row.line1 !== null ? row.line1 : '';
         const line1Content = row.html1 ? row.html1 : (row.val1 !== null ? DiffEngine.escapeHtml(row.val1) : '');
 
-        let leftBgClass = "bg-[#080d1e]";
+        let leftBgClass = "bg-blueprint-900";
         let leftMarker = "";
         if (row.type === 'removed') {
-          leftBgClass = "bg-rose-500/15 text-rose-200 border-l-2 border-rose-500";
+          leftBgClass = "uh-diff-removed border-l-2";
           leftMarker = "-";
         } else if (row.type === 'modified') {
-          leftBgClass = "bg-amber-500/10 text-amber-200 border-l-2 border-amber-500";
+          leftBgClass = "uh-diff-modified border-l-2";
           leftMarker = "~";
         } else if (row.type === 'added') {
           leftBgClass = "bg-blueprint-900/40 opacity-40";
         }
 
         leftRow.innerHTML = `
-          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
+          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 uh-faint-text text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
             ${line1Num}
           </div>
-          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'removed' ? 'text-rose-400' : 'text-slate-600'}">
+          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'removed' ? 'uh-diff-removed-text' : 'uh-faint-text'}">
             ${leftMarker}
           </div>
           <div class="flex-1 px-2 py-0.5 whitespace-pre ${leftBgClass}">
@@ -921,23 +926,23 @@ function calculateTotal(items = []) {
         const line2Num = row.line2 !== null ? row.line2 : '';
         const line2Content = row.html2 ? row.html2 : (row.val2 !== null ? DiffEngine.escapeHtml(row.val2) : '');
 
-        let rightBgClass = "bg-[#080d1e]";
+        let rightBgClass = "bg-blueprint-900";
         let rightMarker = "";
         if (row.type === 'added') {
-          rightBgClass = "bg-emerald-500/15 text-emerald-200 border-l-2 border-emerald-500";
+          rightBgClass = "uh-diff-added border-l-2";
           rightMarker = "+";
         } else if (row.type === 'modified') {
-          rightBgClass = "bg-amber-500/10 text-amber-200 border-l-2 border-amber-500";
+          rightBgClass = "uh-diff-modified border-l-2";
           rightMarker = "~";
         } else if (row.type === 'removed') {
           rightBgClass = "bg-blueprint-900/40 opacity-40";
         }
 
         rightRow.innerHTML = `
-          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
+          <div class="w-12 flex-shrink-0 select-none bg-blueprint-900/80 uh-faint-text text-right pr-2 py-0.5 border-r border-blueprint-600/40 font-mono text-[11px]">
             ${line2Num}
           </div>
-          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'added' ? 'text-emerald-400' : 'text-slate-600'}">
+          <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${row.type === 'added' ? 'uh-diff-added-text' : 'uh-faint-text'}">
             ${rightMarker}
           </div>
           <div class="flex-1 px-2 py-0.5 whitespace-pre ${rightBgClass}">
@@ -991,24 +996,24 @@ function calculateTotal(items = []) {
         row.id = `diff-row-unified-${cIdx}`;
       }
 
-      let bgClass = "bg-[#080d1e]";
-      let textClass = "text-slate-300";
+      let bgClass = "bg-blueprint-900";
+      let textClass = "uh-text";
       if (type === 'added') {
-        bgClass = "bg-emerald-500/15 border-l-2 border-emerald-500";
-        textClass = "text-emerald-300";
+        bgClass = "uh-diff-added border-l-2";
+        textClass = "uh-diff-added-text";
       } else if (type === 'removed') {
-        bgClass = "bg-rose-500/15 border-l-2 border-rose-500";
-        textClass = "text-rose-300";
+        bgClass = "uh-diff-removed border-l-2";
+        textClass = "uh-diff-removed-text";
       }
 
       row.innerHTML = `
-        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
+        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 uh-faint-text text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
           ${l1 || ''}
         </div>
-        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 text-slate-500 text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
+        <div class="w-10 flex-shrink-0 select-none bg-blueprint-900/80 uh-faint-text text-right pr-2 py-0.5 border-r border-blueprint-600/40 text-[11px]">
           ${l2 || ''}
         </div>
-        <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${type === 'added' ? 'text-emerald-400' : (type === 'removed' ? 'text-rose-400' : 'text-slate-600')}">
+        <div class="w-6 flex-shrink-0 select-none text-center py-0.5 font-bold ${type === 'added' ? 'uh-diff-added-text' : (type === 'removed' ? 'uh-diff-removed-text' : 'uh-faint-text')}">
           ${symbol}
         </div>
         <div class="flex-1 px-2 py-0.5 whitespace-pre ${bgClass} ${textClass}">

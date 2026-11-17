@@ -10,20 +10,21 @@
   .img-thumb { position: relative; }
   .img-thumb img { width:100%; border-radius:4px; display:block; background:#fff; object-fit:contain; max-height:150px; }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Images to PDF"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Images to PDF</h1>
-    <p class="page-sub">Turn JPG, PNG or WebP images into a single paginated PDF, with full control over layout.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Images to PDF</h1>
+      <p class="uh-page-sub">Turn JPG, PNG or WebP images into a single paginated PDF, with full control over layout.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="image/*" multiple class="hidden" />
       <div class="icon">🖼️</div>
       <div class="primary-txt">Click or drag images here</div>
       <div class="sub-txt">Supports JPG, PNG, WebP · add as many as you like</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

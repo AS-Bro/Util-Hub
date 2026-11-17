@@ -7,27 +7,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .uh-tab-active { background:var(--uh-panel); color:var(--uh-accent); }
+  .drop-zone.active { border-color: var(--uh-accent); background: color-mix(in srgb, var(--uh-accent) 8%, transparent); }
   .picker-img { max-width: 100%; max-height: 220px; cursor: crosshair; object-fit: contain; image-rendering: pixelated; }
   .native-color-picker {
     width: 38px; height: 34px; padding: 0; cursor: pointer;
-    border: 1px solid rgba(143,176,204,.2); border-radius: 6px; background: none;
+    border: 1px solid var(--uh-line); border-radius: var(--uh-radius-sm); background: none;
   }
   .native-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
-  .native-color-picker::-webkit-color-swatch { border: none; border-radius: 5px; }
+  .native-color-picker::-webkit-color-swatch { border: none; border-radius: var(--uh-radius-sm); }
   .checkerboard-preview {
-    background-color: #0b1622;
-    background-image: linear-gradient(45deg, #14283b 25%, transparent 25%), linear-gradient(-45deg, #14283b 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #14283b 75%), linear-gradient(-45deg, transparent 75%, #14283b 75%);
+    background-color: var(--uh-panel);
+    background-image: linear-gradient(45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(-45deg, var(--uh-elevated) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--uh-elevated) 75%), linear-gradient(-45deg, transparent 75%, var(--uh-elevated) 75%);
     background-size: 16px 16px;
     background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   }
@@ -36,32 +27,32 @@
     image-rendering: crisp-edges;
   }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Color Swapper Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Color Swapper Studio</h1>
-    <p class="text-sm text-slate-400 mb-6">Select source colors on your image assets to dynamically replace, hue-shift, or make transparent.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Color Swapper Studio</h1>
+      <p class="uh-page-sub">Select source colors on your image assets to dynamically replace, hue-shift, or make transparent.</p>
+    </div>
 
     <!-- Initial Upload Zone -->
-    <div id="dropZone" class="drop-zone rounded-md p-10 text-center bg-[#14283b]/20 cursor-pointer mb-6">
+    <div id="dropZone" class="uh-dropzone drop-zone rounded-md p-10 text-center cursor-pointer mb-6">
       <input type="file" id="fileUpload" accept="image/*" class="hidden" />
-      <div class="mono text-teal-300 text-sm font-semibold mb-1">Drop image here or click to browse</div>
-      <div class="text-xs text-slate-400">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
+      <div class="mono text-[var(--uh-accent)] text-sm font-semibold mb-1">Drop image here or click to browse</div>
+      <div class="text-xs text-[var(--uh-muted)]">Supports PNG (transparent or standard), JPG, WEBP, SVG</div>
     </div>
 
     <!-- Studio Workspace -->
     <div id="studioControls" class="grid grid-cols-1 lg:grid-cols-12 gap-6 hidden">
       
       <!-- Left Config Sidebar -->
-      <div class="lg:col-span-5 space-y-4 bg-[#14283b]/30 p-5 rounded-md border border-white/10 max-h-[820px] overflow-y-auto">
+      <div class="uh-card lg:col-span-5 space-y-4 p-5 max-h-[820px] overflow-y-auto">
         
         <!-- Tab Navigation -->
-        <div class="flex border-b border-white/10 pb-2 gap-2">
-          <button id="tabSwapBtn" onclick="switchTab('swap')" class="mono text-xs uppercase font-bold text-teal-300 px-3 py-1 bg-[#17304a] rounded">Color Swap</button>
-          <button id="tabSettingsBtn" onclick="switchTab('settings')" class="mono text-xs uppercase font-bold text-slate-400 px-3 py-1 hover:text-slate-200">Engine Controls</button>
+        <div class="flex border-b uh-line-border pb-2 gap-2">
+          <button id="tabSwapBtn" onclick="switchTab('swap')" class="uh-tab-active mono text-xs uppercase font-bold px-3 py-1 rounded">Color Swap</button>
+          <button id="tabSettingsBtn" onclick="switchTab('settings')" class="mono text-xs uppercase font-bold text-[var(--uh-muted)] px-3 py-1">Engine Controls</button>
         </div>
 
         <!-- TAB 1: SWAP CONTROLS -->
@@ -69,35 +60,35 @@
           
           <!-- Color Sampler Picker -->
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">1. Pick Target Color from Asset</label>
-            <div class="bg-[#0e1c2b] p-2 rounded border border-white/10 text-center checkerboard-preview">
+            <label class="uh-label mono text-xs uppercase block mb-1">1. Pick Target Color from Asset</label>
+            <div class="uh-panel p-2 text-center checkerboard-preview">
               <img id="sourcePreview" class="picker-img rounded mx-auto" title="Click anywhere on image to pick color" />
             </div>
-            <p class="mono text-[10px] text-slate-400 mt-1">Click image above to sample replacement target</p>
+            <p class="mono text-[10px] text-[var(--uh-muted)] mt-1">Click image above to sample replacement target</p>
           </div>
 
           <!-- Color Target & Destination Selection -->
-          <div class="space-y-3 bg-[#0e1c2b]/50 p-3 rounded border border-white/5">
+          <div class="uh-panel space-y-3 p-3">
             <div class="flex items-center justify-between">
-              <span class="mono text-xs text-slate-400 uppercase">Selected Source Color:</span>
+              <span class="mono text-xs text-[var(--uh-muted)] uppercase">Selected Source Color:</span>
               <div class="flex items-center gap-2">
-                <div id="pickedSwatch" class="w-5 h-5 rounded border border-white/20" style="background-color:#FFFFFF;"></div>
-                <span id="pickedHex" class="mono text-xs text-teal-300 font-bold">#FFFFFF</span>
+                <div id="pickedSwatch" class="w-5 h-5 rounded border border-[var(--uh-line)]" style="background-color:#FFFFFF;"></div>
+                <span id="pickedHex" class="mono text-xs text-[var(--uh-accent)] font-bold">#FFFFFF</span>
               </div>
             </div>
 
-            <div id="targetColorRow" class="flex items-center justify-between pt-2 border-t border-white/5">
-              <span class="mono text-xs text-slate-400 uppercase">Replace With Color:</span>
+            <div id="targetColorRow" class="flex items-center justify-between pt-2 border-t border-[var(--uh-line)]">
+              <span class="mono text-xs text-[var(--uh-muted)] uppercase">Replace With Color:</span>
               <div class="flex items-center gap-2">
                 <input type="color" id="targetColorPicker" class="native-color-picker" value="#4F46E5" />
-                <span id="targetHex" class="mono text-xs text-teal-300 font-bold uppercase">#4F46E5</span>
+                <span id="targetHex" class="mono text-xs text-[var(--uh-accent)] font-bold uppercase">#4F46E5</span>
               </div>
             </div>
 
             <!-- Transparency Checkbox -->
-            <div class="pt-2 border-t border-white/5">
-              <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" id="makeTransparent" class="accent-teal-400 w-4 h-4 rounded" />
+            <div class="pt-2 border-t border-[var(--uh-line)]">
+              <label class="flex items-center gap-2 text-xs text-[var(--uh-text)] cursor-pointer">
+                <input type="checkbox" id="makeTransparent" class="uh-checkbox" />
                 <span class="mono text-xs">Convert Selected Color to Transparent Alpha</span>
               </label>
             </div>
@@ -106,24 +97,24 @@
           <!-- Tolerance / Precision Slider -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="mono text-[11px] text-slate-400 uppercase">Fuzziness / Color Precision</label>
-              <span id="toleranceVal" class="mono text-xs text-teal-300 font-bold">30</span>
+              <label class="uh-label mono text-[11px] uppercase">Fuzziness / Color Precision</label>
+              <span id="toleranceVal" class="mono text-xs text-[var(--uh-accent)] font-bold">30</span>
             </div>
             <input id="tolerance" type="range" min="0" max="150" value="30" class="w-full accent-teal-400" />
           </div>
 
           <!-- Mode Selectors -->
           <div class="space-y-2">
-            <label class="mono text-xs text-slate-400 uppercase block">Transformation Engine</label>
-            <select id="swapEngineMode" class="w-full rounded-md p-2 text-xs">
+            <label class="uh-label mono text-xs uppercase block">Transformation Engine</label>
+            <select id="swapEngineMode" class="uh-select w-full rounded-md p-2 text-xs">
               <option value="direct">Direct Replace (Solid Color Swap)</option>
               <option value="shading">Texture & Luminance Match (Shading Preserved)</option>
             </select>
           </div>
 
           <div class="flex items-center gap-2 pt-1">
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="invertMask" class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs text-[var(--uh-text)] cursor-pointer">
+              <input type="checkbox" id="invertMask" class="uh-checkbox" />
               <span class="mono text-xs">Invert Mask (Swap Everything EXCEPT Selected)</span>
             </label>
           </div>
@@ -133,16 +124,16 @@
         <!-- TAB 2: ENGINE SETTINGS -->
         <div id="tabSettings" class="space-y-3 hidden">
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Pixel Smoothing</label>
-            <select id="pixelSmoothing" class="w-full rounded-md p-1.5 text-xs">
+            <label class="uh-label mono text-xs uppercase block mb-1">Pixel Smoothing</label>
+            <select id="pixelSmoothing" class="uh-select w-full rounded-md p-1.5 text-xs">
               <option value="false" selected>Pixel Art Crisp (No Anti-aliasing Grid)</option>
               <option value="true">Smooth (For HD Photos)</option>
             </select>
           </div>
 
           <div>
-            <label class="mono text-xs text-slate-400 uppercase block mb-1">Export Resolution Scaling</label>
-            <select id="exportScale" class="w-full rounded-md p-2 text-xs">
+            <label class="uh-label mono text-xs uppercase block mb-1">Export Resolution Scaling</label>
+            <select id="exportScale" class="uh-select w-full rounded-md p-2 text-xs">
               <option value="1" selected>1x (Original Size)</option>
               <option value="2">2x Upscale</option>
               <option value="4">4x Ultra Upscale</option>
@@ -150,14 +141,14 @@
           </div>
 
           <div class="pt-2">
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-              <input type="checkbox" id="autoUpdate" checked class="accent-teal-400 w-4 h-4 rounded" />
+            <label class="flex items-center gap-2 text-xs text-[var(--uh-text)] cursor-pointer">
+              <input type="checkbox" id="autoUpdate" checked class="uh-checkbox" />
               <span class="mono text-xs">Live Auto-Render on Control Change</span>
             </label>
           </div>
         </div>
 
-        <button id="manualRenderBtn" onclick="processColorSwap()" class="secondary w-full mono text-xs uppercase py-2.5 rounded-md mt-2">Manual Re-render Output</button>
+        <button id="manualRenderBtn" onclick="processColorSwap()" class="uh-btn uh-btn--secondary w-full mono text-xs uppercase py-2.5 rounded-md mt-2">Manual Re-render Output</button>
 
       </div>
 
@@ -165,15 +156,15 @@
       <div class="lg:col-span-7 flex flex-col justify-between space-y-4">
         
         <!-- Live Result Canvas Preview Container -->
-        <div class="bg-[#14283b]/40 border border-white/10 p-4 rounded-md flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
+        <div class="uh-card p-4 flex flex-col items-center justify-center min-h-[420px] checkerboard-preview overflow-hidden">
           <img id="resultImg" class="max-h-[460px] max-w-full rounded shadow-2xl object-contain" />
         </div>
 
         <!-- Export Toolbar -->
-        <div class="bg-[#14283b]/30 p-4 rounded-md border border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div class="uh-toolbar flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <label class="mono text-xs text-slate-400 uppercase">Export Format</label>
-            <select id="exportFormat" class="rounded p-2 text-xs font-semibold">
+            <label class="uh-label mono text-xs uppercase">Export Format</label>
+            <select id="exportFormat" class="uh-select rounded p-2 text-xs font-semibold">
               <option value="image/png">PNG (.png)</option>
               <option value="image/webp">WEBP (.webp)</option>
               <option value="image/jpeg">JPG (.jpg)</option>
@@ -181,9 +172,9 @@
           </div>
           
           <div class="flex gap-2">
-            <button onclick="goBackToUpload()" class="secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Image</button>
-            <button id="downloadBtn" onclick="downloadSwappedAsset()" class="primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Asset</button>
-          </div>
+            <button onclick="goBackToUpload()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3 py-2.5 rounded-md">Replace Image</button>
+            <button id="downloadBtn" onclick="downloadSwappedAsset()" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2.5 rounded-md">Download Asset</button>
+          </main>
         </div>
 
       </div>
@@ -225,13 +216,13 @@
       ['swap', 'settings'].forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
         const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}Btn`);
-        btn.classList.remove('text-teal-300', 'bg-[#17304a]');
-        btn.classList.add('text-slate-400');
+        btn.classList.remove('uh-tab-active');
+        btn.classList.add('text-[var(--uh-muted)]');
       });
 
       const activeBtn = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}Btn`);
-      activeBtn.classList.remove('text-slate-400');
-      activeBtn.classList.add('text-teal-300', 'bg-[#17304a]');
+      activeBtn.classList.remove('text-[var(--uh-muted)]');
+      activeBtn.classList.add('uh-tab-active');
       document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
     };
 

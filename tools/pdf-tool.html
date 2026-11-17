@@ -13,71 +13,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  select, input[type="text"], input[type="number"] { background:#14283b; border:1px solid rgba(143,176,204,.16); color:#e7eef4; }
-  select:focus, input:focus { outline:none; border-color:#6fd8cb; }
-  .drop-zone { border: 2px dashed rgba(143,176,204,.2); transition: all 0.2s ease; }
-  .drop-zone.active { border-color: #6fd8cb; background: rgba(111,216,203,0.05); }
+  .drop-zone { border: 2px dashed var(--uh-line-strong); transition: var(--uh-transition); }
+  .drop-zone.active { border-color: var(--uh-accent); }
+  .uh-modal-backdrop { background: color-mix(in srgb, var(--uh-bg) 85%, transparent); backdrop-filter: blur(6px); }
   
   /* Buttons */
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
-  button.primary:hover:not(:disabled) { background:#93e5da; box-shadow: 0 0 15px rgba(111,216,203,0.4); }
-  button.primary:disabled { opacity:0.5; cursor:not-allowed; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover:not(:disabled) { border-color:#6fd8cb; color:#6fd8cb; }
-  
-  button.tab-btn.active { background:#6fd8cb; color:#0e1c2b; font-weight:700; }
-  button.tab-btn:not(.active) { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.tab-btn:not(.active):hover { border-color:#6fd8cb; color:#6fd8cb; }
-
-  /* Highly Visible Download Button Styling */
-  .dl-btn-prominent {
-    background: linear-gradient(135deg, #6fd8cb 0%, #38bdf8 100%);
-    color: #08111a;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
-    transition: all 0.2s ease;
-  }
-  .dl-btn-prominent:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(111, 216, 203, 0.5);
-    filter: brightness(1.08);
-  }
-  
-  /* Custom styled scrollbars */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #0e1c2b; }
-  ::-webkit-scrollbar-thumb { background: #17304a; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #6fd8cb; }
+  button.tab-btn.active { border-color: var(--uh-accent); color: var(--uh-accent); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="PDF Super Studio"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-6xl px-6 py-8">
-    <!-- Header -->
-    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
-      <div>
-        <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-        <h1 class="display text-2xl font-bold mt-1">PDF Super Studio</h1>
-        <p class="text-xs text-slate-400">Split, extract, rotate, organize, and convert PDF pages offline inside your browser.</p>
-      </div>
-      <div class="mono text-xs bg-[#14283b] px-3 py-1.5 rounded-full border border-teal-400/20 text-teal-300">
-        🔒 100% Client-Side Privacy
-      </div>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">PDF Super Studio</h1>
+      <p class="uh-page-sub">Split, extract, rotate, organize, and convert PDF pages offline inside your browser.</p>
+      <span class="uh-badge">🔒 100% Client-Side Privacy</span>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       <!-- Upload Panel -->
       <div id="uploadPanel" class="lg:col-span-12">
-        <div id="dropZone" class="drop-zone rounded-lg p-12 text-center bg-[#14283b]/20 cursor-pointer">
+        <div id="dropZone" class="drop-zone rounded-lg p-12 text-center uh-panel cursor-pointer">
           <input type="file" id="pdfUploader" accept="application/pdf" class="hidden" />
           <div class="text-5xl mb-3">📄</div>
-          <div class="mono text-teal-300 text-base font-semibold mb-1">Click or drag PDF document here</div>
-          <div class="text-xs text-slate-400">Supports single PDF files up to 150MB+</div>
+          <div class="mono uh-accent-text text-base font-semibold mb-1">Click or drag PDF document here</div>
+          <div class="text-xs uh-muted-text">Supports single PDF files up to 150MB+</div>
         </div>
       </div>
 
@@ -88,39 +49,39 @@
         <div class="lg:col-span-5 space-y-4">
           
           <!-- File Overview Info Box -->
-          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 flex items-center justify-between">
+          <div class="uh-panel p-4 rounded-md border uh-line-border flex items-center justify-between">
             <div>
               <div id="fileNameLabel" class="font-semibold text-sm truncate max-w-[200px]">document.pdf</div>
-              <div id="fileMetaLabel" class="mono text-[11px] text-slate-400 mt-0.5">0 MB | 0 Pages</div>
+              <div id="fileMetaLabel" class="mono text-[11px] uh-muted-text mt-0.5">0 MB | 0 Pages</div>
             </div>
-            <button onclick="resetStudio()" class="secondary text-xs px-3 py-1.5 rounded mono">Change PDF</button>
+            <button onclick="resetStudio()" class="uh-btn uh-btn--secondary text-xs px-3 py-1.5 rounded mono">Change PDF</button>
           </div>
 
           <!-- Configuration Card -->
-          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-4">
-            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-2">Tools & Actions</span>
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-4">
+            <span class="mono text-xs uppercase uh-accent-text font-bold block border-b uh-line-border pb-2">Tools & Actions</span>
 
             <!-- Operation Selector Mode Tabs -->
             <div class="grid grid-cols-4 gap-1.5">
-              <button id="btnTabSplit" onclick="switchMode('split')" class="tab-btn active text-[11px] py-2 rounded mono transition">Split</button>
-              <button id="btnTabExtract" onclick="switchMode('extract')" class="tab-btn text-[11px] py-2 rounded mono transition">Extract</button>
-              <button id="btnTabRotate" onclick="switchMode('rotate')" class="tab-btn text-[11px] py-2 rounded mono transition">Rotate</button>
-              <button id="btnTabConvert" onclick="switchMode('convert')" class="tab-btn text-[11px] py-2 rounded mono transition">Images</button>
+              <button id="btnTabSplit" onclick="switchMode('split')" class="uh-btn uh-btn--secondary tab-btn active text-[11px] mono">Split</button>
+              <button id="btnTabExtract" onclick="switchMode('extract')" class="uh-btn uh-btn--secondary tab-btn text-[11px] mono">Extract</button>
+              <button id="btnTabRotate" onclick="switchMode('rotate')" class="uh-btn uh-btn--secondary tab-btn text-[11px] mono">Rotate</button>
+              <button id="btnTabConvert" onclick="switchMode('convert')" class="uh-btn uh-btn--secondary tab-btn text-[11px] mono">Images</button>
             </div>
 
             <!-- Global Output Base Filename -->
             <div>
-              <label class="mono text-xs text-slate-400 block mb-1">Export File Base Name</label>
-              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono" placeholder="document_export" />
+              <label class="mono text-xs uh-muted-text block mb-1">Export File Base Name</label>
+              <input type="text" id="outputFileName" class="w-full rounded-md p-2 text-xs mono uh-input" placeholder="document_export" />
             </div>
 
             <!-- MODE 1: SPLIT CONTROLS -->
             <div id="modeSplit" class="space-y-3">
               <div>
-                <label class="mono text-xs text-slate-400 block mb-1">Split Every N Pages</label>
-                <input type="number" id="splitInterval" min="1" value="5" class="w-full rounded-md p-2 text-xs mono" />
+                <label class="mono text-xs uh-muted-text block mb-1">Split Every N Pages</label>
+                <input type="number" id="splitInterval" min="1" value="5" class="w-full rounded-md p-2 text-xs mono uh-input" />
               </div>
-              <button onclick="processSplit()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+              <button onclick="processSplit()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
                 ✂️ Execute Split PDF
               </button>
             </div>
@@ -129,15 +90,15 @@
             <div id="modeExtract" class="hidden space-y-3">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">Start Page</label>
-                  <input type="number" id="extractStart" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                  <label class="mono text-xs uh-muted-text block mb-1">Start Page</label>
+                  <input type="number" id="extractStart" min="1" value="1" class="w-full rounded p-2 text-xs mono uh-input" />
                 </div>
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">End Page</label>
-                  <input type="number" id="extractEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                  <label class="mono text-xs uh-muted-text block mb-1">End Page</label>
+                  <input type="number" id="extractEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono uh-input" />
                 </div>
               </div>
-              <button onclick="processExtract()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+              <button onclick="processExtract()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
                 📄 Extract Page Range
               </button>
             </div>
@@ -146,23 +107,23 @@
             <div id="modeRotate" class="hidden space-y-3">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">Rotate Degree</label>
-                  <select id="rotateDegree" class="w-full rounded-md p-2 text-xs">
+                  <label class="mono text-xs uh-muted-text block mb-1">Rotate Degree</label>
+                  <select id="rotateDegree" class="w-full rounded-md p-2 text-xs uh-select">
                     <option value="90">90° Clockwise</option>
                     <option value="180">180° Flip</option>
                     <option value="270">270° Counter-Clockwise</option>
                   </select>
                 </div>
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">Apply To</label>
-                  <select id="rotateScope" class="w-full rounded-md p-2 text-xs">
+                  <label class="mono text-xs uh-muted-text block mb-1">Apply To</label>
+                  <select id="rotateScope" class="w-full rounded-md p-2 text-xs uh-select">
                     <option value="all">All Pages</option>
                     <option value="odd">Odd Pages Only</option>
                     <option value="even">Even Pages Only</option>
                   </select>
                 </div>
               </div>
-              <button onclick="processRotate()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+              <button onclick="processRotate()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
                 🔄 Apply Rotation & Save
               </button>
             </div>
@@ -171,15 +132,15 @@
             <div id="modeConvert" class="hidden space-y-3">
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">Image Format</label>
-                  <select id="imageFormat" class="w-full rounded-md p-2 text-xs">
+                  <label class="mono text-xs uh-muted-text block mb-1">Image Format</label>
+                  <select id="imageFormat" class="w-full rounded-md p-2 text-xs uh-select">
                     <option value="png" selected>PNG (Lossless)</option>
                     <option value="jpeg">JPEG (Compressed)</option>
                   </select>
                 </div>
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">DPI Resolution</label>
-                  <select id="imageDpi" class="w-full rounded-md p-2 text-xs">
+                  <label class="mono text-xs uh-muted-text block mb-1">DPI Resolution</label>
+                  <select id="imageDpi" class="w-full rounded-md p-2 text-xs uh-select">
                     <option value="1.0">1x (Standard)</option>
                     <option value="2.0" selected>2x (High Quality)</option>
                     <option value="3.0">3x (Ultra HD)</option>
@@ -188,30 +149,30 @@
               </div>
 
               <div>
-                <label class="mono text-xs text-slate-400 block mb-1">Selection Mode</label>
-                <select id="pngMode" onchange="togglePngInputs()" class="w-full rounded-md p-2 text-xs">
+                <label class="mono text-xs uh-muted-text block mb-1">Selection Mode</label>
+                <select id="pngMode" onchange="togglePngInputs()" class="w-full rounded-md p-2 text-xs uh-select">
                   <option value="range" selected>Page Range</option>
                   <option value="single">Single Page</option>
                 </select>
               </div>
 
               <div id="pngSingleGroup" class="hidden">
-                <label class="mono text-xs text-slate-400 block mb-1">Target Page</label>
-                <input type="number" id="pngSinglePage" min="1" value="1" class="w-full rounded-md p-2 text-xs mono" />
+                <label class="mono text-xs uh-muted-text block mb-1">Target Page</label>
+                <input type="number" id="pngSinglePage" min="1" value="1" class="w-full rounded-md p-2 text-xs mono uh-input" />
               </div>
 
               <div id="pngRangeGroup" class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">From Page</label>
-                  <input type="number" id="pngStart" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                  <label class="mono text-xs uh-muted-text block mb-1">From Page</label>
+                  <input type="number" id="pngStart" min="1" value="1" class="w-full rounded p-2 text-xs mono uh-input" />
                 </div>
                 <div>
-                  <label class="mono text-xs text-slate-400 block mb-1">To Page</label>
-                  <input type="number" id="pngEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono" />
+                  <label class="mono text-xs uh-muted-text block mb-1">To Page</label>
+                  <input type="number" id="pngEnd" min="1" value="1" class="w-full rounded p-2 text-xs mono uh-input" />
                 </div>
               </div>
 
-              <button id="pngExportBtn" onclick="processPngExport()" class="primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
+              <button id="pngExportBtn" onclick="processPngExport()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase py-2.5 rounded-md shadow-lg transition-transform active:scale-95">
                 🖼️ Export Selected Image(s)
               </button>
             </div>
@@ -224,31 +185,31 @@
         <div class="lg:col-span-7 space-y-4">
           
           <!-- Status HUD -->
-          <div id="statusHud" class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 hidden space-y-2">
-            <div id="statusText" class="mono text-xs text-teal-300">Processing request...</div>
-            <div class="w-full bg-[#0e1c2b] rounded-full h-2 overflow-hidden border border-white/10">
-              <div id="progressElement" class="bg-teal-300 h-full w-0 transition-all duration-200"></div>
+          <div id="statusHud" class="uh-panel p-4 rounded-md border uh-line-border hidden space-y-2">
+            <div id="statusText" class="mono text-xs uh-accent-text">Processing request...</div>
+            <div class="w-full uh-panel rounded-full h-2 overflow-hidden border uh-line-border">
+              <div id="progressElement" class="uh-accent-bg h-full w-0 transition-all duration-200"></div>
             </div>
           </div>
 
           <!-- Document Pages Visualizer Grid -->
-          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-3">
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-3">
             <div class="flex justify-between items-center">
-              <span class="mono text-xs uppercase text-teal-300 font-bold">Document Page Previews</span>
-              <span id="pagePreviewCounter" class="mono text-xs text-slate-400">Click page thumbnail to inspect</span>
+              <span class="mono text-xs uppercase uh-accent-text font-bold">Document Page Previews</span>
+              <span id="pagePreviewCounter" class="mono text-xs uh-muted-text">Click page thumbnail to inspect</span>
             </div>
 
             <!-- Page Thumbnails Container Grid -->
-            <div id="pageGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[340px] overflow-y-auto p-1 bg-[#08111a] rounded-md border border-white/5">
+            <div id="pageGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[340px] overflow-y-auto p-1 uh-panel rounded-md border uh-line-border">
               <!-- Rendered canvas elements appear here -->
             </div>
           </div>
 
           <!-- Generated Download Files Results List -->
-          <div class="bg-[#14283b]/40 p-4 rounded-md border border-white/10 space-y-2">
-            <span class="mono text-xs uppercase text-teal-300 font-bold block border-b border-white/10 pb-1.5">Processed Outputs & Downloads</span>
+          <div class="uh-panel p-4 rounded-md border uh-line-border space-y-2">
+            <span class="mono text-xs uppercase uh-accent-text font-bold block border-b uh-line-border pb-1.5">Processed Outputs & Downloads</span>
             <div id="resultsList" class="space-y-2 max-h-[180px] overflow-y-auto">
-              <div class="mono text-xs text-slate-500 py-3 text-center">No processed files generated yet. Choose an action on the left.</div>
+              <div class="mono text-xs uh-faint-text py-3 text-center">No processed files generated yet. Choose an action on the left.</div>
             </div>
           </div>
 
@@ -257,29 +218,29 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <!-- Interactive Lightbox Modal Preview -->
-  <div id="previewModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-[#14283b] border border-white/10 rounded-lg max-w-2xl w-full p-5 space-y-4 shadow-2xl relative">
-      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+  <div id="previewModal" class="uh-modal-backdrop fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="uh-panel border uh-line-border rounded-lg max-w-2xl w-full p-5 space-y-4 shadow-2xl relative">
+      <div class="flex justify-between items-center border-b uh-line-border pb-3">
         <div>
-          <h3 id="modalTitle" class="display font-bold text-base text-teal-300">Page Preview</h3>
-          <span id="modalDimensions" class="mono text-[11px] text-slate-400">Dimensions: Loading...</span>
+          <h3 id="modalTitle" class="display font-bold text-base uh-accent-text">Page Preview</h3>
+          <span id="modalDimensions" class="mono text-[11px] uh-muted-text">Dimensions: Loading...</span>
         </div>
-        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-white mono text-lg px-2">✕</button>
+        <button onclick="closePreviewModal()" class="uh-muted-text hover:uh-text mono text-lg px-2">✕</button>
       </div>
 
-      <div class="flex justify-center bg-[#08111a] p-3 rounded border border-white/5 max-h-[60vh] overflow-auto">
+      <div class="flex justify-center uh-panel p-3 rounded border uh-line-border max-h-[60vh] overflow-auto">
         <canvas id="modalCanvas" class="max-w-full height-auto rounded shadow-lg"></canvas>
       </div>
 
-      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-white/10">
+      <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t uh-line-border">
         <div class="flex gap-2">
-          <button id="modalExtractBtn" class="secondary text-xs px-3 py-1.5 rounded mono">📄 Extract This Page</button>
-          <button id="modalPngBtn" class="secondary text-xs px-3 py-1.5 rounded mono">🖼️ Download PNG</button>
+          <button id="modalExtractBtn" class="uh-btn uh-btn--secondary text-xs px-3 py-1.5 rounded mono">📄 Extract This Page</button>
+          <button id="modalPngBtn" class="uh-btn uh-btn--secondary text-xs px-3 py-1.5 rounded mono">🖼️ Download PNG</button>
         </div>
-        <button onclick="closePreviewModal()" class="primary text-xs px-4 py-1.5 rounded mono">Close Preview</button>
+        <button onclick="closePreviewModal()" class="uh-btn uh-btn--primary text-xs px-4 py-1.5 rounded mono">Close Preview</button>
       </div>
     </div>
   </div>
@@ -431,7 +392,7 @@
         const viewport = page.getViewport({ scale: 0.25 });
 
         const card = document.createElement('div');
-        card.className = "bg-[#14283b] p-2 rounded border border-white/10 flex flex-col items-center justify-between hover:border-[#6fd8cb] cursor-pointer transition transform hover:-translate-y-0.5";
+        card.className = "uh-card p-2 rounded border uh-line-border flex flex-col items-center justify-between hover:uh-accent-border cursor-pointer transition transform hover:-translate-y-0.5";
         
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -441,7 +402,7 @@
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         const label = document.createElement('span');
-        label.className = "mono text-[10px] text-teal-300 mt-1.5 font-semibold";
+        label.className = "mono text-[10px] uh-accent-text mt-1.5 font-semibold";
         label.textContent = `Page ${i}`;
 
         card.appendChild(canvas);
@@ -678,13 +639,13 @@
       }
 
       const item = document.createElement('div');
-      item.className = "bg-[#0e1c2b] p-3 rounded-md border border-teal-400/30 flex items-center justify-between shadow-md hover:border-teal-400 transition";
+      item.className = "uh-card p-3 rounded-md border uh-accent-border flex items-center justify-between shadow-md hover:uh-accent-border transition";
       item.innerHTML = `
         <div class="truncate max-w-[240px] sm:max-w-[300px]">
-          <div class="font-bold text-xs truncate text-teal-300">${fileName}</div>
-          <div class="mono text-[10px] text-slate-400">${infoStr}</div>
+          <div class="font-bold text-xs truncate uh-accent-text">${fileName}</div>
+          <div class="mono text-[10px] uh-muted-text">${infoStr}</div>
         </div>
-        <a href="${downloadUrl}" download="${fileName}" class="dl-btn-prominent text-xs px-4 py-2 rounded-md mono font-bold flex items-center gap-1.5 shrink-0">
+        <a href="${downloadUrl}" download="${fileName}" class="uh-btn uh-btn--primary text-xs px-4 py-2 rounded-md mono font-bold flex items-center gap-1.5 shrink-0">
           💾 Download File
         </a>
       `;
@@ -714,7 +675,7 @@
       pdfJsDoc = null;
       totalPages = 0;
       pageGrid.innerHTML = "";
-      resultsList.innerHTML = `<div class="mono text-xs text-slate-500 py-3 text-center">No processed files generated yet. Choose an action on the left.</div>`;
+      resultsList.innerHTML = `<div class="mono text-xs uh-faint-text py-3 text-center">No processed files generated yet. Choose an action on the left.</div>`;
     }
   </script>
 </body>

@@ -6,20 +6,21 @@
 <title>Unlock PDF — PDF Toolkit</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="../css/style.css" />
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Unlock PDF"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Unlock PDF</h1>
-    <p class="page-sub">Remove password protection from an encrypted PDF. Requires the correct password — this tool does not crack or brute-force passwords.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Unlock PDF</h1>
+      <p class="uh-page-sub">Remove password protection from an encrypted PDF. Requires the correct password — this tool does not crack or brute-force passwords.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">🔓</div>
       <div class="primary-txt">Click or drag an encrypted PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="notEncryptedNote" class="warn-box hidden" style="max-width:600px;">This PDF does not appear to be password-protected — there's nothing to unlock.</div>
 

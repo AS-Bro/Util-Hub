@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image URL & Clipboard Downloader — Utility Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    .checkerboard {
+      background-color: var(--uh-panel);
+      background-image:
+        linear-gradient(45deg, var(--uh-elevated) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--uh-elevated) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--uh-elevated) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--uh-elevated) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    input[type="range"]::-webkit-slider-thumb { background: var(--uh-accent); }
+  </style>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Image URL & Clipboard Downloader"></script>
+</head>
+<body>
+  <main class="uh-container">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Image URL &amp; Clipboard Downloader</h1>
+      <p class="uh-page-sub">Paste a Google Image link, direct URL, or press <kbd class="mono uh-panel px-1.5 py-0.5 rounded uh-accent-text border">Ctrl+V</kbd> after copying an image to download it in JPG, PNG, WEBP, or BMP.</p>
+    </div>
+
+    <!-- URL Input Bar -->
+    <div class="uh-card rounded-xl p-5 mb-6">
+      <label for="urlInput" class="mono text-xs uppercase tracking-wider uh-muted-text block mb-2">Paste Image URL or Google Image Link</label>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input
+          type="text"
+          id="urlInput"
+          placeholder="https://example.com/photo.jpg or Google Images link..."
+          class="flex-1 uh-panel border border rounded-lg px-4 py-2.5 text-sm uh-text placeholder-uh-faint focus:outline-none focus:uh-accent-border mono uh-input"
+          onkeydown="if(event.key === 'Enter') loadFromUrl()"
+        />
+        <div class="flex gap-2">
+          <button onclick="pasteFromClipboardBtn()" class="uh-btn uh-btn--secondary mono text-xs uppercase px-3.5 py-2.5 rounded-lg flex items-center gap-1.5 shrink-0" title="Read from Clipboard">
+            <svg class="w-4 h-4 uh-accent-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            Paste
+          </button>
+          <button onclick="loadFromUrl()" class="uh-btn uh-btn--primary mono text-xs uppercase px-5 py-2.5 rounded-lg shrink-0">
+            Fetch Image
+          </button>
+        </div>
+      </div>
+
+      <!-- Status / Error Alert Box -->
+      <div id="alertBox" class="uh-alert hidden mt-4"></div>
+    </div>
+
+    <!-- Empty State / Paste Hint -->
+    <div id="emptyState" class="uh-card border-dashed border-2 border rounded-xl p-10 text-center">
+      <div class="w-12 h-12 rounded-full uh-panel border border flex items-center justify-center mx-auto mb-3 uh-accent-text">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+      </div>
+      <p class="text-sm font-medium uh-text mb-1">Waiting for an Image Link or Clipboard Paste</p>
+      <p class="text-xs uh-muted-text max-w-md mx-auto leading-relaxed">
+        Tip: If a website blocks direct URL downloads, right-click the picture on Google, select <span class="uh-accent-text font-medium">"Copy image"</span>, and press <span class="mono uh-accent-text">Ctrl+V</span> anywhere on this page.
+      </p>
+    </div>
+
+    <!-- Workspace / Preview & Download Card -->
+    <div id="workspace" class="hidden space-y-6">
+      <div class="uh-card rounded-xl p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border">
+          <div class="flex items-center gap-2">
+            <span id="sourceBadge" class="uh-badge uh-badge-success">URL Loaded</span>
+            <span id="metaDimensions" class="mono text-xs uh-muted-text">0 &times; 0 px</span>
+          </div>
+          <button onclick="resetWorkspace()" class="uh-btn uh-btn--danger mono text-xs uppercase">Clear Image</button>
+        </div>
+
+        <!-- Image Preview -->
+        <div class="checkerboard rounded-lg border border flex items-center justify-center p-4 mb-6 max-h-[420px] overflow-hidden">
+          <img id="previewImg" class="max-h-[380px] max-w-full object-contain rounded shadow-lg" alt="Fetched Preview" />
+        </div>
+
+        <!-- Export Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+          <div class="sm:col-span-5">
+            <label for="fileNameInput" class="mono text-xs uppercase tracking-wider uh-muted-text block mb-1.5">File Name</label>
+            <input
+              type="text"
+              id="fileNameInput"
+              value="downloaded-image"
+              class="w-full uh-panel border border rounded-lg px-3 py-2 text-xs uh-text focus:outline-none focus:uh-accent-border mono uh-input"
+            />
+          </div>
+
+          <div class="sm:col-span-4">
+            <label for="formatSelect" class="mono text-xs uppercase tracking-wider uh-muted-text block mb-1.5">Format</label>
+            <select id="formatSelect" onchange="toggleQuality()" class="w-full uh-panel uh-text border border text-xs rounded-lg px-3 py-2 focus:outline-none focus:uh-accent-border mono uh-select">
+              <option value="image/png">PNG (Lossless)</option>
+              <option value="image/jpeg">JPG / JPEG</option>
+              <option value="image/webp" selected>WEBP</option>
+              <option value="image/bmp">BMP</option>
+            </select>
+          </div>
+
+          <div class="sm:col-span-3">
+            <button onclick="downloadConverted()" class="uh-btn uh-btn--primary w-full mono text-xs uppercase px-4 py-2.5 rounded-lg flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <!-- Quality Slider (Shown for JPG / WEBP) -->
+        <div id="qualityRow" class="mt-4 pt-4 border-t border flex items-center justify-between gap-4">
+          <label for="qualityRange" class="mono text-xs uppercase tracking-wider uh-muted-text">
+            Compression Quality: <span id="qualityLabel" class="uh-accent-text">92%</span>
+          </label>
+          <input type="range" id="qualityRange" min="10" max="100" value="92" oninput="document.getElementById('qualityLabel').textContent = this.value + '%'" class="w-48 accent-teal-400 h-1.5 uh-elevated-bg rounded-lg appearance-none cursor-pointer uh-range" />
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const alertBox = document.getElementById('alertBox');
+    const emptyState = document.getElementById('emptyState');
+    const workspace = document.getElementById('workspace');
+    const previewImg = document.getElementById('previewImg');
+    const fileNameInput = document.getElementById('fileNameInput');
+    const formatSelect = document.getElementById('formatSelect');
+    const qualityRange = document.getElementById('qualityRange');
+    const qualityRow = document.getElementById('qualityRow');
+    const metaDimensions = document.getElementById('metaDimensions');
+    const sourceBadge = document.getElementById('sourceBadge');
+
+    let loadedImageElement = null;
+
+    function showAlert(message, type = 'error') {
+      alertBox.classList.remove('hidden', 'uh-alert--error', 'uh-alert--success', 'uh-alert--info');
+      if (type === 'error') {
+        alertBox.classList.add('uh-alert--error');
+      } else if (type === 'info') {
+        alertBox.classList.add('uh-alert--info');
+      } else {
+        alertBox.classList.add('uh-alert--success');
+      }
+      alertBox.innerHTML = message;
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+
+    function toggleQuality() {
+      const fmt = formatSelect.value;
+      if (fmt === 'image/jpeg' || fmt === 'image/webp') {
+        qualityRow.classList.remove('opacity-30', 'pointer-events-none');
+      } else {
+        qualityRow.classList.add('opacity-30', 'pointer-events-none');
+      }
+    }
+
+    // Extract actual image URL if user pastes a Google Images search redirect link
+    function cleanImageUrl(rawUrl) {
+      let trimmed = rawUrl.trim();
+      try {
+        const parsed = new URL(trimmed);
+        if (parsed.hostname.includes('google.') && parsed.pathname.includes('/imgres')) {
+          const imgurl = parsed.searchParams.get('imgurl');
+          if (imgurl) return imgurl;
+        }
+      } catch (e) {
+        // Not a standard URL (could be data:image/...)
+      }
+      return trimmed;
+    }
+
+    function extractFileName(url) {
+      if (url.startsWith('data:image')) return 'pasted-image';
+      try {
+        const pathname = new URL(url).pathname;
+        const base = pathname.substring(pathname.lastIndexOf('/') + 1);
+        const clean = base.split('.')[0].replace(/[^a-zA-Z0-9-_]/g, '');
+        return clean || 'downloaded-image';
+      } catch {
+        return 'downloaded-image';
+      }
+    }
+
+    function loadFromUrl() {
+      const raw = urlInput.value;
+      if (!raw.trim()) {
+        showAlert('Please paste an image URL first.');
+        return;
+      }
+
+      const targetUrl = cleanImageUrl(raw);
+      urlInput.value = targetUrl;
+      hideAlert();
+      showAlert('Fetching image…', 'info');
+
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+
+      img.onload = () => {
+        hideAlert();
+        loadedImageElement = img;
+        previewImg.src = img.src;
+        fileNameInput.value = extractFileName(targetUrl);
+        metaDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+        sourceBadge.textContent = targetUrl.startsWith('data:') ? 'Data URI' : 'URL Loaded';
+        emptyState.classList.add('hidden');
+        workspace.classList.remove('hidden');
+      };
+
+      img.onerror = () => {
+        showAlert(`
+          <strong>Unable to load image directly due to host CORS security rules or an invalid link.</strong><br/>
+          <span class="uh-text mt-1 block">Workaround: Right-click the image in your browser → click <strong>"Copy image"</strong> → press <kbd class="mono uh-panel px-1.5 py-0.5 rounded uh-accent-text">Ctrl+V</kbd> anywhere on this page.</span>
+        `, 'error');
+      };
+
+      img.src = targetUrl;
+    }
+
+    // Handle Global Paste (Ctrl+V) for both copied Images and copied URLs
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // 1. Check if clipboard contains an actual image bitmap
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          loadBlobImage(blob);
+          return;
+        }
+      }
+
+      // 2. If user pressed Ctrl+V outside the input box with a URL in clipboard
+      if (document.activeElement !== urlInput) {
+        const text = e.clipboardData.getData('text');
+        if (text && (text.startsWith('http://') || text.startsWith('https://') || text.startsWith('data:image/'))) {
+          urlInput.value = text;
+          loadFromUrl();
+        }
+      }
+    });
+
+    async function pasteFromClipboardBtn() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.read) {
+          const clipboardItems = await navigator.clipboard.read();
+          for (const item of clipboardItems) {
+            const imageType = item.types.find(t => t.startsWith('image/'));
+            if (imageType) {
+              const blob = await item.getType(imageType);
+              loadBlobImage(blob);
+              return;
+            }
+          }
+        }
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          urlInput.value = text;
+          loadFromUrl();
+        }
+      } catch (err) {
+        showAlert('Clipboard button blocked by browser permissions. Just press <kbd class="mono uh-panel px-1.5 py-0.5 rounded uh-accent-text">Ctrl+V</kbd> directly on the page!', 'error');
+      }
+    }
+
+    function loadBlobImage(blob) {
+      hideAlert();
+      const objectUrl = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        loadedImageElement = img;
+        previewImg.src = objectUrl;
+        fileNameInput.value = 'clipboard-image';
+        metaDimensions.textContent = `${img.naturalWidth} × ${img.naturalHeight} px`;
+        sourceBadge.textContent = 'Clipboard Image';
+        emptyState.classList.add('hidden');
+        workspace.classList.remove('hidden');
+      };
+      img.src = objectUrl;
+    }
+
+    function downloadConverted() {
+      if (!loadedImageElement) return;
+
+      const mimeType = formatSelect.value;
+      const quality = parseInt(qualityRange.value, 10) / 100;
+      const extMap = {
+        'image/png': 'png',
+        'image/jpeg': 'jpg',
+        'image/webp': 'webp',
+        'image/bmp': 'bmp'
+      };
+      const ext = extMap[mimeType] || 'png';
+      const baseName = fileNameInput.value.trim() || 'downloaded-image';
+
+      const canvas = document.createElement('canvas');
+      canvas.width = loadedImageElement.naturalWidth;
+      canvas.height = loadedImageElement.naturalHeight;
+      const ctx = canvas.getContext('2d');
+
+      // White background fill for JPG/BMP so transparent pixels don't turn black
+      if (mimeType === 'image/jpeg' || mimeType === 'image/bmp') {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.drawImage(loadedImageElement, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          showAlert('Export failed. Try pasting the image directly with Ctrl+V.', 'error');
+          return;
+        }
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${baseName}.${ext}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, mimeType, quality);
+    }
+
+    function resetWorkspace() {
+      loadedImageElement = null;
+      previewImg.src = '';
+      urlInput.value = '';
+      hideAlert();
+      workspace.classList.add('hidden');
+      emptyState.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

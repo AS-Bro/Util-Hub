@@ -7,108 +7,98 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  textarea, input, select { 
-    background:#14283b; 
-    border:1px solid rgba(143,176,204,.16); 
-    color: #e7eef4;
-  }
-  textarea:focus, input:focus, select:focus { outline:none; border-color:#6fd8cb; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
+  .wc-progress-track { background: var(--uh-elevated); border: 1px solid var(--uh-line); }
+  .wc-progress-fill { background: var(--uh-accent); }
+  .wc-word-item { background: var(--uh-panel); border: 1px solid var(--uh-line); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Word Counter & Text Analyzer"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-4xl px-6 py-10">
-    <!-- Header -->
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Word Counter & Text Analyzer</h1>
-    <p class="text-sm text-slate-400 mb-6">Real-time statistics, readability index, target tracking, and keyword density.</p>
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Word Counter &amp; Text Analyzer</h1>
+      <p class="uh-page-sub">Real-time statistics, readability index, target tracking, and keyword density.</p>
+    </div>
 
     <!-- Toolbar: Quick Actions -->
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <div class="flex flex-wrap gap-1.5">
+    <div class="uh-toolbar mb-3">
+      <div class="uh-actions">
         <button type="button" onclick="cleanExtraSpaces()" class="secondary mono text-[11px] uppercase px-2.5 py-1 rounded">Clean Extra Spaces</button>
       </div>
 
-      <div class="flex gap-2">
+      <div class="uh-actions">
         <button type="button" id="copyBtn" onclick="copyText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded">Copy</button>
         <button type="button" onclick="downloadText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded">Download .txt</button>
-        <button type="button" onclick="clearText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded text-rose-400 border-rose-400/30 hover:border-rose-400 hover:text-rose-300">Clear</button>
+        <button type="button" onclick="clearText()" class="secondary mono text-[11px] uppercase px-3 py-1 rounded uh-danger-text uh-danger-border hover:uh-danger-border hover:uh-danger-text">Clear</button>
       </div>
     </div>
 
     <!-- Text Input -->
-    <textarea id="input" rows="9" class="w-full rounded-md p-4 text-sm resize-y leading-relaxed mb-4" placeholder="Paste or type text here…"></textarea>
+    <textarea id="input" rows="9" class="uh-input w-full rounded-md p-4 text-sm resize-y leading-relaxed mb-4" placeholder="Paste or type text here…"></textarea>
 
     <!-- Goal / Target Tracker -->
-    <div class="mb-6 rounded-md border border-white/10 p-4 bg-[#14283b]/40">
+    <div class="uh-card mb-6">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
         <div class="flex items-center gap-2">
-          <span class="mono text-xs uppercase tracking-wide text-slate-400">Target Goal:</span>
-          <input id="goalCount" type="number" value="500" min="1" class="w-20 rounded p-1 text-xs mono text-center" />
-          <select id="goalType" class="rounded p-1 text-xs mono">
+          <span class="mono text-xs uppercase tracking-wide uh-muted">Target Goal:</span>
+          <input id="goalCount" type="number" value="500" min="1" class="uh-input w-20 p-1 text-xs mono text-center" />
+          <select id="goalType" class="uh-select p-1 text-xs mono">
             <option value="words" selected>Words</option>
             <option value="chars">Characters</option>
           </select>
         </div>
-        <div id="goalProgressText" class="mono text-xs text-teal-300">0 / 500 (0%)</div>
+        <div id="goalProgressText" class="mono text-xs uh-accent">0 / 500 (0%)</div>
       </div>
-      <div class="w-full h-1.5 bg-[#14283b] rounded-full overflow-hidden border border-white/10">
-        <div id="goalBar" class="h-full bg-[#6fd8cb] transition-all duration-300" style="width: 0%"></div>
+      <div class="wc-progress-track w-full h-1.5 rounded-full overflow-hidden">
+        <div id="goalBar" class="wc-progress-fill h-full transition-all duration-300" style="width: 0%"></div>
       </div>
     </div>
 
     <!-- Main Statistics Grid -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Words</div>
-        <div id="words" class="display text-2xl font-semibold mt-1">0</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Words</div>
+        <div id="words" class="uh-stat-value">0</div>
       </div>
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Characters</div>
-        <div id="chars" class="display text-2xl font-semibold mt-1">0</div>
-        <div id="charsNoSpace" class="mono text-[10px] text-slate-500 mt-0.5">0 no spaces</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Characters</div>
+        <div id="chars" class="uh-stat-value">0</div>
+        <div id="charsNoSpace" class="mono text-[10px] uh-faint mt-0.5">0 no spaces</div>
       </div>
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Sentences</div>
-        <div id="sentences" class="display text-2xl font-semibold mt-1">0</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Sentences</div>
+        <div id="sentences" class="uh-stat-value">0</div>
       </div>
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Paragraphs</div>
-        <div id="paragraphs" class="display text-2xl font-semibold mt-1">0</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Paragraphs</div>
+        <div id="paragraphs" class="uh-stat-value">0</div>
       </div>
 
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Reading Time</div>
-        <div id="readtime" class="display text-xl font-semibold mt-1 text-teal-300">0 min</div>
-        <div class="mono text-[10px] text-slate-500 mt-0.5">200 wpm avg</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Reading Time</div>
+        <div id="readtime" class="uh-stat-value uh-accent">0 min</div>
+        <div class="mono text-[10px] uh-faint mt-0.5">200 wpm avg</div>
       </div>
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30">
-        <div class="mono text-xs text-slate-400 uppercase">Speaking Time</div>
-        <div id="speaktime" class="display text-xl font-semibold mt-1 text-teal-300">0 min</div>
-        <div class="mono text-[10px] text-slate-500 mt-0.5">130 wpm avg</div>
+      <div class="uh-stat">
+        <div class="mono text-xs uh-muted uppercase">Speaking Time</div>
+        <div id="speaktime" class="uh-stat-value uh-accent">0 min</div>
+        <div class="mono text-[10px] uh-faint mt-0.5">130 wpm avg</div>
       </div>
-      <div class="rounded-md border border-white/10 p-4 bg-[#14283b]/30 col-span-2">
-        <div class="mono text-xs text-slate-400 uppercase">Readability Index</div>
-        <div id="readability" class="display text-xl font-semibold mt-1">—</div>
-        <div id="readabilityScore" class="mono text-[10px] text-slate-500 mt-0.5">Flesch Reading Ease Score</div>
+      <div class="uh-stat col-span-2">
+        <div class="mono text-xs uh-muted uppercase">Readability Index</div>
+        <div id="readability" class="uh-stat-value">—</div>
+        <div id="readabilityScore" class="mono text-[10px] uh-faint mt-0.5">Flesch Reading Ease Score</div>
       </div>
     </div>
 
     <!-- Keyword Frequency / Density Section -->
-    <div class="rounded-md border border-white/10 p-5 bg-[#14283b]/30">
-      <h3 class="mono text-xs uppercase tracking-wider text-slate-400 mb-3">Top Repeated Words</h3>
+    <div class="uh-card">
+      <h3 class="mono text-xs uppercase tracking-wider uh-muted mb-3">Top Repeated Words</h3>
       <div id="densityList" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mono">
-        <span class="text-slate-500 italic col-span-full">Type or paste text above to see keyword density…</span>
+        <span class="uh-faint italic col-span-full">Type or paste text above to see keyword density…</span>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     const input = document.getElementById('input');
@@ -192,7 +182,7 @@
 
       // Density calculation
       if (wordCount === 0) {
-        densityList.innerHTML = '<span class="text-slate-500 italic col-span-full">Type or paste text above to see keyword density…</span>';
+        densityList.innerHTML = '<span class="uh-faint italic col-span-full">Type or paste text above to see keyword density…</span>';
       } else {
         const freq = {};
         rawWords.forEach(w => {
@@ -205,13 +195,13 @@
         const sorted = Object.entries(freq).sort((a,b) => b[1] - a[1]).slice(0, 8);
 
         if (sorted.length === 0) {
-          densityList.innerHTML = '<span class="text-slate-500 italic col-span-full">No key terms identified yet.</span>';
+          densityList.innerHTML = '<span class="uh-faint italic col-span-full">No key terms identified yet.</span>';
         } else {
           densityList.innerHTML = sorted.map(([word, count]) => {
             const pct = ((count / wordCount) * 100).toFixed(1);
-            return `<div class="bg-[#14283b] p-2 rounded border border-white/5 flex justify-between items-center">
-              <span class="text-teal-300 truncate pr-1">${word}</span>
-              <span class="text-slate-400 text-[10px]">${count} (${pct}%)</span>
+            return `<div class="wc-word-item p-2 rounded flex justify-between items-center">
+              <span class="uh-accent truncate pr-1">${word}</span>
+              <span class="uh-muted text-[10px]">${count} (${pct}%)</span>
             </div>`;
           }).join('');
         }

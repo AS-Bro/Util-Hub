@@ -7,55 +7,39 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  input[type="text"], select, textarea { 
-    background:#14283b; 
-    border:1px solid rgba(143,176,204,.16); 
-    color: #e7eef4;
-  }
-  input[type="text"]:focus, select:focus, textarea:focus { outline:none; border-color:#6fd8cb; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; font-weight: 600; transition: all 0.15s ease; }
-  button.primary:hover { background:#93e5da; }
-  button.secondary { background:#17304a; border:1px solid rgba(143,176,204,.2); color:#e7eef4; transition: all 0.15s ease; }
-  button.secondary:hover { border-color:#6fd8cb; color:#6fd8cb; }
-  
-  /* Active Platform Tab Styling */
-  .tab-btn.active {
-    background: #6fd8cb;
-    color: #0e1c2b;
+  html body.uh-tool .tab-btn.active {
+    background: var(--uh-accent);
+    color: var(--uh-bg);
     font-weight: 700;
   }
-  .tab-btn:not(.active) {
-    background: #17304a;
-    color: #94a3b8;
+  html body.uh-tool .tab-btn:not(.active) {
+    background: var(--uh-panel);
+    color: var(--uh-muted);
   }
-  .tab-btn:not(.active):hover {
-    color: #e7eef4;
-    border-color: #6fd8cb;
+  html body.uh-tool .tab-btn:not(.active):hover {
+    color: var(--uh-text);
+    border-color: var(--uh-accent);
   }
   
-  /* Custom Scrollbar for Previews */
   .custom-scroll::-webkit-scrollbar { width: 6px; }
-  .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-  .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+  .custom-scroll::-webkit-scrollbar-track { background: var(--uh-panel); }
+  .custom-scroll::-webkit-scrollbar-thumb { background: var(--uh-line-strong); border-radius: var(--uh-radius-sm); }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Social Media Post Previewer"></script>
 </head>
-<body class="min-h-screen pb-12">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 py-8">
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    
-    <div class="flex flex-col md:flex-row md:items-center justify-between mt-4 mb-6 gap-4">
+<body>
+  <main class="uh-container uh-container--wide">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <h1 class="display text-2xl sm:text-3xl font-bold">Social Media Post Previewer</h1>
-        <p class="text-sm text-slate-400 mt-1">Draft, inspect, and optimize posts for Twitter/X, LinkedIn, Facebook, Instagram, and Google Search in real time.</p>
+        <div class="uh-page-head">
+          <h1 class="uh-page-title">Social Media Post Previewer</h1>
+          <p class="uh-page-sub">Draft, inspect, and optimize posts for Twitter/X, LinkedIn, Facebook, Instagram, and Google Search in real time.</p>
+        </div>
       </div>
-      <div class="flex items-center gap-2 bg-[#14283b] p-1.5 rounded-lg border border-slate-700/60 self-start md:self-auto">
-        <span class="mono text-xs text-slate-400 px-2">Theme Mode:</span>
-        <button id="themeDark" onclick="setPreviewTheme('dark')" class="px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]">Dark</button>
-        <button id="themeLight" onclick="setPreviewTheme('light')" class="px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white">Light</button>
+      <div class="uh-toolbar flex items-center gap-2 self-start md:self-auto">
+        <span class="uh-label mono text-xs px-2">Theme Mode:</span>
+        <button id="themeDark" onclick="setPreviewTheme('dark')" class="uh-btn uh-btn--primary px-3 py-1 text-xs font-semibold">Dark</button>
+        <button id="themeLight" onclick="setPreviewTheme('light')" class="uh-btn uh-btn--secondary px-3 py-1 text-xs font-semibold">Light</button>
       </div>
     </div>
 
@@ -63,86 +47,86 @@
       
       <div class="lg:col-span-5 space-y-5">
         
-        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
-          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-3 font-semibold">1. Profile & Author Info</h2>
+        <div class="uh-card p-4">
+          <h2 class="uh-card-title mono text-xs uppercase tracking-wider mb-3 font-semibold">1. Profile & Author Info</h2>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Display Name</label>
-              <input id="authorName" type="text" value="Utility Hub" class="w-full rounded-md p-2 text-xs">
+              <label class="uh-label mono text-[10px] uppercase block mb-1">Display Name</label>
+              <input id="authorName" type="text" value="Utility Hub" class="uh-input w-full rounded-md p-2 text-xs">
             </div>
             <div>
-              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Username / Handle</label>
-              <input id="authorHandle" type="text" value="utilityhub" class="w-full rounded-md p-2 text-xs">
+              <label class="uh-label mono text-[10px] uppercase block mb-1">Username / Handle</label>
+              <input id="authorHandle" type="text" value="utilityhub" class="uh-input w-full rounded-md p-2 text-xs">
             </div>
           </div>
           <div class="mt-3">
-            <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Avatar Image URL (Optional)</label>
-            <input id="avatarUrl" type="text" placeholder="Paste image link or leave for default icon..." class="w-full rounded-md p-2 text-xs">
+            <label class="uh-label mono text-[10px] uppercase block mb-1">Avatar Image URL (Optional)</label>
+            <input id="avatarUrl" type="text" placeholder="Paste image link or leave for default icon..." class="uh-input w-full rounded-md p-2 text-xs">
           </div>
         </div>
 
-        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
+        <div class="uh-card p-4">
           <div class="flex items-center justify-between mb-2">
-            <h2 class="mono text-xs uppercase tracking-wider text-teal-300 font-semibold">2. Post Copy & Text</h2>
-            <button onclick="clearText()" class="mono text-[11px] text-slate-400 hover:text-rose-400 underline">Clear Text</button>
+            <h2 class="uh-card-title mono text-xs uppercase tracking-wider font-semibold">2. Post Copy & Text</h2>
+            <button onclick="clearText()" class="uh-btn uh-btn--ghost mono text-[11px] underline">Clear Text</button>
           </div>
           
-          <textarea id="postText" rows="6" placeholder="Write your post here... Include links, #hashtags, and @mentions to test how they render across platforms." class="w-full rounded-md p-3 text-sm leading-relaxed custom-scroll">🚀 Excited to announce our newest update to Utility Hub! Build, preview, and optimize your social media strategy effortlessly across Twitter, LinkedIn, Facebook, and Instagram.
+          <textarea id="postText" rows="6" placeholder="Write your post here... Include links, #hashtags, and @mentions to test how they render across platforms." class="uh-textarea w-full rounded-md p-3 text-sm leading-relaxed custom-scroll">🚀 Excited to announce our newest update to Utility Hub! Build, preview, and optimize your social media strategy effortlessly across Twitter, LinkedIn, Facebook, and Instagram.
 
 Check out the full release here: https://utilityhub.app/tools/social-previewer
 
 #WebDev #SocialMedia #MarketingTools #Productivity</textarea>
 
-          <div class="mt-3 pt-3 border-t border-slate-700/60 grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-[11px]">
-            <div id="cntTwitter" class="p-1.5 rounded bg-[#17304a] text-center">
-              <span class="block text-[9px] text-slate-400 uppercase">X / Twitter</span>
+          <div class="mt-3 pt-3 border-t uh-line-border grid grid-cols-2 sm:grid-cols-4 gap-2 mono text-[11px]">
+            <div id="cntTwitter" class="uh-badge p-1.5 text-center">
+              <span class="block text-[9px] uh-muted-text uppercase">X / Twitter</span>
               <span class="val font-semibold">0 / 280</span>
             </div>
-            <div id="cntLinkedin" class="p-1.5 rounded bg-[#17304a] text-center">
-              <span class="block text-[9px] text-slate-400 uppercase">LinkedIn</span>
+            <div id="cntLinkedin" class="uh-badge p-1.5 text-center">
+              <span class="block text-[9px] uh-muted-text uppercase">LinkedIn</span>
               <span class="val font-semibold">0 / 3000</span>
             </div>
-            <div id="cntFacebook" class="p-1.5 rounded bg-[#17304a] text-center">
-              <span class="block text-[9px] text-slate-400 uppercase">Facebook</span>
+            <div id="cntFacebook" class="uh-badge p-1.5 text-center">
+              <span class="block text-[9px] uh-muted-text uppercase">Facebook</span>
               <span class="val font-semibold">0 / 63206</span>
             </div>
-            <div id="cntInstagram" class="p-1.5 rounded bg-[#17304a] text-center">
-              <span class="block text-[9px] text-slate-400 uppercase">Instagram</span>
+            <div id="cntInstagram" class="uh-badge p-1.5 text-center">
+              <span class="block text-[9px] uh-muted-text uppercase">Instagram</span>
               <span class="val font-semibold">0 / 2200</span>
             </div>
           </div>
         </div>
 
-        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
-          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-3 font-semibold">3. Media & Link Attachment</h2>
+        <div class="uh-card p-4">
+          <h2 class="mono text-xs uppercase tracking-wider uh-accent-text mb-3 font-semibold">3. Media & Link Attachment</h2>
           
           <div class="space-y-3">
             <div>
-              <label class="mono text-[10px] uppercase text-slate-400 block mb-1">Attached Image</label>
+              <label class="uh-label mono text-[10px] uppercase block mb-1">Attached Image</label>
               <div class="flex gap-2">
-                <input id="mediaUrl" type="text" placeholder="Paste image URL..." value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" class="w-full rounded-md p-2 text-xs">
-                <label class="secondary cursor-pointer px-3 py-2 rounded-md text-xs font-semibold shrink-0 flex items-center gap-1">
+                <input id="mediaUrl" type="text" placeholder="Paste image URL..." value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80" class="uh-input w-full rounded-md p-2 text-xs">
+                <label class="uh-btn uh-btn--secondary cursor-pointer px-3 py-2 rounded-md text-xs font-semibold shrink-0 flex items-center gap-1">
                   📁 Upload
                   <input id="fileInput" type="file" accept="image/*" class="hidden">
                 </label>
               </div>
             </div>
 
-            <div class="pt-2 border-t border-slate-700/50">
-              <span class="mono text-[10px] uppercase text-slate-400 block mb-2 font-semibold">Link Preview Card Overrides (OG Meta)</span>
+            <div class="pt-2 border-t uh-line-border">
+              <span class="uh-label mono text-[10px] uppercase block mb-2 font-semibold">Link Preview Card Overrides (OG Meta)</span>
               <div class="space-y-2">
-                <input id="ogTitle" type="text" value="Utility Hub — All-in-One Client-Side Web Utilities" placeholder="OG Title (e.g. Article Headline)" class="w-full rounded-md p-2 text-xs">
-                <input id="ogDomain" type="text" value="utilityhub.app" placeholder="Domain (e.g. example.com)" class="w-full rounded-md p-2 text-xs">
-                <input id="ogDescription" type="text" value="Powerful, fast, and privacy-first web developer tools right inside your browser without any server latency." placeholder="OG Description..." class="w-full rounded-md p-2 text-xs">
+                <input id="ogTitle" type="text" value="Utility Hub — All-in-One Client-Side Web Utilities" placeholder="OG Title (e.g. Article Headline)" class="uh-input w-full rounded-md p-2 text-xs">
+                <input id="ogDomain" type="text" value="utilityhub.app" placeholder="Domain (e.g. example.com)" class="uh-input w-full rounded-md p-2 text-xs">
+                <input id="ogDescription" type="text" value="Powerful, fast, and privacy-first web developer tools right inside your browser without any server latency." placeholder="OG Description..." class="uh-input w-full rounded-md p-2 text-xs">
               </div>
             </div>
           </div>
         </div>
 
-        <div class="rounded-xl border border-white/10 bg-[#14283b] p-4">
-          <h2 class="mono text-xs uppercase tracking-wider text-teal-300 mb-2 font-semibold">4. Detected Hashtags & Links</h2>
+        <div class="uh-card p-4">
+          <h2 class="uh-card-title mono text-xs uppercase tracking-wider mb-2 font-semibold">4. Detected Hashtags & Links</h2>
           <div id="hashtagContainer" class="flex flex-wrap gap-1.5 min-h-[30px] items-center">
-            <span class="text-xs text-slate-500 italic">No hashtags detected yet. Type #hashtags in your post.</span>
+            <span class="text-xs uh-faint-text italic">No hashtags detected yet. Type #hashtags in your post.</span>
           </div>
         </div>
 
@@ -150,14 +134,14 @@ Check out the full release here: https://utilityhub.app/tools/social-previewer
 
       <div class="lg:col-span-7 space-y-4">
         
-        <div class="flex flex-wrap gap-2 border-b border-slate-700/80 pb-3">
-          <button onclick="switchTab('all')" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">All Platforms</button>
-          <button onclick="switchTab('twitter')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">X / Twitter</button>
-          <button onclick="switchTab('linkedin')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">LinkedIn</button>
-          <button onclick="switchTab('facebook')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Facebook</button>
-          <button onclick="switchTab('instagram')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Instagram</button>
-          <button onclick="switchTab('google')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all">Google Search</button>
-        </div>
+        <div class="flex flex-wrap gap-2 border-b border-[var(--uh-line)] pb-3">
+          <button onclick="switchTab('all')" class="uh-btn uh-btn--secondary tab-btn active px-3.5 py-1.5 text-xs font-semibold transition-all">All Platforms</button>
+          <button onclick="switchTab('twitter')" class="uh-btn uh-btn--secondary tab-btn px-3.5 py-1.5 text-xs font-semibold transition-all">X / Twitter</button>
+          <button onclick="switchTab('linkedin')" class="uh-btn uh-btn--secondary tab-btn px-3.5 py-1.5 text-xs font-semibold transition-all">LinkedIn</button>
+          <button onclick="switchTab('facebook')" class="uh-btn uh-btn--secondary tab-btn px-3.5 py-1.5 text-xs font-semibold transition-all">Facebook</button>
+          <button onclick="switchTab('instagram')" class="uh-btn uh-btn--secondary tab-btn px-3.5 py-1.5 text-xs font-semibold transition-all">Instagram</button>
+          <button onclick="switchTab('google')" class="uh-btn uh-btn--secondary tab-btn px-3.5 py-1.5 text-xs font-semibold transition-all">Google Search</button>
+        </main>
 
         <div id="previewContainer" class="space-y-6">
 
@@ -485,11 +469,11 @@ Check out the full release here: https://utilityhub.app/tools/social-previewer
       valEl.textContent = `${current} / ${max}`;
 
       if (current > max) {
-        el.className = 'p-1.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-center';
+        el.className = 'uh-alert uh-alert--error p-1.5 text-center';
       } else if (current > max * 0.9) {
-        el.className = 'p-1.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-center';
+        el.className = 'uh-alert uh-alert--info p-1.5 text-center';
       } else {
-        el.className = 'p-1.5 rounded bg-[#17304a] text-slate-300 text-center';
+        el.className = 'uh-badge p-1.5 text-center';
       }
     }
 
@@ -517,13 +501,13 @@ Check out the full release here: https://utilityhub.app/tools/social-previewer
       const matches = text.match(/#\w+/g);
 
       if (!matches || matches.length === 0) {
-        container.innerHTML = '<span class="text-xs text-slate-500 italic">No hashtags detected yet. Type #hashtags in your post.</span>';
+        container.innerHTML = '<span class="text-xs text-[var(--uh-muted)] italic">No hashtags detected yet. Type #hashtags in your post.</span>';
         return;
       }
 
       const uniqueTags = [...new Set(matches)];
       container.innerHTML = uniqueTags.map(tag => `
-        <span class="px-2.5 py-1 rounded-full bg-teal-400/10 border border-teal-400/30 text-teal-300 text-xs mono flex items-center gap-1">
+        <span class="uh-badge text-xs mono flex items-center gap-1">
           ${tag}
         </span>
       `).join('');
@@ -571,8 +555,8 @@ Check out the full release here: https://utilityhub.app/tools/social-previewer
       };
 
       if (mode === 'light') {
-        darkBtn.className = 'px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white';
-        lightBtn.className = 'px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]';
+        darkBtn.className = 'uh-btn uh-btn--secondary px-3 py-1 text-xs font-semibold';
+        lightBtn.className = 'uh-btn uh-btn--primary px-3 py-1 text-xs font-semibold';
 
         cards.tw.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
         cards.li.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
@@ -580,8 +564,8 @@ Check out the full release here: https://utilityhub.app/tools/social-previewer
         cards.ig.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all max-w-md mx-auto lg:max-w-none';
         cards.goog.className = 'preview-card bg-white border border-slate-300 rounded-xl p-4 text-slate-900 shadow-xl transition-all';
       } else {
-        darkBtn.className = 'px-3 py-1 text-xs font-semibold rounded bg-[#6fd8cb] text-[#0e1c2b]';
-        lightBtn.className = 'px-3 py-1 text-xs font-semibold rounded text-slate-300 hover:text-white';
+        darkBtn.className = 'uh-btn uh-btn--primary px-3 py-1 text-xs font-semibold';
+        lightBtn.className = 'uh-btn uh-btn--secondary px-3 py-1 text-xs font-semibold';
 
         cards.tw.className = 'preview-card bg-black border border-slate-800 rounded-xl p-4 text-white shadow-xl transition-all';
         cards.li.className = 'preview-card bg-[#1b1f23] border border-slate-800 rounded-xl p-4 text-slate-100 shadow-xl transition-all';

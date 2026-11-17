@@ -7,31 +7,26 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  body { background:#0e1c2b; color:#e7eef4; font-family:'Inter',sans-serif; }
-  .mono { font-family:'IBM Plex Mono',monospace; }
-  .display { font-family:'Space Grotesk',sans-serif; }
-  input { background:#14283b; border:1px solid rgba(143,176,204,.16); }
-  input:focus { outline:none; border-color:#6fd8cb; }
-  button.primary { background:#6fd8cb; color:#0e1c2b; }
 </style>
-  <script src="../style.js"></script>
+  <script src="../style.js" data-uh-page-type="tool" data-uh-title="Timestamp Converter"></script>
 </head>
-<body class="min-h-screen">
-  <div class="mx-auto max-w-3xl px-6 py-10">
-    <a href="../index.html" class="mono text-xs uppercase tracking-wide text-teal-300 hover:underline">&larr; Back to Utility Hub</a>
-    <h1 class="display text-2xl font-bold mt-4 mb-1">Timestamp Converter</h1>
-    <p class="text-sm text-slate-400 mb-6">Switch between Unix timestamps and human-readable dates and times.</p>
+<body>
+  <main class="uh-container uh-container--narrow">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Timestamp Converter</h1>
+      <p class="uh-page-sub">Switch between Unix timestamps and human-readable dates and times.</p>
+    </div>
 
-    <div class="mb-6">
-      <label class="mono text-xs text-slate-400 uppercase block mb-1">Unix timestamp (seconds)</label>
-      <input id="unix" type="number" class="w-full rounded-md p-3 text-sm mono" />
+    <div class="uh-card mb-4">
+      <label class="uh-label mono text-xs uppercase block mb-1">Unix timestamp (seconds)</label>
+      <input id="unix" type="number" class="uh-input w-full rounded-md p-3 text-sm mono" />
     </div>
-    <div class="mb-6">
-      <label class="mono text-xs text-slate-400 uppercase block mb-1">Date &amp; time (local)</label>
-      <input id="datetime" type="datetime-local" class="w-full rounded-md p-3 text-sm mono" />
+    <div class="uh-card mb-4">
+      <label class="uh-label mono text-xs uppercase block mb-1">Date &amp; time (local)</label>
+      <input id="datetime" type="datetime-local" class="uh-input w-full rounded-md p-3 text-sm mono" />
     </div>
-    <button id="now" class="primary mono text-xs uppercase px-4 py-2 rounded-md">Use current time</button>
-  </div>
+    <button id="now" class="uh-btn uh-btn--primary mono text-xs uppercase px-4 py-2 rounded-md">Use current time</button>
+  </main>
 
   <script>
     const unix = document.getElementById('unix');

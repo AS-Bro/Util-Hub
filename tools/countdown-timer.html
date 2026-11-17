@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,11 +8,11 @@
   <script src="../style.js" data-uh-page-type="tool" data-uh-title="Countdown Timer"></script>
 </head>
 <body class="uh-time-tool uh-countdown-page">
-  <main class="uh-time-shell" id="countdown-app">
-    <section class="uh-time-heading">
+  <main class="uh-time-shell uh-container uh-container--wide" id="countdown-app">
+    <section class="uh-time-heading uh-page-head">
       <span class="uh-time-kicker">Timers / Multi-session console</span>
-      <h1>Countdown Timer</h1>
-      <p>Create precise, named timers for cooking, workouts, study blocks, and anything else you need to time.</p>
+      <h1 class="uh-page-title">Countdown Timer</h1>
+      <p class="uh-page-sub">Create precise, named timers for cooking, workouts, study blocks, and anything else you need to time.</p>
     </section>
 
     <div class="uh-time-columns">
@@ -26,8 +26,8 @@
           <label class="uh-time-field">Minutes<input id="timer-minutes" type="number" min="0" max="59" value="5" inputmode="numeric"></label>
           <label class="uh-time-field">Seconds<input id="timer-seconds" type="number" min="0" max="59" value="0" inputmode="numeric"></label>
           <div class="uh-time-form-actions uh-time-field-wide">
-            <button class="uh-time-button primary" id="timer-submit" type="submit">Add timer</button>
-            <button class="uh-time-button quiet" id="timer-cancel-edit" type="button" hidden>Cancel edit</button>
+            <button class="uh-btn uh-btn--primary" id="timer-submit" type="submit">Add timer</button>
+            <button class="uh-btn uh-btn--secondary" id="timer-cancel-edit" type="button" hidden>Cancel edit</button>
           </div>
           <p id="timer-form-error" class="uh-time-error uh-time-field-wide" role="alert" hidden></p>
         </form>
@@ -41,7 +41,7 @@
           </div>
           <form id="save-preset-form" class="uh-time-save-preset">
             <input id="preset-name" type="text" maxlength="32" placeholder="Custom preset name" aria-label="Custom preset name">
-            <button class="uh-time-button" type="submit">Save current duration</button>
+            <button class="uh-btn uh-btn--secondary" type="submit">Save current duration</button>
           </form>
           <div id="saved-presets" class="uh-time-chip-row" aria-label="Saved custom presets"></div>
         </div>
@@ -53,18 +53,17 @@
         <label class="uh-time-field uh-time-volume">Sound volume <output id="volume-value">45%</output>
           <input id="timer-volume" type="range" min="0" max="100" value="45">
         </label>
-        <button type="button" id="timer-fullscreen" class="uh-time-button">Enter fullscreen</button>
+        <button type="button" id="timer-fullscreen" class="uh-btn uh-btn--secondary">Enter fullscreen</button>
         <p class="uh-time-hint">Timers run locally and recover from tab switching or refresh using their saved deadlines.</p>
       </section>
     </div>
 
     <section class="uh-time-section" aria-labelledby="active-timers-title">
       <div class="uh-time-section-head"><div><span class="uh-time-label">Live / Local session</span><h2 id="active-timers-title">Your timers <span id="timer-count" class="uh-time-count">0</span></h2></div>
-        <button type="button" id="clear-completed-timers" class="uh-time-button quiet">Clear completed</button>
+        <button type="button" id="clear-completed-timers" class="uh-btn uh-btn--secondary">Clear completed</button>
       </div>
       <div id="timer-list" class="uh-time-timer-grid"><div class="uh-time-empty">No countdowns yet. Set a duration above to begin.</div></div>
     </section>
-    <footer class="uh-time-footer">COUNTDOWN ENGINE / DEADLINE-BASED TIMING · LOCAL ONLY</footer>
   </main>
 
   <script>
@@ -199,7 +198,7 @@
     function actionButton(label, action, id, primary, danger) {
       var button = document.createElement('button');
       button.type = 'button';
-      button.className = 'uh-time-button' + (primary ? ' primary' : '') + (danger ? ' danger' : '');
+      button.className = 'uh-btn ' + (primary ? 'uh-btn--primary' : danger ? 'uh-btn--danger' : 'uh-btn--secondary');
       button.dataset.action = action;
       button.dataset.id = id;
       button.textContent = label;

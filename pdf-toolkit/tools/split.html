@@ -9,26 +9,27 @@
 <style>
   .mode-tabs { display:flex; gap:8px; margin-bottom:14px; }
   .mode-tab { flex:1; text-align:center; padding:9px 6px; border-radius: var(--radius-sm); background:var(--panel); border:1px solid var(--border-softer); font-size:12px; cursor:pointer; color:var(--text-dim); }
-  .mode-tab.active { border-color:var(--teal); color:var(--teal); background:rgba(111,216,203,.08); }
+  .mode-tab.active { border-color:var(--uh-accent); color:var(--uh-accent); background:color-mix(in srgb, var(--uh-accent) 8%, transparent); }
   .split-marker { position:absolute; top:0; right:-9px; bottom:0; width:18px; display:flex; align-items:center; justify-content:center; z-index:2; }
-  .split-marker button { width:18px; height:18px; border-radius:50%; background:var(--panel); border:1.5px solid var(--border); color:var(--text-dim); font-size:11px; cursor:pointer; }
-  .split-marker button.active { background:var(--teal); border-color:var(--teal); color:var(--bg); }
+  .split-marker button { width:18px; height:18px; border-radius:50%; background:var(--uh-panel); border:1.5px solid var(--uh-line); color:var(--uh-muted); font-size:11px; cursor:pointer; }
+  .split-marker button.active { background:var(--uh-accent); border-color:var(--uh-accent); color:var(--uh-bg); }
   .thumb-card { position:relative; }
 </style>
-  <script src="../../style.js"></script>
+  <script src="../../style.js" data-uh-page-type="tool" data-uh-title="Split PDF"></script>
 </head>
 <body>
-  <div class="wrap">
-    <a href="../index.html" class="back-link">&larr; Back to PDF Toolkit</a>
-    <h1 class="page-title display">Split PDF</h1>
-    <p class="page-sub">Break one PDF into several — by page ranges, fixed chunk size, or one file per page.</p>
+  <main class="uh-container uh-container--wide">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Split PDF</h1>
+      <p class="uh-page-sub">Break one PDF into several — by page ranges, fixed chunk size, or one file per page.</p>
+    </div>
 
     <div id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="application/pdf" class="hidden" />
       <div class="icon">✂️</div>
       <div class="primary-txt">Click or drag a PDF file here</div>
       <div class="sub-txt">Processed entirely in your browser</div>
-    </div>
+    </main>
 
     <div id="workspace" class="hidden" style="margin-top:20px;">
       <div class="grid">

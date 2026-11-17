@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -15,9 +15,9 @@
       margin-bottom: 20px;
     }
     .uh-buzzer-mode-select {
-      background: rgba(0,0,0,0.3);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: inherit;
+      background: var(--uh-elevated);
+      border: 1px solid var(--uh-line);
+      color: var(--uh-text);
       padding: 6px 12px;
       border-radius: 6px;
       font-size: 0.9rem;
@@ -29,17 +29,17 @@
       margin: 20px 0;
     }
     .uh-player-card {
-      background: rgba(255,255,255,0.05);
-      border: 2px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
+      background: var(--uh-panel);
+      border: 2px solid var(--uh-line);
+      border-radius: var(--uh-radius-md);
       padding: 16px;
       text-align: center;
       transition: transform 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease;
       position: relative;
     }
     .uh-player-card.is-winner {
-      border-color: #22c55e;
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+      border-color: var(--uh-success);
+      box-shadow: 0 0 20px color-mix(in srgb,var(--uh-success) 40%,transparent);
       transform: scale(1.03);
     }
     .uh-player-card.is-locked {
@@ -47,8 +47,8 @@
       pointer-events: none;
     }
     .uh-player-card.is-penalty {
-      border-color: #ef4444;
-      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+      border-color: var(--uh-danger);
+      box-shadow: 0 0 15px color-mix(in srgb,var(--uh-danger) 30%,transparent);
     }
     .uh-player-name {
       font-weight: bold;
@@ -62,7 +62,7 @@
       margin-bottom: 12px;
     }
     .uh-player-key kbd {
-      background: rgba(255,255,255,0.15);
+      background: var(--uh-elevated);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: monospace;
@@ -74,7 +74,7 @@
       margin: 8px 0;
     }
     .uh-score-btn {
-      background: rgba(255,255,255,0.1);
+      background: var(--uh-elevated);
       border: none;
       color: inherit;
       padding: 4px 10px;
@@ -83,25 +83,25 @@
       cursor: pointer;
       margin: 0 2px;
     }
-    .uh-score-btn:hover { background: rgba(255,255,255,0.25); }
+    .uh-score-btn:hover { background: var(--uh-panel); }
     .uh-hit-btn {
       width: 100%;
       padding: 12px;
       border: none;
       border-radius: 8px;
       font-weight: bold;
-      color: #fff;
+      color: var(--uh-text);
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-top: 8px;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      box-shadow: 0 4px 0 color-mix(in srgb,var(--uh-bg) 30%,transparent);
     }
-    .uh-hit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
-    .p1-color { background: #e11d48; }
-    .p2-color { background: #0284c7; }
-    .p3-color { background: #16a34a; }
-    .p4-color { background: #d97706; }
+    .uh-hit-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 color-mix(in srgb,var(--uh-bg) 30%,transparent); }
+    .p1-color { background: var(--uh-danger); }
+    .p2-color { background: var(--uh-accent); }
+    .p3-color { background: var(--uh-success); }
+    .p4-color { background: var(--uh-signal); }
     .uh-history-table {
       width: 100%;
       border-collapse: collapse;
@@ -111,32 +111,32 @@
     .uh-history-table th, .uh-history-table td {
       padding: 8px 12px;
       text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid var(--uh-line);
     }
   </style>
 </head>
 <body class="uh-time-tool uh-buzzer-page">
-  <main class="uh-time-shell uh-buzzer-shell" id="buzzer-app">
-    <section class="uh-time-heading uh-buzzer-heading">
+  <main class="uh-time-shell uh-buzzer-shell uh-container uh-container--wide" id="buzzer-app">
+    <section class="uh-time-heading uh-page-head uh-buzzer-heading">
       <span class="uh-time-kicker">Interactive tools / Multi-player arena</span>
-      <h1>Game Show & Reaction Buzzer Pro</h1>
-      <p>Lockout quiz mode, false-start penalty detection, audio cues, reaction timers, and integrated scoreboard.</p>
+      <h1 class="uh-page-title">Game Show &amp; Reaction Buzzer Pro</h1>
+      <p class="uh-page-sub">Lockout quiz mode, false-start penalty detection, audio cues, reaction timers, and integrated scoreboard.</p>
     </section>
 
     <section class="uh-buzzer-console" aria-label="Buzzer console">
       <div class="uh-buzzer-controls-bar">
-        <select id="mode-select" class="uh-buzzer-mode-select">
+        <select id="mode-select" class="uh-select uh-buzzer-mode-select">
           <option value="lockout">Quiz Lockout Mode (First to Buzz)</option>
           <option value="reaction">Reaction Speed Challenge</option>
           <option value="countdown">30s Trivia Countdown Timer</option>
         </select>
-        <select id="players-select" class="uh-buzzer-mode-select">
+        <select id="players-select" class="uh-select uh-buzzer-mode-select">
           <option value="1">1 Player</option>
           <option value="2" selected>2 Players</option>
           <option value="3">3 Players</option>
           <option value="4">4 Players</option>
         </select>
-        <button type="button" id="audio-toggle" class="uh-time-button quiet">Sound: ON</button>
+        <button type="button" id="audio-toggle" class="uh-btn uh-btn--secondary">Sound: ON</button>
       </div>
 
       <div class="uh-buzzer-clock-label" id="clock-label">ELAPSED / REACTION TIME</div>
@@ -147,8 +147,8 @@
       <div class="uh-player-grid" id="player-grid"></div>
 
       <div class="uh-time-actions" style="margin-top: 15px;">
-        <button type="button" id="host-ready" class="uh-time-button primary">Host: Next Round / Ready</button>
-        <button type="button" id="buzzer-reset" class="uh-time-button quiet">Reset Session</button>
+        <button type="button" id="host-ready" class="uh-btn uh-btn--primary">Host: Next Round / Ready</button>
+        <button type="button" id="buzzer-reset" class="uh-btn uh-btn--secondary">Reset Session</button>
       </div>
     </section>
 
@@ -159,7 +159,7 @@
           <span class="uh-time-label">Session Log</span>
           <h2>Round History</h2>
         </div>
-        <button type="button" id="clear-history" class="uh-time-button quiet">Clear History</button>
+        <button type="button" id="clear-history" class="uh-btn uh-btn--secondary">Clear History</button>
       </div>
       <table class="uh-history-table">
         <thead>
@@ -176,7 +176,6 @@
       </table>
     </section>
 
-    <footer class="uh-time-footer">BUZZER PRO / MONOTONIC LOCKOUT ENGINE</footer>
   </main>
 
   <script>
