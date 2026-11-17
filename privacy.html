@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy &amp; How Utility Hub Works</title>
+  <script src="style.js" data-uh-page-type="tool" data-uh-title="Privacy &amp; How It Works"></script>
+</head>
+<body>
+  <main class="uh-container uh-container--narrow">
+    <div class="uh-page-head">
+      <h1 class="uh-page-title">Privacy &amp; How It Works</h1>
+      <p class="uh-page-sub">What happens to your files, text, and browser requests when you use Utility Hub.</p>
+    </div>
+
+    <section class="uh-card uh-stack">
+      <h2 class="uh-card-title">Processing on your device</h2>
+      <p>Most tools process text and files in your browser. The QR Code Generator also builds and exports QR codes locally using a library bundled with this site. Utility Hub does not upload files for processing.</p>
+    </section>
+
+    <section class="uh-card uh-stack">
+      <h2 class="uh-card-title">Tools that load remote images</h2>
+      <p><strong>Image URL &amp; Clipboard Downloader</strong> requests the image URL you enter directly from that image host. The host can see the request and your IP address; the image is not uploaded to Utility Hub.</p>
+      <p><strong>Social Media Post Previewer</strong> loads the preview media and avatar URLs in your browser, including its sample image from images.unsplash.com. If you leave the avatar URL blank, the displayed author name is sent as a query parameter to ui-avatars.com to generate the default avatar.</p>
+      <p><strong>Family Tree</strong> loads a remote image if you add an avatar URL to a person. Other family-tree content remains in your browser storage.</p>
+    </section>
+
+    <section class="uh-card uh-stack">
+      <h2 class="uh-card-title">Third-party resources</h2>
+      <p>Some pages load fonts, styles, or libraries from Google Fonts (fonts.googleapis.com and fonts.gstatic.com) and CDNs such as cdnjs, jsDelivr, unpkg, and Tailwind’s CDN. Those providers may receive your IP address and normal browser request metadata. The libraries process the tool data locally in your browser.</p>
+    </section>
+
+    <section class="uh-card uh-stack">
+      <h2 class="uh-card-title">Browser storage</h2>
+      <p>Favorites, recent tools, and your theme preference are stored in this browser’s localStorage. Some tools also save their own settings or working data there. This storage is not sent to Utility Hub by the site.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "name": "Utility Hub",
+  "short_name": "Util-Hub",
+  "description": "A collection of useful everyday tools that run in your browser.",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#091521",
+  "theme_color": "#091521",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "./images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./images/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "PDF Toolkit",
+      "short_name": "PDFs",
+      "url": "./pdf-toolkit/index.html",
+      "icons": [{ "src": "./images/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Image Converter",
+      "short_name": "Convert image",
+      "url": "./tools/image-converter.html",
+      "icons": [{ "src": "./images/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Image Resizer",
+      "short_name": "Resize image",
+      "url": "./tools/image-resizer.html",
+      "icons": [{ "src": "./images/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "QR Generator",
+      "short_name": "QR code",
+      "url": "./tools/qr-generator.html",
+      "icons": [{ "src": "./images/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -85,9 +85,9 @@
           <label class="uh-label mono text-[11px] uppercase tracking-wide">
             Background Margin Size <span class="text-[var(--uh-faint)] text-[10px] lowercase">(larger = smaller QR)</span>
           </label>
-          <span id="marginVal" class="mono text-xs text-[var(--uh-accent)]">1 module</span>
+          <span id="marginVal" class="mono text-xs text-[var(--uh-accent)]">10 px</span>
         </div>
-        <input id="margin" type="range" min="10" max="50" value="1" step="1" class="uh-range w-full cursor-pointer" />
+        <input id="margin" type="range" min="10" max="50" value="10" step="1" class="uh-range w-full cursor-pointer" />
       </div>
     </div>
 
@@ -104,10 +104,12 @@
         <button id="copyBtn" type="button" class="uh-btn uh-btn--secondary mono text-xs uppercase px-4 py-2.5 rounded-md transition">
           Copy Image
         </button>
-      </main>
+      </div>
+      <div id="qrError" class="uh-alert uh-alert--error hidden w-full" role="alert"></div>
     </div>
-  </div>
+  </main>
 
+  <script src="vendor/qrcode-generator-1.4.4.js"></script>
   <script>
     const input = document.getElementById('input');
     const size = document.getElementById('size');
@@ -119,48 +121,116 @@
     const margin = document.getElementById('margin');
     const marginVal = document.getElementById('marginVal');
     const qr = document.getElementById('qr');
+    const qrError = document.getElementById('qrError');
     const downloadBtn = document.getElementById('downloadBtn');
     const copyBtn = document.getElementById('copyBtn');
 
     let currentQrUrl = '';
+    let currentQrCode = null;
 
-    function getApiUrl() {
-      const data = encodeURIComponent(input.value.trim() || 'https://example.com');
-      const sz = size.value;
-      const fmt = format.value;
-      const fg = fgColor.value.replace('#', '');
-      const bg = bgColor.value.replace('#', '');
-      const m = margin.value;
+    function buildQrCode() {
+      qrcode.stringToBytes = function (text) {
+        return Array.from(new TextEncoder().encode(text));
+      };
+      const code = qrcode(0, 'M');
+      code.addData(input.value.trim() || 'https://example.com', 'Byte');
+      code.make();
+      return code;
+    }
 
-      return `https://api.qrserver.com/v1/create-qr-code/?size=${sz}x${sz}&data=${data}&color=${fg}&bgcolor=${bg}&margin=${m}&format=${fmt}`;
+    function createSvg(code, outputSize, marginSize) {
+      const count = code.getModuleCount();
+      const codeSize = outputSize - marginSize * 2;
+      let path = '';
+
+      for (let row = 0; row < count; row += 1) {
+        for (let col = 0; col < count; col += 1) {
+          if (code.isDark(row, col)) {
+            const x = marginSize + col * codeSize / count;
+            const y = marginSize + row * codeSize / count;
+            const right = marginSize + (col + 1) * codeSize / count;
+            const bottom = marginSize + (row + 1) * codeSize / count;
+            path += `M${x} ${y}H${right}V${bottom}H${x}Z`;
+          }
+        }
+      }
+
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${outputSize}" height="${outputSize}" viewBox="0 0 ${outputSize} ${outputSize}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="${bgColor.value}"/><path fill="${fgColor.value}" d="${path}"/></svg>`;
+    }
+
+    function drawCanvas(code, outputSize, marginSize) {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const count = code.getModuleCount();
+      const codeSize = outputSize - marginSize * 2;
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      context.fillStyle = bgColor.value;
+      context.fillRect(0, 0, outputSize, outputSize);
+      context.fillStyle = fgColor.value;
+
+      for (let row = 0; row < count; row += 1) {
+        for (let col = 0; col < count; col += 1) {
+          if (code.isDark(row, col)) {
+            const left = Math.round(marginSize + col * codeSize / count);
+            const top = Math.round(marginSize + row * codeSize / count);
+            const right = Math.round(marginSize + (col + 1) * codeSize / count);
+            const bottom = Math.round(marginSize + (row + 1) * codeSize / count);
+            context.fillRect(left, top, right - left, bottom - top);
+          }
+        }
+      }
+      return canvas;
     }
 
     function update() {
       fgHex.textContent = fgColor.value.toUpperCase();
       bgHex.textContent = bgColor.value.toUpperCase();
-      marginVal.textContent = `${margin.value} ${margin.value === '1' ? 'module' : 'modules'}`;
+      marginVal.textContent = `${margin.value} px`;
 
-      currentQrUrl = getApiUrl();
-      qr.src = currentQrUrl;
+      try {
+        currentQrCode = buildQrCode();
+        const outputSize = Number(size.value);
+        const marginSize = Number(margin.value);
+        const codeSize = outputSize - marginSize * 2;
+        if (codeSize <= 0 ||
+          (format.value !== 'svg' && currentQrCode.getModuleCount() > codeSize)) {
+          throw new Error('The selected output size and margin are too small for this text.');
+        }
+
+        if (format.value === 'svg') {
+          const svg = createSvg(currentQrCode, outputSize, marginSize);
+          currentQrUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+        } else {
+          const canvas = drawCanvas(currentQrCode, outputSize, marginSize);
+          currentQrUrl = canvas.toDataURL(format.value === 'jpg' ? 'image/jpeg' : 'image/png', 0.92);
+        }
+        qr.src = currentQrUrl;
+        qrError.classList.add('hidden');
+        qrError.textContent = '';
+        downloadBtn.disabled = false;
+        copyBtn.disabled = false;
+      } catch (error) {
+        currentQrUrl = '';
+        qr.removeAttribute('src');
+        qrError.textContent = error && error.message === 'The selected output size and margin are too small for this text.'
+          ? error.message + ' Increase the size, reduce the margin, or shorten the text.'
+          : 'This text is too long to encode as a QR code. Shorten it and try again.';
+        qrError.classList.remove('hidden');
+        downloadBtn.disabled = true;
+        copyBtn.disabled = true;
+      }
     }
 
-    // Direct Blob Download implementation to fix cross-origin download issues
     async function downloadQR() {
       try {
         downloadBtn.innerText = 'Downloading...';
-        const response = await fetch(currentQrUrl);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
-        a.href = blobUrl;
+        a.href = currentQrUrl;
         a.download = `qr-code.${format.value}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      } catch (e) {
-        window.open(currentQrUrl, '_blank');
       } finally {
         downloadBtn.innerText = `Download ${format.value.toUpperCase()}`;
       }
@@ -169,14 +239,21 @@
     // Copy QR Image to Clipboard
     async function copyQR() {
       try {
-        const response = await fetch(currentQrUrl);
-        const blob = await response.blob();
+        const count = currentQrCode.getModuleCount();
+        const outputSize = Math.max(Number(size.value), count + Number(margin.value) * 2);
+        const canvas = drawCanvas(currentQrCode, outputSize, Number(margin.value));
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob((imageBlob) => {
+            if (imageBlob) resolve(imageBlob);
+            else reject(new Error('Could not render the QR image.'));
+          }, 'image/png');
+        });
         await navigator.clipboard.write([
           new ClipboardItem({ [blob.type]: blob })
         ]);
         copyBtn.innerText = 'Copied!';
         setTimeout(() => copyBtn.innerText = 'Copy Image', 2000);
-      } catch (err) {
+      } catch (error) {
         alert('Copying image failed or is not supported by your browser.');
       }
     }

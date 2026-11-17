@@ -2,15 +2,13 @@
 (function () {
   'use strict';
 
-  if (!('serviceWorker' in navigator) || window.location.protocol === 'file:') return;
+  if (!('serviceWorker' in navigator) || !/^https?:$/.test(window.location.protocol)) return;
   if (window.__utilityHubPwaInitialized) return;
   window.__utilityHubPwaInitialized = true;
 
   var serviceWorkerUrl = new URL('service-worker.js', document.currentScript.src);
   var stylesheetUrl = new URL('styles/shared.css', serviceWorkerUrl).href;
   var serviceWorkerScope = new URL('./', serviceWorkerUrl).pathname;
-  var cachePrefix = 'utilityhub-';
-  var currentCache = 'utilityhub-app-v1';
   var registration = null;
   var waitingWorker = null;
   var updateInProgress = false;
@@ -95,37 +93,16 @@
     if (notification) notification.hidden = true;
   }
 
-  function clearOutdatedCaches() {
-    if (!('caches' in window)) return Promise.resolve();
-
-    return window.caches.keys().then(function (names) {
-      var outdated = names.filter(function (name) {
-        return name.indexOf(cachePrefix) === 0 && name !== currentCache;
-      });
-      return Promise.all(outdated.map(function (name) {
-        return window.caches.delete(name).then(function (deleted) {
-          if (!deleted) throw new Error('Could not remove an outdated application cache.');
-        });
-      }));
-    });
-  }
-
   function reloadAfterUpdate() {
     if (!updateInProgress || reloadStarted) return;
     var controller = navigator.serviceWorker.controller;
     if (!controller || (registration && registration.active && controller.scriptURL !== registration.active.scriptURL)) return;
 
     window.clearTimeout(activationTimer);
-    clearOutdatedCaches().then(function () {
-      if (reloadStarted) return;
-      reloadStarted = true;
-      updateInProgress = false;
-      hideNotification();
-      window.location.reload();
-    }).catch(function (error) {
-      console.error('Utility Hub: failed to clear outdated application caches.', error);
-      showError('The new version is active, but cleanup failed. Retry to finish the update.');
-    });
+    reloadStarted = true;
+    updateInProgress = false;
+    hideNotification();
+    window.location.reload();
   }
 
   function startUpdate() {

@@ -2,9 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Util-Hub</title>
 <meta name="description" content="A central dashboard for everyday utility tools." />
+<meta name="theme-color" content="#091521" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Util-Hub" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
 <link rel="icon" type="image/png" href="images/UH_2.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -200,14 +206,15 @@
       <div id="tool-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
 
       <!-- Empty state -->
-      <div id="empty-state" class="hidden flex-col items-center justify-center rounded-card border border-dashed border-line py-16 text-center">
+      <div id="empty-state" class="hidden flex flex-col items-center justify-center rounded-card border border-dashed border-line py-16 text-center">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-line-strong text-faint">
           <i data-lucide="search-x" class="h-6 w-6" aria-hidden="true"></i>
         </div>
         <p class="font-display text-base font-semibold text-ink">Nothing on this sheet</p>
-        <p class="mt-1 max-w-xs text-sm text-muted">
-          No tools match your current search or category.
+        <p id="empty-message" class="mt-1 max-w-xs text-sm text-muted">
+          No tools match the current filters.
         </p>
+        <div id="suggested-tags" class="mt-4 flex flex-wrap justify-center gap-2" aria-label="Suggested searches"></div>
         <button
           id="clear-filters-btn"
           type="button"
