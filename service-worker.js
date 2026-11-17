@@ -1,13 +1,15 @@
 'use strict';
 
 // Bump CACHE whenever any app-shell file or its caching behavior changes.
-const CACHE = 'uh-v1';
+// Premium polish update: shared shell now includes the premium stylesheet and a new polished theme layer.
+const CACHE = 'uh-v2';
 const APP_SHELL = [
   'index.html',
   'app.js',
   'style.js',
   'pwa.js',
   'styles/shared.css',
+  'styles/premium.css',
   'styles/tailwind-fallback.css',
   'manifest.webmanifest',
   'images/UH.png',

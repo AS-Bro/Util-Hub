@@ -14,6 +14,9 @@
   --uh-radius-md: 12px;
   --uh-radius-lg: 18px;
   --uh-transition: 190ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  --uh-elev-1: 0 10px 24px rgba(10, 19, 29, 0.18);
+  --uh-elev-2: 0 18px 28px rgba(10, 19, 29, 0.2);
+  --uh-elev-3: 0 22px 42px rgba(10, 19, 29, 0.28);
 }
 
 html.dark {
@@ -34,18 +37,21 @@ html.dark {
   --uh-success: #83d9b1;
   --uh-warning: #e9bf75;
   --uh-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  --uh-elev-1: 0 10px 24px rgba(2, 8, 14, 0.28);
+  --uh-elev-2: 0 18px 32px rgba(2, 8, 14, 0.34);
+  --uh-elev-3: 0 22px 42px rgba(2, 8, 14, 0.4);
 }
 
 html.light {
   color-scheme: light;
-  --uh-bg: #edf3f6;
-  --uh-panel: #f9fcfd;
+  --uh-bg: #f3efe7;
+  --uh-panel: #fffdf9;
   --uh-elevated: #ffffff;
-  --uh-line: rgba(30, 61, 83, 0.11);
-  --uh-line-strong: rgba(30, 61, 83, 0.24);
+  --uh-line: rgba(52, 67, 79, 0.16);
+  --uh-line-strong: rgba(52, 67, 79, 0.26);
   --uh-text: #102436;
-  --uh-muted: #506a7d;
-  --uh-faint: #8095a5;
+  --uh-muted: #4d6475;
+  --uh-faint: #758995;
   --uh-accent: #087f78;
   --uh-accent-strong: #086b66;
   --uh-signal: #a96b1c;
@@ -54,6 +60,9 @@ html.light {
   --uh-success: #19784a;
   --uh-warning: #91600e;
   --uh-shadow: 0 22px 60px rgba(24, 55, 79, 0.12);
+  --uh-elev-1: 0 10px 24px rgba(52, 67, 79, 0.08);
+  --uh-elev-2: 0 18px 32px rgba(52, 67, 79, 0.12);
+  --uh-elev-3: 0 22px 42px rgba(52, 67, 79, 0.14);
 }
 
 /* Aliases keep existing PDF Toolkit components on the shared palette. */

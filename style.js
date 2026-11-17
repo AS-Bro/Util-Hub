@@ -14,6 +14,8 @@
   var themeKey = 'utilityhub:theme';
   var themePreference = window.matchMedia('(prefers-color-scheme: light)');
   var stylesheetUrl = new URL('styles/shared.css', rootUrl).href;
+  var premiumStylesheetUrl = new URL('styles/premium.css', rootUrl).href;
+  var UH_VERSION = '3.3';
   var initialized = false;
   var installPromptEvent = null;
   var installButton = null;
@@ -87,6 +89,22 @@
     }
   }
 
+  function injectInitialThemeStyles() {
+    if (!document.head || document.head.querySelector('style[data-uh-initial-theme]')) return;
+    var initialTheme = savedTheme() || (themePreference.matches ? 'light' : 'dark');
+    var css = [
+      'html { background-color: ' + (initialTheme === 'light' ? '#f3efe7' : '#091521') + '; }',
+      'html, body { background-color: var(--uh-bg); }',
+      'body { margin: 0; }',
+      'html.dark { --uh-bg: #091521; --uh-text: #edf4f8; }',
+      'html.light { --uh-bg: #f3efe7; --uh-text: #102436; }'
+    ].join(' ');
+    var style = document.createElement('style');
+    style.setAttribute('data-uh-initial-theme', '');
+    style.textContent = css;
+    document.head.insertBefore(style, document.head.firstChild);
+  }
+
   function loadStylesheet() {
     if (!document.head) return;
     var links = document.querySelectorAll('link[rel="stylesheet"]');
@@ -97,6 +115,19 @@
     link.rel = 'stylesheet';
     link.href = stylesheetUrl;
     link.setAttribute('data-uh-shared-style', '');
+    document.head.appendChild(link);
+  }
+
+  function loadPremiumStylesheet() {
+    if (!document.head) return;
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+    for (var i = 0; i < links.length; i += 1) {
+      if (links[i].href === premiumStylesheetUrl || links[i].hasAttribute('data-uh-premium-style')) return;
+    }
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = premiumStylesheetUrl;
+    link.setAttribute('data-uh-premium-style', '');
     document.head.appendChild(link);
   }
 
@@ -265,6 +296,83 @@
       '.uh-ios-install-hint{display:flex;width:min(calc(100% - 2rem),1180px);box-sizing:border-box;align-items:center;justify-content:space-between;gap:.75rem;margin:0 auto .65rem;border:1px solid var(--uh-line);border-radius:var(--uh-radius-sm);background:var(--uh-panel);padding:.55rem .7rem;color:var(--uh-muted);font:500 .72rem/1.45 var(--uh-font-body)}' +
       '@media(max-width:480px){.uh-ios-install-hint{width:calc(100% - 1rem);font-size:.68rem}.uh-pwa-install{min-height:32px;padding:0 .5rem;font-size:.62rem}}';
     document.head.appendChild(style);
+  }
+
+  function flashSuccess(button) {
+    if (!button) return;
+    var timer = button.getAttribute('data-uh-success-timer');
+    if (timer) {
+      window.clearTimeout(Number(timer));
+    }
+    button.classList.remove('is-success');
+    void button.offsetWidth;
+    button.classList.add('is-success');
+    var nextTimer = window.setTimeout(function () {
+      button.classList.remove('is-success');
+      button.removeAttribute('data-uh-success-timer');
+    }, 1200);
+    button.setAttribute('data-uh-success-timer', String(nextTimer));
+  }
+
+  function addScrollSentinel(header) {
+    if (!header || !document.body) return;
+    var sentinel = document.getElementById('uh-page-sentinel');
+    if (!sentinel) {
+      sentinel = document.createElement('div');
+      sentinel.id = 'uh-page-sentinel';
+      sentinel.setAttribute('aria-hidden', 'true');
+      sentinel.style.position = 'absolute';
+      sentinel.style.top = '0';
+      sentinel.style.left = '0';
+      sentinel.style.width = '1px';
+      sentinel.style.height = '1px';
+      sentinel.style.pointerEvents = 'none';
+      document.body.insertBefore(sentinel, document.body.firstChild);
+    }
+    if ('IntersectionObserver' in window && header) {
+      var observer = new IntersectionObserver(function (entries) {
+        var entry = entries[0];
+        if (!entry) return;
+        header.classList.toggle('is-scrolled', !entry.isIntersecting);
+      }, { threshold: [0, 1] });
+      observer.observe(sentinel);
+    }
+  }
+
+  function addHeroStrip() {
+    var existing = document.querySelector('.uh-premium-hero-strip');
+    if (existing) return;
+    var strip = document.createElement('div');
+    strip.className = 'uh-premium-hero-strip';
+    var count = 0;
+    if (window.UtilityHub && Array.isArray(window.UtilityHub.tools)) count = window.UtilityHub.tools.length;
+    else if (Array.isArray(window.toolsData)) count = window.toolsData.length;
+    var offlineText = ' - Works offline';
+    if (!('serviceWorker' in navigator && typeof navigator.serviceWorker.register === 'function')) offlineText = '';
+    strip.innerHTML = '<span>' + count + ' tools</span><span>•</span><span>Runs in your browser</span>' + (offlineText ? '<span>•</span><span>Works offline</span>' : '');
+    var header = document.querySelector('header, .uh-layout-header');
+    if (header && header.parentNode) {
+      header.parentNode.insertBefore(strip, header.nextSibling);
+    }
+  }
+
+  function addSheetEyebrow() {
+    var heading = document.querySelector('main h1, .uh-page-heading h1, h1');
+    if (!heading || document.querySelector('.uh-sheet-eyebrow')) return;
+    var registry = window.UtilityHub && Array.isArray(window.UtilityHub.tools) ? window.UtilityHub.tools : [];
+    var title = (heading.textContent || '').trim();
+    var index = -1;
+    for (var i = 0; i < registry.length; i += 1) {
+      if ((registry[i].title || '').trim() === title || (registry[i].url || '').split('/').pop() === document.location.pathname.split('/').pop()) {
+        index = i;
+        break;
+      }
+    }
+    if (index === -1) return;
+    var eyebrow = document.createElement('div');
+    eyebrow.className = 'uh-sheet-eyebrow';
+    eyebrow.textContent = 'SHEET ' + String(index + 1).padStart(2, '0') + ' - ' + registry[index].title.toUpperCase();
+    heading.parentNode.insertBefore(eyebrow, heading);
   }
 
   function getTitle(options) {
@@ -606,6 +714,8 @@
     } else {
       footer.classList.add('uh-shared-footer');
     }
+    footer.style.viewTransitionName = 'uh-footer';
+
     var brand = footer.querySelector('.uh-footer-brand');
     if (!brand) {
       brand = document.createElement('a');
@@ -663,7 +773,7 @@
       lock.appendChild(lockShackle);
 
       var messageText = document.createElement('span');
-      messageText.textContent = 'Files stay in your browser. Some tools send text or image URLs to remote hosts.';
+      messageText.textContent = 'Your files and text stay in your browser. Nothing is uploaded.';
       message.appendChild(lock);
       message.appendChild(messageText);
 
@@ -675,6 +785,60 @@
       privacy.appendChild(privacyLink);
       content.appendChild(privacy);
     }
+
+    var status = footer.querySelector('.uh-footer-status');
+    if (!status) {
+      status = document.createElement('div');
+      status.className = 'uh-footer-status';
+      footer.appendChild(status);
+    }
+    var toolCount = 0;
+    if (window.UtilityHub && Array.isArray(window.UtilityHub.tools)) {
+      toolCount = window.UtilityHub.tools.length;
+    } else if (Array.isArray(window.toolsData)) {
+      toolCount = window.toolsData.length;
+    }
+    var offlineMessage = '';
+    if ('serviceWorker' in navigator && typeof navigator.serviceWorker.register === 'function') {
+      offlineMessage = ' - Works offline';
+    }
+    // status.innerHTML = '<span>v' + UH_VERSION + '</span><span> - </span><span>' + toolCount + ' tools</span><span> - </span><span>Privacy</span><span> - </span><a href="https://github.com/AS-Bro/Util-Hub" target="_blank" rel="noreferrer noopener">GitHub</a>' + (offlineMessage ? '<span> - </span><span>Works offline</span>' : '');
+    status.innerHTML = '<span>' + toolCount + ' tools</span><span> - </span><span>Privacy</span>' + (offlineMessage ? '<span> - </span><span>Works offline</span>' : '');
+  }
+
+  function setupDropzones() {
+    if (document.body && document.body.dataset.uhDropzonesReady === 'true') return;
+    var findDropzone = function (target) {
+      if (!target || !target.closest) return null;
+      return target.closest('.drop-zone, .uh-dropzone, [data-dropzone]');
+    };
+    var setDropzoneState = function (target, active) {
+      var zone = findDropzone(target);
+      if (!zone) return;
+      zone.classList.toggle('uh-drag-active', active);
+    };
+    document.addEventListener('dragenter', function (event) {
+      if (event && event.target) setDropzoneState(event.target, true);
+    }, { passive: true });
+    document.addEventListener('dragover', function (event) {
+      if (event && event.target) {
+        var zone = findDropzone(event.target);
+        if (zone) {
+          event.preventDefault();
+          setDropzoneState(event.target, true);
+        }
+      }
+    }, { passive: false });
+    document.addEventListener('dragleave', function (event) {
+      if (event && event.target) {
+        var zone = findDropzone(event.target);
+        if (zone && !zone.contains(event.relatedTarget)) setDropzoneState(event.target, false);
+      }
+    }, { passive: true });
+    document.addEventListener('drop', function (event) {
+      if (event && event.target) setDropzoneState(event.target, false);
+    }, { passive: true });
+    if (document.body) document.body.dataset.uhDropzonesReady = 'true';
   }
 
   function initLayout(options) {
@@ -719,6 +883,7 @@
     } else {
       header.classList.add('uh-layout-header');
     }
+    header.style.viewTransitionName = 'uh-header';
 
     if (type === 'dashboard') {
       var headerRow = header.querySelector('.flex.items-center.justify-between') || header;
@@ -739,18 +904,25 @@
     layoutControls = header.querySelector('.uh-layout-controls');
     addPwaInstallControls(header, dashboardRightControls, layoutControls);
     addFooter(type);
+    if (type === 'dashboard') addHeroStrip();
+    else addSheetEyebrow();
+    if (header) addScrollSentinel(header);
+    setupDropzones();
   }
 
+  injectInitialThemeStyles();
   setupPwaMetadata();
   addPwaStyles();
   applyTheme(savedTheme() || (themePreference.matches ? 'light' : 'dark'));
   loadTailwindFallback();
   loadStylesheet();
+  loadPremiumStylesheet();
   loadFonts();
   loadPwaUpdater();
 
   window.UtilityHub = window.UtilityHub || {};
   window.UtilityHub.initLayout = initLayout;
+  window.UtilityHub.flashSuccess = flashSuccess;
   if (document.body) initLayout();
   else document.addEventListener('DOMContentLoaded', function () { initLayout(); }, { once: true });
 
