@@ -25,6 +25,11 @@ const CONFIG = {
     theme: 'utilityhub:theme',
     favorites: 'utilityhub:favorites',
     recents: 'utilityhub:recents',
+    dashboardView: 'utilityhub:dashboard-view',
+    dashboardSort: 'utilityhub:dashboard-sort',
+    collections: 'utilityhub:collections',
+    pinnedCollections: 'utilityhub:pinned-collections',
+    toolUsage: 'utilityhub:tool-usage',
   },
   maxRecents: 5,
   // Optional: force a specific 3-letter code for a category's coordinate
@@ -524,10 +529,28 @@ window.UtilityHub.tools = toolsData;
     query: '',
     activeCategory: 'All',
     quickFilter: null,
-    favorites: loadJSON(CONFIG.storageKeys.favorites, []),
-    recents: loadJSON(CONFIG.storageKeys.recents, []),
+    favorites: loadToolIds(loadJSON(CONFIG.storageKeys.favorites, [])),
+    recents: loadToolIds(loadJSON(CONFIG.storageKeys.recents, [])).slice(0, CONFIG.maxRecents),
+    view: loadPreference(CONFIG.storageKeys.dashboardView, ['grid', 'list'], 'grid'),
+    sort: loadPreference(CONFIG.storageKeys.dashboardSort, ['az', 'recent', 'used'], 'az'),
+    collections: loadCollections(loadJSON(CONFIG.storageKeys.collections, [])),
+    pinnedCollections: [],
+    toolUsage: loadToolUsage(loadJSON(CONFIG.storageKeys.toolUsage, {})),
+    activeCollectionId: null,
+    editingCollectionId: null,
+    collectionModalMode: 'editor',
+    returnToAssignment: false,
+    pendingToolId: null,
     previewToolId: null,
+    searchResultIndex: 0,
+    dockCloseTimer: null,
+    dockSearchOpen: false,
+    dockTransitionId: 0,
   };
+  state.pinnedCollections = loadPinnedCollections(
+    loadJSON(CONFIG.storageKeys.pinnedCollections, []),
+    state.collections
+  );
 
   /* ---------------------------- DOM references ---------------------------- */
 
@@ -555,6 +578,49 @@ window.UtilityHub.tools = toolsData;
     previewClose: document.getElementById('preview-close'),
     previewOpenFull: document.getElementById('preview-open-full'),
     toastRegion: document.getElementById('toast-region'),
+    welcomeDate: document.getElementById('welcome-date'),
+    welcomeTitle: document.getElementById('welcome-title'),
+    welcomeToolCount: document.getElementById('welcome-tool-count'),
+    welcomeFavoriteCount: document.getElementById('welcome-favorite-count'),
+    recentlyAddedTools: document.getElementById('recently-added-tools'),
+    recentTools: document.getElementById('recent-tools'),
+    pinnedCollectionsSection: document.getElementById('pinned-collections-section'),
+    pinnedCollections: document.getElementById('pinned-collections'),
+    collectionsSection: document.getElementById('collections-section'),
+    collectionsGrid: document.getElementById('collections-grid'),
+    createCollectionBtn: document.getElementById('create-collection-btn'),
+    toolsHeading: document.getElementById('tools-heading'),
+    collectionBackBtn: document.getElementById('collection-back-btn'),
+    gridViewBtn: document.getElementById('grid-view-btn'),
+    listViewBtn: document.getElementById('list-view-btn'),
+    sortSelect: document.getElementById('tool-sort'),
+    collectionModal: document.getElementById('collection-modal'),
+    collectionForm: document.getElementById('collection-form'),
+    collectionModalTitle: document.getElementById('collection-modal-title'),
+    collectionName: document.getElementById('collection-name'),
+    collectionPinned: document.getElementById('collection-pinned'),
+    collectionEditorFields: document.getElementById('collection-editor-fields'),
+    collectionToolPicker: document.getElementById('collection-tool-picker'),
+    collectionToolOptions: document.getElementById('collection-tool-options'),
+    collectionAssignment: document.getElementById('collection-assignment'),
+    collectionAssignmentTitle: document.getElementById('collection-assignment-title'),
+    collectionAssignmentList: document.getElementById('collection-assignment-list'),
+    collectionAssignmentEmpty: document.getElementById('collection-assignment-empty'),
+    assignmentCreateCollectionBtn: document.getElementById('assignment-create-collection-btn'),
+    collectionFormError: document.getElementById('collection-form-error'),
+    collectionDeleteBtn: document.getElementById('collection-delete-btn'),
+    collectionSaveBtn: document.getElementById('collection-save-btn'),
+    collectionCloseBtn: document.getElementById('collection-close-btn'),
+    collectionCancelBtn: document.getElementById('collection-cancel-btn'),
+    actionDock: document.getElementById('uh-action-dock'),
+    dockActions: document.querySelector('[data-dock-actions]'),
+    openDockSearch: document.getElementById('open-dock-search'),
+    dockSearchPanel: document.getElementById('uh-dock-search-panel'),
+    dockResultsPanel: document.getElementById('uh-dock-results-panel'),
+    dockResultsCount: document.getElementById('uh-dock-results-count'),
+    dockResultsEmpty: document.getElementById('uh-dock-results-empty'),
+    dockResultsList: document.getElementById('uh-dock-results-list'),
+    closeDockSearch: document.getElementById('close-dock-search'),
   };
 
   /* ----------------------------- Storage helpers --------------------------- */
@@ -575,6 +641,63 @@ window.UtilityHub.tools = toolsData;
     } catch (err) {
       console.warn('Utility Hub: could not save', key, err);
     }
+  }
+
+  function loadPreference(key, allowedValues, fallback) {
+    try {
+      const saved = localStorage.getItem(key);
+      return allowedValues.includes(saved) ? saved : fallback;
+    } catch (err) {
+      console.warn('Utility Hub: could not read', key, err);
+      return fallback;
+    }
+  }
+
+  function isKnownToolId(id) {
+    return typeof id === 'string' && toolsData.some((tool) => tool.id === id);
+  }
+
+  function loadToolIds(value) {
+    if (!Array.isArray(value)) return [];
+    return Array.from(new Set(value.filter(isKnownToolId)));
+  }
+
+  function loadCollections(value) {
+    if (!Array.isArray(value)) return [];
+    const seenIds = new Set();
+    return value.reduce((collections, item) => {
+      if (!item || typeof item !== 'object' || typeof item.id !== 'string' ||
+        !item.id || seenIds.has(item.id) || typeof item.name !== 'string') return collections;
+      const name = item.name.trim().slice(0, 48);
+      if (!name) return collections;
+      seenIds.add(item.id);
+      collections.push({
+        id: item.id,
+        name,
+        toolIds: loadToolIds(item.toolIds),
+      });
+      return collections;
+    }, []);
+  }
+
+  function loadPinnedCollections(value, collections) {
+    if (!Array.isArray(value)) return [];
+    const validIds = new Set(collections.map((collection) => collection.id));
+    return Array.from(new Set(value.filter((id) => typeof id === 'string' && validIds.has(id))));
+  }
+
+  function loadToolUsage(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    return Object.keys(value).reduce((usage, id) => {
+      const item = value[id];
+      if (isKnownToolId(id) && item && Number.isFinite(item.count) && item.count > 0) {
+        usage[id] = {
+          count: Math.floor(item.count),
+          lastOpened: Number.isFinite(item.lastOpened) && item.lastOpened > 0 ? item.lastOpened : 0,
+        };
+      }
+      return usage;
+    }, {});
   }
 
   /* -------------------------------- Theme --------------------------------- */
@@ -740,17 +863,44 @@ window.UtilityHub.tools = toolsData;
   }
 
   function getFilteredTools() {
-    return tagged.filter((tool) => {
+    const collection = state.collections.find((item) => item.id === state.activeCollectionId);
+    const filtered = tagged.filter((tool) => {
       const categoryOk = state.activeCategory === 'All' || tool.category === state.activeCategory;
-      return categoryOk && isToolInQuickFilter(tool) && matchesQuery(tool, state.query);
-    }).sort((a, b) => {
-      const rankDifference = getQueryRank(a, state.query) - getQueryRank(b, state.query);
-      return rankDifference || searchIndex.get(a.id).order - searchIndex.get(b.id).order;
+      const inCollection = !collection || collection.toolIds.includes(tool.id);
+      return inCollection && categoryOk && isToolInQuickFilter(tool) && matchesQuery(tool, state.query);
+    });
+    return sortTools(filtered);
+  }
+
+  function sortTools(tools) {
+    return tools.sort((a, b) => {
+      if (state.query) {
+        const rankDifference = getQueryRank(a, state.query) - getQueryRank(b, state.query);
+        if (rankDifference) return rankDifference;
+      }
+      if (state.sort === 'recent') {
+        const dateDifference = (Date.parse(`${b.added || ''}T00:00:00Z`) || 0) -
+          (Date.parse(`${a.added || ''}T00:00:00Z`) || 0);
+        if (dateDifference) return dateDifference;
+      } else if (state.sort === 'used') {
+        const usageA = state.toolUsage[a.id] || { count: 0, lastOpened: 0 };
+        const usageB = state.toolUsage[b.id] || { count: 0, lastOpened: 0 };
+        const usageDifference = usageB.count - usageA.count;
+        if (usageDifference) return usageDifference;
+        const lastOpenedDifference = usageB.lastOpened - usageA.lastOpened;
+        if (lastOpenedDifference) return lastOpenedDifference;
+      } else {
+        const alphabetical = a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
+        if (alphabetical) return alphabetical;
+      }
+      return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }) ||
+        searchIndex.get(a.id).order - searchIndex.get(b.id).order;
     });
   }
 
   function getFavoriteTools() {
-    return tagged.filter((t) => state.favorites.includes(t.id) && isToolInQuickFilter(t) && matchesQuery(t, state.query));
+    return sortTools(tagged.filter((t) => state.favorites.includes(t.id) &&
+      isToolInQuickFilter(t) && matchesQuery(t, state.query)));
   }
 
   /* --------------------------------- Actions -------------------------------- */
@@ -769,10 +919,18 @@ window.UtilityHub.tools = toolsData;
     saveJSON(CONFIG.storageKeys.recents, state.recents);
   }
 
+  function recordToolUse(id) {
+    const previous = state.toolUsage[id] || { count: 0, lastOpened: 0 };
+    state.toolUsage[id] = { count: previous.count + 1, lastOpened: Date.now() };
+    saveJSON(CONFIG.storageKeys.toolUsage, state.toolUsage);
+    addToRecents(id);
+  }
+
   function openTool(id) {
     const tool = byId[id];
     if (!tool) return;
-    addToRecents(id);
+    if (!el.dockSearchPanel.hidden) closeDockSearch();
+    recordToolUse(id);
     window.location.href = tool.url;
   }
 
@@ -781,6 +939,7 @@ window.UtilityHub.tools = toolsData;
     if (!tool) return;
     state.previewToolId = id;
     addToRecents(id);
+    renderWelcomePanel();
     el.previewTitle.textContent = `${tool.title} — ${tool.tag}`;
     el.previewIframe.src = tool.url;
     el.previewOpenFull.href = tool.url;
@@ -791,6 +950,335 @@ window.UtilityHub.tools = toolsData;
     closeModal(el.previewModal);
     el.previewIframe.src = 'about:blank';
     state.previewToolId = null;
+  }
+
+  function persistCollections() {
+    saveJSON(CONFIG.storageKeys.collections, state.collections);
+    saveJSON(CONFIG.storageKeys.pinnedCollections, state.pinnedCollections);
+  }
+
+  function makeCollectionId() {
+    let id;
+    do {
+      id = `collection-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    } while (state.collections.some((collection) => collection.id === id));
+    return id;
+  }
+
+  function openCollectionEditor(collectionId = null, presetToolId = null, returnToAssignment = false) {
+    const collection = state.collections.find((item) => item.id === collectionId);
+    state.collectionModalMode = returnToAssignment ? 'create-from-assignment' : 'editor';
+    state.returnToAssignment = returnToAssignment;
+    state.editingCollectionId = collection ? collection.id : null;
+    state.pendingToolId = isKnownToolId(presetToolId) ? presetToolId : null;
+    el.collectionModalTitle.textContent = collection ? 'Edit collection' : 'Create collection';
+    el.collectionSaveBtn.textContent = collection ? 'Save changes' : 'Create collection';
+    el.collectionDeleteBtn.classList.toggle('hidden', !collection);
+    el.collectionName.value = collection ? collection.name : '';
+    el.collectionName.required = true;
+    el.collectionPinned.checked = collection
+      ? state.pinnedCollections.includes(collection.id)
+      : false;
+    el.collectionEditorFields.hidden = false;
+    el.collectionToolPicker.hidden = false;
+    el.collectionAssignment.classList.add('hidden');
+    el.collectionFormError.hidden = true;
+    const selectedIds = new Set(collection ? collection.toolIds : []);
+    if (state.pendingToolId) selectedIds.add(state.pendingToolId);
+    el.collectionToolOptions.innerHTML = sortTools(tagged.slice()).map((tool) => `
+      <label class="uh-tool-option">
+        <input type="checkbox" name="collection-tool" value="${escapeHtml(tool.id)}" ${selectedIds.has(tool.id) ? 'checked' : ''} />
+        <span>${iconMarkup(tool.icon, 'h-4 w-4')}</span>
+        <span class="uh-tool-option-copy"><strong>${escapeHtml(tool.title)}</strong><small>${escapeHtml(tool.category)}</small></span>
+      </label>
+    `).join('');
+    el.collectionModal.setAttribute('aria-hidden', 'false');
+    openModal(el.collectionModal);
+    el.collectionName.focus({ preventScroll: true });
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function openCollectionAssignment(toolId) {
+    const tool = byId[toolId];
+    if (!tool) return;
+    state.collectionModalMode = 'assignment';
+    state.returnToAssignment = false;
+    state.pendingToolId = toolId;
+    state.editingCollectionId = null;
+    el.collectionModalTitle.textContent = 'Add to collections';
+    el.collectionSaveBtn.textContent = 'Save assignments';
+    el.collectionDeleteBtn.classList.add('hidden');
+    el.collectionName.required = false;
+    el.collectionEditorFields.hidden = true;
+    el.collectionToolPicker.hidden = true;
+    el.collectionFormError.hidden = true;
+    el.collectionAssignmentTitle.textContent = tool.title;
+    el.collectionAssignmentList.innerHTML = state.collections.map((collection) => {
+      const containsTool = collection.toolIds.includes(toolId);
+      return `
+        <label class="uh-assignment-option">
+          <input type="checkbox" name="collection-assignment" value="${escapeHtml(collection.id)}" ${containsTool ? 'checked' : ''} />
+          <span class="uh-assignment-copy">
+            <strong>${escapeHtml(collection.name)}</strong>
+            <small>${collection.toolIds.length} ${collection.toolIds.length === 1 ? 'tool' : 'tools'}</small>
+          </span>
+          <span class="uh-assignment-check" aria-hidden="true">${iconMarkup('check', 'h-4 w-4')}</span>
+        </label>
+      `;
+    }).join('');
+    el.collectionAssignmentEmpty.classList.toggle('hidden', state.collections.length > 0);
+    el.collectionAssignment.classList.remove('hidden');
+    el.collectionModal.setAttribute('aria-hidden', 'false');
+    openModal(el.collectionModal);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function closeCollectionEditor() {
+    closeModal(el.collectionModal);
+    el.collectionModal.setAttribute('aria-hidden', 'true');
+    state.editingCollectionId = null;
+    state.pendingToolId = null;
+    state.collectionModalMode = 'editor';
+    state.returnToAssignment = false;
+  }
+
+  function openDockSearch() {
+    if (state.dockSearchOpen) {
+      el.searchInput.focus({ preventScroll: true });
+      return;
+    }
+
+    state.dockSearchOpen = true;
+    const transitionId = ++state.dockTransitionId;
+    clearTimeout(state.dockCloseTimer);
+    state.dockCloseTimer = null;
+    el.dockSearchPanel.hidden = false;
+    el.dockSearchPanel.inert = false;
+    el.dockSearchPanel.setAttribute('aria-hidden', 'false');
+    el.dockSearchPanel.classList.remove('is-open');
+    el.openDockSearch.classList.add('is-search-open');
+    el.openDockSearch.setAttribute('aria-expanded', 'true');
+    renderDockSearchResults();
+    requestAnimationFrame(() => {
+      if (state.dockSearchOpen && state.dockTransitionId === transitionId) {
+        el.dockSearchPanel.classList.add('is-open');
+      }
+    });
+    el.searchInput.focus({ preventScroll: true });
+    el.searchInput.select();
+  }
+
+  function closeDockSearch(restoreFocus = false) {
+    if (!state.dockSearchOpen) return;
+    state.dockSearchOpen = false;
+    const transitionId = ++state.dockTransitionId;
+    clearTimeout(state.dockCloseTimer);
+    el.dockSearchPanel.classList.remove('is-open');
+    el.dockSearchPanel.inert = true;
+    el.dockSearchPanel.setAttribute('aria-hidden', 'true');
+    el.openDockSearch.classList.remove('is-search-open');
+    el.openDockSearch.setAttribute('aria-expanded', 'false');
+    if (document.activeElement === el.searchInput) el.searchInput.blur();
+    if (restoreFocus) el.openDockSearch.focus({ preventScroll: true });
+
+    state.dockCloseTimer = setTimeout(() => {
+      if (state.dockSearchOpen || state.dockTransitionId !== transitionId) return;
+      state.dockCloseTimer = null;
+      el.dockSearchPanel.hidden = true;
+      renderFavorites();
+      renderGrid();
+      if (window.lucide) window.lucide.createIcons();
+    }, prefersReducedMotion() ? 0 : 240);
+  }
+
+  function dockResultTemplate(tool, index, featured = false) {
+    const description = tool.description.length > 78
+      ? `${tool.description.slice(0, 75).trimEnd()}…`
+      : tool.description;
+    const active = index === state.searchResultIndex;
+    return `
+      <button
+        type="button"
+        class="uh-dock-result${active ? ' is-active' : ''}"
+        data-search-result="${escapeHtml(tool.id)}"
+        tabindex="${active ? '0' : '-1'}"
+        aria-label="Open ${escapeHtml(tool.title)}${featured ? ', popular tool' : ''}"
+      >
+        <span class="uh-dock-result-icon">${iconMarkup(tool.icon, 'h-4 w-4')}</span>
+        <span class="uh-dock-result-copy">
+          <strong>${highlightedTitle(tool)}</strong>
+          <small>${escapeHtml(description)}</small>
+        </span>
+        <span class="uh-dock-result-meta">${escapeHtml(tool.category)}</span>
+        <i data-lucide="arrow-up-right" class="uh-dock-result-open h-3.5 w-3.5" aria-hidden="true"></i>
+      </button>
+    `;
+  }
+
+  function renderDockSearchResults() {
+    const query = state.query.trim();
+    let results;
+    let featured = false;
+    if (query) {
+      results = getFilteredTools();
+      el.dockResultsCount.textContent = `${results.length} ${results.length === 1 ? 'match' : 'matches'}`;
+      el.dockResultsEmpty.textContent = results.length
+        ? ''
+        : 'No tools found. Try a different keyword or search by category.';
+    } else {
+      results = tagged.filter((tool) => tool.popular).slice(0, 4);
+      featured = results.length > 0;
+      el.dockResultsCount.textContent = featured ? 'Popular' : '';
+      el.dockResultsEmpty.textContent = 'What are you looking for?';
+    }
+
+    state.searchResultIndex = Math.min(state.searchResultIndex, Math.max(results.length - 1, 0));
+    el.dockResultsList.innerHTML = results
+      .map((tool, index) => dockResultTemplate(tool, index, featured))
+      .join('');
+    el.dockResultsList.hidden = results.length === 0;
+    el.dockResultsEmpty.hidden = Boolean(results.length) && Boolean(query);
+    el.dockResultsPanel.classList.toggle('has-query', Boolean(query));
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function moveDockResultFocus(direction) {
+    const results = Array.from(el.dockResultsList.querySelectorAll('[data-search-result]'));
+    if (!results.length) return;
+    const currentIndex = results.indexOf(document.activeElement);
+    const nextIndex = currentIndex < 0
+      ? (direction > 0 ? 0 : results.length - 1)
+      : Math.max(0, Math.min(results.length - 1, currentIndex + direction));
+    state.searchResultIndex = nextIndex;
+    results.forEach((result, index) => {
+      result.classList.toggle('is-active', index === nextIndex);
+      result.tabIndex = index === nextIndex ? 0 : -1;
+    });
+    results[nextIndex].focus({ preventScroll: true });
+    results[nextIndex].scrollIntoView({ block: 'nearest' });
+  }
+
+  function saveCollection(event) {
+    event.preventDefault();
+    if (state.collectionModalMode === 'assignment') {
+      const toolId = state.pendingToolId;
+      if (!isKnownToolId(toolId)) {
+        closeCollectionEditor();
+        return;
+      }
+      const selectedIds = new Set(
+        Array.from(el.collectionAssignmentList.querySelectorAll('input[name="collection-assignment"]:checked'))
+          .map((input) => input.value)
+      );
+      state.collections.forEach((collection) => {
+        const toolIds = new Set(collection.toolIds);
+        if (selectedIds.has(collection.id)) toolIds.add(toolId);
+        else toolIds.delete(toolId);
+        collection.toolIds = Array.from(toolIds);
+      });
+      persistCollections();
+      closeCollectionEditor();
+      render();
+      showToast('Collection assignments saved');
+      return;
+    }
+
+    const name = el.collectionName.value.trim().slice(0, 48);
+    const duplicate = state.collections.some((collection) =>
+      collection.id !== state.editingCollectionId && collection.name.toLowerCase() === name.toLowerCase()
+    );
+    if (!name || duplicate) {
+      el.collectionFormError.textContent = duplicate
+        ? 'A collection with that name already exists.'
+        : 'Enter a name for this collection.';
+      el.collectionFormError.hidden = false;
+      el.collectionName.focus();
+      return;
+    }
+
+    const toolIds = Array.from(new Set(Array.from(el.collectionToolOptions.querySelectorAll('input[name="collection-tool"]:checked'))
+      .map((input) => input.value)
+      .filter(isKnownToolId)));
+    if (state.collectionModalMode === 'create-from-assignment' && isKnownToolId(state.pendingToolId)) {
+      if (!toolIds.includes(state.pendingToolId)) toolIds.push(state.pendingToolId);
+    }
+    let collection = state.collections.find((item) => item.id === state.editingCollectionId);
+    if (collection) {
+      collection.name = name;
+      collection.toolIds = toolIds;
+    } else {
+      collection = { id: makeCollectionId(), name, toolIds };
+      state.collections.push(collection);
+    }
+
+    const pinned = state.pinnedCollections.includes(collection.id);
+    if (el.collectionPinned.checked && !pinned) state.pinnedCollections.push(collection.id);
+    if (!el.collectionPinned.checked && pinned) {
+      state.pinnedCollections = state.pinnedCollections.filter((id) => id !== collection.id);
+    }
+    persistCollections();
+    if (state.returnToAssignment && isKnownToolId(state.pendingToolId)) {
+      const toolId = state.pendingToolId;
+      render();
+      openCollectionAssignment(toolId);
+      showToast('Collection created and tool assigned');
+      return;
+    }
+    state.activeCollectionId = null;
+    closeCollectionEditor();
+    render();
+    showToast('Collection saved');
+  }
+
+  function deleteCollection() {
+    const collection = state.collections.find((item) => item.id === state.editingCollectionId);
+    if (!collection || !window.confirm(`Delete "${collection.name}"?`)) return;
+    state.collections = state.collections.filter((item) => item.id !== collection.id);
+    state.pinnedCollections = state.pinnedCollections.filter((id) => id !== collection.id);
+    if (state.activeCollectionId === collection.id) state.activeCollectionId = null;
+    persistCollections();
+    closeCollectionEditor();
+    render();
+    showToast('Collection deleted');
+  }
+
+  function openCollection(id) {
+    if (!state.collections.some((collection) => collection.id === id)) return;
+    state.activeCollectionId = id;
+    state.activeCategory = 'All';
+    state.quickFilter = null;
+    render();
+    el.grid.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  function toggleCollectionPin(id) {
+    if (state.pinnedCollections.includes(id)) {
+      state.pinnedCollections = state.pinnedCollections.filter((pinnedId) => pinnedId !== id);
+    } else if (state.collections.some((collection) => collection.id === id)) {
+      state.pinnedCollections.push(id);
+    }
+    persistCollections();
+    render();
+  }
+
+  function moveCollection(id, direction) {
+    const index = state.collections.findIndex((collection) => collection.id === id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= state.collections.length) return;
+    [state.collections[index], state.collections[nextIndex]] =
+      [state.collections[nextIndex], state.collections[index]];
+    persistCollections();
+    render();
+  }
+
+  function movePinnedCollection(id, direction) {
+    const index = state.pinnedCollections.indexOf(id);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= state.pinnedCollections.length) return;
+    [state.pinnedCollections[index], state.pinnedCollections[nextIndex]] =
+      [state.pinnedCollections[nextIndex], state.pinnedCollections[index]];
+    persistCollections();
+    render();
   }
 
   /* --------------------------------- Toasts --------------------------------- */
@@ -813,8 +1301,9 @@ window.UtilityHub.tools = toolsData;
   let lastFocusedBeforeModal = null;
 
   function openModal(modalEl) {
-    lastFocusedBeforeModal = document.activeElement;
+    if (!modalEl.open) lastFocusedBeforeModal = document.activeElement;
     modalEl.classList.remove('hidden');
+    if (typeof modalEl.showModal === 'function' && !modalEl.open) modalEl.showModal();
     requestAnimationFrame(() => modalEl.classList.add('is-open'));
     document.body.classList.add('overflow-hidden');
     const focusTarget = modalEl.querySelector('[data-autofocus]') || modalEl;
@@ -824,12 +1313,17 @@ window.UtilityHub.tools = toolsData;
   function closeModal(modalEl) {
     modalEl.classList.remove('is-open');
     document.body.classList.remove('overflow-hidden');
-    setTimeout(() => modalEl.classList.add('hidden'), 150);
+    setTimeout(() => {
+      if (modalEl.classList.contains('is-open')) return;
+      if (typeof modalEl.close === 'function' && modalEl.open) modalEl.close();
+      modalEl.classList.add('hidden');
+    }, 150);
     if (lastFocusedBeforeModal) lastFocusedBeforeModal.focus({ preventScroll: true });
   }
 
   function anyModalOpen() {
-    return el.previewModal.classList.contains('is-open');
+    return el.previewModal.classList.contains('is-open') ||
+      el.collectionModal.classList.contains('is-open');
   }
 
   /* --------------------------------- Templates -------------------------------- */
@@ -871,11 +1365,11 @@ window.UtilityHub.tools = toolsData;
     return escapeHtml(title);
   }
 
-  function cardTemplate(tool, { compact = false } = {}) {
+  function cardTemplate(tool, { compact = false, view = state.view } = {}) {
     const isFav = state.favorites.includes(tool.id);
     return `
       <article
-        class="tool-card card-frame group relative flex ${compact ? 'w-64 shrink-0' : ''} flex-col gap-3 rounded-card border border-line bg-panel p-5 outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-glow focus-visible:-translate-y-0.5 focus-visible:border-accent focus-visible:shadow-glow"
+        class="tool-card card-frame group relative flex ${compact ? 'w-64 shrink-0' : ''} flex-col gap-3 rounded-card border border-line bg-panel p-5 outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-glow focus-visible:-translate-y-0.5 focus-visible:border-accent focus-visible:shadow-glow ${view === 'list' ? 'is-list' : ''}"
         data-card
         data-id="${tool.id}"
         tabindex="0"
@@ -887,11 +1381,11 @@ window.UtilityHub.tools = toolsData;
         <span class="corner corner-bl"></span>
         <span class="corner corner-br"></span>
 
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-md border border-line bg-bg text-accent">
+        <div class="tool-card-header flex items-start justify-between gap-3">
+          <div class="tool-card-icon flex h-10 w-10 items-center justify-center rounded-md border border-line bg-bg text-accent">
             ${iconMarkup(tool.icon, 'h-5 w-5')}
           </div>
-          <div class="flex items-center gap-1">
+          <div class="tool-card-actions flex items-center gap-1">
             ${badgeMarkup(tool)}
             <button
               type="button"
@@ -913,15 +1407,25 @@ window.UtilityHub.tools = toolsData;
             >
               ${iconMarkup('eye', 'h-4 w-4')}
             </button>
+            <button
+              type="button"
+              class="uh-icon-button tool-collection-action"
+              data-action="add-to-collection"
+              data-id="${tool.id}"
+              aria-label="Add ${escapeHtml(tool.title)} to collections"
+              title="Add to collection"
+            >
+              ${iconMarkup('folder-plus', 'h-4 w-4')}
+            </button>
           </div>
         </div>
 
-        <div class="flex-1">
+        <div class="tool-card-content flex-1">
           <h3 class="font-display text-base font-semibold text-ink">${highlightedTitle(tool)}</h3>
           <p class="mt-1 text-sm leading-relaxed text-muted">${escapeHtml(tool.description)}</p>
         </div>
 
-        <div class="flex items-center justify-between border-t border-line pt-3">
+        <div class="tool-card-meta flex items-center justify-between border-t border-line pt-3">
           <span class="font-mono text-[11px] tracking-wide text-faint">${tool.tag}</span>
           <span class="font-mono text-[11px] uppercase tracking-wide text-accent">${escapeHtml(tool.category)}</span>
         </div>
@@ -949,7 +1453,7 @@ window.UtilityHub.tools = toolsData;
         return `
           <button
             type="button"
-            class="tab-btn shrink-0 rounded-md border px-3.5 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors ${
+            class="tab-btn shrink-0 rounded-md border px-3 py-1 font-mono text-xs uppercase tracking-wide transition-colors ${
               active
                 ? 'border-accent bg-accent/10 text-accent'
                 : 'border-line text-muted hover:border-line-strong hover:text-ink'
@@ -968,7 +1472,7 @@ window.UtilityHub.tools = toolsData;
     ].map(({ id, label }) => `
       <button
         type="button"
-        class="tab-btn quick-filter-btn shrink-0 rounded-md border px-3.5 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors ${state.quickFilter === id ? 'border-accent bg-accent/10 text-accent' : 'border-line text-muted hover:border-line-strong hover:text-ink'}"
+        class="tab-btn quick-filter-btn shrink-0 rounded-md border px-3 py-1 font-mono text-xs uppercase tracking-wide transition-colors ${state.quickFilter === id ? 'border-accent bg-accent/10 text-accent' : 'border-line text-muted hover:border-line-strong hover:text-ink'}"
         data-quick-filter="${id}"
         aria-pressed="${state.quickFilter === id}"
       >
@@ -998,17 +1502,131 @@ window.UtilityHub.tools = toolsData;
 
   function renderFavorites() {
     const favs = getFavoriteTools();
-    if (!favs.length) {
+    if (!favs.length || state.activeCollectionId || !el.dockSearchPanel.hidden) {
       el.favoritesSection.classList.add('hidden');
       return;
     }
     el.favoritesSection.classList.remove('hidden');
-    el.favoritesGrid.innerHTML = favs.map((t) => cardTemplate(t)).join('');
+    el.favoritesGrid.innerHTML = favs.map((t) => cardTemplate(t, { view: 'grid' })).join('');
+  }
+
+  function miniToolTemplate(tool) {
+    return `
+      <button type="button" class="uh-mini-tool" data-action="quick-open" data-id="${tool.id}" aria-label="Open ${escapeHtml(tool.title)}">
+        <span class="uh-mini-icon">${iconMarkup(tool.icon, 'h-4 w-4')}</span>
+        <span>${escapeHtml(tool.title)}</span>
+      </button>
+    `;
+  }
+
+  function renderWelcomePanel() {
+    const now = new Date();
+    const hour = now.getHours();
+    const greeting = hour < 12 ? 'Good morning' : (hour < 18 ? 'Good afternoon' : 'Good evening');
+    el.welcomeTitle.textContent = `${greeting}, welcome back.`;
+    el.welcomeDate.textContent = new Intl.DateTimeFormat(undefined, {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+    }).format(now);
+    el.welcomeToolCount.textContent = String(toolsData.length);
+    el.welcomeFavoriteCount.textContent = String(state.favorites.length);
+
+    const recentlyAdded = tagged
+      .filter((tool) => {
+        const addedAt = Date.parse(`${tool.added || ''}T00:00:00Z`);
+        return Number.isFinite(addedAt) && addedAt <= now.getTime();
+      })
+      .sort((a, b) => Date.parse(`${b.added}T00:00:00Z`) - Date.parse(`${a.added}T00:00:00Z`))
+      .slice(0, 3);
+    el.recentlyAddedTools.innerHTML = recentlyAdded.length
+      ? recentlyAdded.map(miniToolTemplate).join('')
+      : '<p class="uh-inline-empty">New tools will appear here when available.</p>';
+
+    const recentTools = state.recents.slice(0, CONFIG.maxRecents)
+      .map((id) => byId[id])
+      .filter(Boolean);
+    el.recentTools.innerHTML = recentTools.length
+      ? recentTools.map(miniToolTemplate).join('')
+      : '<p class="uh-inline-empty">Your recently opened tools will show up here.</p>';
+  }
+
+  function collectionCardTemplate(collection, { pinnedSection = false } = {}) {
+    const collectionIndex = state.collections.findIndex((item) => item.id === collection.id);
+    const pinnedIndex = state.pinnedCollections.indexOf(collection.id);
+    const previewTools = collection.toolIds.slice(0, 4).map((id) => byId[id]).filter(Boolean);
+    const preview = previewTools.length
+      ? previewTools.map((tool) =>
+        `<span class="uh-collection-icon" title="${escapeHtml(tool.title)}">${iconMarkup(tool.icon, 'h-4 w-4')}</span>`
+      ).join('')
+      : '<span class="uh-collection-no-preview">No tools yet</span>';
+    const reorderActions = pinnedSection
+      ? `
+        <button type="button" class="uh-icon-button" data-action="move-pinned" data-id="${collection.id}" data-direction="-1" aria-label="Move ${escapeHtml(collection.name)} up" ${pinnedIndex <= 0 ? 'disabled' : ''}>${iconMarkup('chevron-up', 'h-4 w-4')}</button>
+        <button type="button" class="uh-icon-button" data-action="move-pinned" data-id="${collection.id}" data-direction="1" aria-label="Move ${escapeHtml(collection.name)} down" ${pinnedIndex === state.pinnedCollections.length - 1 ? 'disabled' : ''}>${iconMarkup('chevron-down', 'h-4 w-4')}</button>
+      `
+      : `
+        <button type="button" class="uh-icon-button" data-action="move-collection" data-id="${collection.id}" data-direction="-1" aria-label="Move ${escapeHtml(collection.name)} up" ${collectionIndex <= 0 ? 'disabled' : ''}>${iconMarkup('chevron-up', 'h-4 w-4')}</button>
+        <button type="button" class="uh-icon-button" data-action="move-collection" data-id="${collection.id}" data-direction="1" aria-label="Move ${escapeHtml(collection.name)} down" ${collectionIndex === state.collections.length - 1 ? 'disabled' : ''}>${iconMarkup('chevron-down', 'h-4 w-4')}</button>
+      `;
+    const pinned = state.pinnedCollections.includes(collection.id);
+    return `
+      <article class="uh-collection-card">
+        <div class="uh-collection-card-top">
+          <div class="uh-collection-preview" aria-hidden="true">${preview}</div>
+          <div class="uh-collection-reorder">${reorderActions}</div>
+        </div>
+        <h3>${escapeHtml(collection.name)}</h3>
+        <p>${collection.toolIds.length} ${collection.toolIds.length === 1 ? 'tool' : 'tools'}</p>
+        <div class="uh-collection-actions">
+          <button type="button" class="uh-control-button uh-open-collection" data-action="open-collection" data-id="${collection.id}">Open</button>
+          <button type="button" class="uh-icon-button" data-action="edit-collection" data-id="${collection.id}" aria-label="Edit ${escapeHtml(collection.name)}">${iconMarkup('pencil', 'h-4 w-4')}</button>
+          ${pinnedSection
+            ? `<button type="button" class="uh-icon-button" data-action="toggle-pin" data-id="${collection.id}" aria-label="Unpin ${escapeHtml(collection.name)}" title="Unpin collection">${iconMarkup('pin-off', 'h-4 w-4')}</button>`
+            : `<button type="button" class="uh-icon-button" data-action="toggle-pin" data-id="${collection.id}" aria-label="${pinned ? 'Unpin' : 'Pin'} ${escapeHtml(collection.name)}" title="${pinned ? 'Unpin collection' : 'Pin to dashboard'}">${iconMarkup(pinned ? 'pin-off' : 'pin', 'h-4 w-4')}</button>`
+          }
+        </div>
+      </article>
+    `;
+  }
+
+  function renderCollections() {
+    const active = state.collections.find((collection) => collection.id === state.activeCollectionId);
+    if (state.activeCollectionId && !active) state.activeCollectionId = null;
+    const viewingCollection = Boolean(active);
+    el.collectionsSection.classList.toggle('hidden', viewingCollection);
+    el.pinnedCollectionsSection.classList.toggle('hidden', viewingCollection || !state.pinnedCollections.length);
+    el.toolsHeading.textContent = active ? active.name : 'All Tools';
+    el.collectionBackBtn.classList.toggle('hidden', !active);
+
+    el.collectionsGrid.innerHTML = state.collections.length
+      ? state.collections.map((collection) => collectionCardTemplate(collection)).join('')
+      : `
+        <div class="uh-collection-empty">
+          <p>You haven’t created any collections yet.</p>
+          <button type="button" class="uh-control-button uh-primary-button" data-action="create-collection">Create collection</button>
+        </div>
+      `;
+    const pinned = state.pinnedCollections
+      .map((id) => state.collections.find((collection) => collection.id === id))
+      .filter(Boolean);
+    el.pinnedCollections.innerHTML = pinned
+      .map((collection) => collectionCardTemplate(collection, { pinnedSection: true }))
+      .join('');
   }
 
   function renderGrid() {
     const filtered = getFilteredTools();
     el.resultsCount.textContent = `${filtered.length} tool${filtered.length === 1 ? '' : 's'}`;
+    el.grid.classList.toggle('is-list', state.view === 'list');
+    el.gridViewBtn.setAttribute('aria-pressed', String(state.view === 'grid'));
+    el.listViewBtn.setAttribute('aria-pressed', String(state.view === 'list'));
+    el.sortSelect.value = state.sort;
+
+    if (!el.dockSearchPanel.hidden) {
+      el.grid.classList.add('hidden');
+      el.emptyState.classList.add('hidden');
+      renderDockSearchResults();
+      return;
+    }
 
     if (!filtered.length) {
       el.grid.innerHTML = '';
@@ -1032,8 +1650,10 @@ window.UtilityHub.tools = toolsData;
   }
 
   function render() {
+    renderWelcomePanel();
     renderTabs();
     renderFooterCategories();
+    renderCollections();
     renderFavorites();
     renderGrid();
     if (window.lucide) window.lucide.createIcons();
@@ -1044,6 +1664,7 @@ window.UtilityHub.tools = toolsData;
   function handleGridClick(e) {
     const favBtn = e.target.closest('[data-action="favorite"]');
     const previewBtn = e.target.closest('[data-action="preview"]');
+    const collectionBtn = e.target.closest('[data-action="add-to-collection"]');
     const card = e.target.closest('[data-card]');
 
     if (favBtn) {
@@ -1056,6 +1677,11 @@ window.UtilityHub.tools = toolsData;
       openPreview(previewBtn.dataset.id);
       return;
     }
+    if (collectionBtn) {
+      e.stopPropagation();
+      openCollectionAssignment(collectionBtn.dataset.id);
+      return;
+    }
     if (card) {
       openTool(card.dataset.id);
     }
@@ -1063,6 +1689,113 @@ window.UtilityHub.tools = toolsData;
 
   [el.grid, el.favoritesGrid].forEach((container) => {
     container.addEventListener('click', handleGridClick);
+  });
+
+  function handleDashboardAction(e) {
+    const button = e.target.closest('[data-action]');
+    if (!button) return;
+    const { action, id } = button.dataset;
+    if (action === 'quick-open') return openTool(id);
+    if (action === 'open-collection') return openCollection(id);
+    if (action === 'edit-collection') return openCollectionEditor(id);
+    if (action === 'toggle-pin') return toggleCollectionPin(id);
+    if (action === 'move-collection') return moveCollection(id, Number(button.dataset.direction));
+    if (action === 'move-pinned') return movePinnedCollection(id, Number(button.dataset.direction));
+    if (action === 'create-collection') return openCollectionEditor();
+  }
+
+  [el.recentlyAddedTools, el.recentTools, el.collectionsGrid, el.pinnedCollections]
+    .forEach((container) => container.addEventListener('click', handleDashboardAction));
+
+  el.assignmentCreateCollectionBtn.addEventListener('click', () => {
+    openCollectionEditor(null, state.pendingToolId, true);
+  });
+
+  el.dockActions.addEventListener('click', (e) => {
+    const action = e.target.closest('[data-dock-action]');
+    if (!action) return;
+    if (action.dataset.dockAction === 'search') {
+      if (!state.dockSearchOpen) openDockSearch();
+      else closeDockSearch();
+    }
+  });
+  el.closeDockSearch.addEventListener('click', () => closeDockSearch(true));
+  el.dockResultsList.addEventListener('click', (e) => {
+    const result = e.target.closest('[data-search-result]');
+    if (result) openTool(result.dataset.searchResult);
+  });
+  el.dockResultsList.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      moveDockResultFocus(e.key === 'ArrowDown' ? 1 : -1);
+    } else if (e.key === 'Enter') {
+      const result = e.target.closest('[data-search-result]');
+      if (result) {
+        e.preventDefault();
+        openTool(result.dataset.searchResult);
+      }
+    }
+  });
+  el.dockResultsList.addEventListener('focusin', (e) => {
+    const result = e.target.closest('[data-search-result]');
+    if (!result) return;
+    state.searchResultIndex = Array.from(el.dockResultsList.querySelectorAll('[data-search-result]')).indexOf(result);
+  });
+  document.addEventListener('click', (e) => {
+    const path = typeof e.composedPath === 'function' ? e.composedPath() : null;
+    const clickedInsideDock = path
+      ? path.includes(el.actionDock)
+      : el.actionDock.contains(e.target);
+    if (state.dockSearchOpen && !clickedInsideDock) closeDockSearch();
+  });
+
+  el.createCollectionBtn.addEventListener('click', () => openCollectionEditor());
+  el.collectionBackBtn.addEventListener('click', () => {
+    state.activeCollectionId = null;
+    render();
+  });
+  el.gridViewBtn.addEventListener('click', () => {
+    state.view = 'grid';
+    saveJSON(CONFIG.storageKeys.dashboardView, state.view);
+    render();
+  });
+  el.listViewBtn.addEventListener('click', () => {
+    state.view = 'list';
+    saveJSON(CONFIG.storageKeys.dashboardView, state.view);
+    render();
+  });
+  el.sortSelect.addEventListener('change', () => {
+    state.sort = el.sortSelect.value;
+    saveJSON(CONFIG.storageKeys.dashboardSort, state.sort);
+    render();
+  });
+
+  el.collectionForm.addEventListener('submit', saveCollection);
+  el.collectionDeleteBtn.addEventListener('click', deleteCollection);
+  [el.collectionCloseBtn, el.collectionCancelBtn].forEach((button) => {
+    button.addEventListener('click', closeCollectionEditor);
+  });
+  el.collectionModal.addEventListener('click', (e) => {
+    if (e.target === el.collectionModal || !el.collectionForm.contains(e.target)) {
+      closeCollectionEditor();
+    }
+  });
+  el.collectionModal.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeCollectionEditor();
+  });
+  el.previewOpenFull.addEventListener('click', () => {
+    const id = state.previewToolId;
+    if (!id) return;
+    const previous = state.toolUsage[id] || { count: 0, lastOpened: 0 };
+    state.toolUsage[id] = { count: previous.count + 1, lastOpened: Date.now() };
+    saveJSON(CONFIG.storageKeys.toolUsage, state.toolUsage);
+  });
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest && e.target.closest('a.uh-tools-link');
+    if (!link) return;
+    const tool = tagged.find((item) => new URL(item.url, document.baseURI).href === link.href);
+    if (tool) recordToolUse(tool.id);
   });
 
   el.tabs.addEventListener('click', (e) => {
@@ -1111,22 +1844,37 @@ window.UtilityHub.tools = toolsData;
 
   /* --------------------------------- Search --------------------------------- */
 
-  let searchDebounce = null;
   el.searchInput.addEventListener('input', (e) => {
-    clearTimeout(searchDebounce);
     const value = e.target.value;
     el.clearSearch.classList.toggle('hidden', value.length === 0);
-    searchDebounce = setTimeout(() => {
-      state.query = value.trim();
-      render();
-    }, 180);
+    state.query = value.trim();
+    state.searchResultIndex = 0;
+    if (el.dockSearchPanel.hidden) render();
+    else renderDockSearchResults();
+  });
+  el.searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' && !el.dockResultsList.hidden) {
+      e.preventDefault();
+      moveDockResultFocus(1);
+    } else if (e.key === 'ArrowUp' && !el.dockResultsList.hidden) {
+      e.preventDefault();
+      moveDockResultFocus(-1);
+    } else if (e.key === 'Enter' && !el.dockResultsList.hidden) {
+      const result = el.dockResultsList.querySelectorAll('[data-search-result]')[state.searchResultIndex];
+      if (result) {
+        e.preventDefault();
+        openTool(result.dataset.searchResult);
+      }
+    }
   });
 
   el.clearSearch.addEventListener('click', () => {
     el.searchInput.value = '';
     el.clearSearch.classList.add('hidden');
     state.query = '';
-    render();
+    state.searchResultIndex = 0;
+    if (el.dockSearchPanel.hidden) render();
+    else renderDockSearchResults();
     el.searchInput.focus();
   });
 
@@ -1149,23 +1897,58 @@ window.UtilityHub.tools = toolsData;
 
   document.addEventListener('keydown', (e) => {
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
-    const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+    const target = e.target || document.activeElement;
+    const isContentEditable = Boolean(target && (
+      target.isContentEditable ||
+      (typeof target.closest === 'function' && target.closest('[contenteditable]:not([contenteditable="false"])'))
+    ));
+    const targetTag = target ? target.tagName : '';
+    const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' ||
+      targetTag === 'INPUT' || targetTag === 'TEXTAREA' || isContentEditable;
 
     // Escape closes whichever modal is open, or blurs the search field.
     if (e.key === 'Escape') {
       if (el.previewModal.classList.contains('is-open')) return closePreview();
+      if (el.collectionModal.classList.contains('is-open')) {
+        e.preventDefault();
+        return closeCollectionEditor();
+      }
+      if (!el.dockSearchPanel.hidden) {
+        e.preventDefault();
+        return closeDockSearch(true);
+      }
       if (document.activeElement === el.searchInput) el.searchInput.blur();
+      return;
+    }
+
+    if (el.collectionModal.classList.contains('is-open') && e.key === 'Tab') {
+      const focusable = Array.from(el.collectionModal.querySelectorAll(
+        'button:not(:disabled), input:not(:disabled)'
+      )).filter((item) => !item.hidden && !item.closest('.hidden'));
+      if (!focusable.length) {
+        e.preventDefault();
+        return;
+      }
+      const index = focusable.indexOf(document.activeElement);
+      if (e.shiftKey && index <= 0) {
+        e.preventDefault();
+        focusable[focusable.length - 1].focus();
+      } else if (!e.shiftKey && index === focusable.length - 1) {
+        e.preventDefault();
+        focusable[0].focus();
+      }
       return;
     }
 
     if (anyModalOpen()) return; // don't let grid shortcuts leak under a modal
 
-    // Focus search with "/" or Cmd/Ctrl+K.
-    const isSearchShortcut = (e.key === '/' && !isTyping) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k');
+    // Focus search with an unmodified "/" or Cmd/Ctrl+K.
+    const isSlashSearchShortcut = e.key === '/' && !e.ctrlKey && !e.altKey && !e.metaKey && !isTyping;
+    const isSearchShortcut = isSlashSearchShortcut ||
+      (!isTyping && (e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k');
     if (isSearchShortcut) {
       e.preventDefault();
-      el.searchInput.focus();
-      el.searchInput.select();
+      openDockSearch();
       return;
     }
 
@@ -1191,6 +1974,7 @@ window.UtilityHub.tools = toolsData;
   // Cards use role="button" so Space should activate them like a native button.
   document.addEventListener('keydown', (e) => {
     if (e.key !== ' ') return;
+    if (e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
     const card = e.target.closest && e.target.closest('[data-card]');
     if (!card) return;
     e.preventDefault();

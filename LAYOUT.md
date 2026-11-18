@@ -1,6 +1,8 @@
 # Shared Utility Hub layout
 
-The shared header, category menu, theme initialization, and footer are provided by `style.js` and `styles/shared.css`. The dashboard and tool pages use the same layout code; the dashboard retains its existing search, category filters, theme switch, and footer details.
+The shared header, category menu, theme initialization, and footer are provided by `style.js` and `styles/shared.css`. The dashboard and tool pages use the same layout code; the dashboard retains its existing search, category filters, theme switch, and footer details. Homepage search is hosted in the bottom floating action dock, and tool-to-collection assignments update the existing `utilityhub:collections` data.
+
+The homepage dashboard enhancements are implemented in the existing `app.js` registry/render flow. Grid/list and sort preferences, custom collections, pinned collection order, and per-tool usage live in `localStorage` under `utilityhub:dashboard-view`, `utilityhub:dashboard-sort`, `utilityhub:collections`, `utilityhub:pinned-collections`, and `utilityhub:tool-usage`. Favorites and recent history continue using their existing keys. Collection members are tool IDs from `toolsData`; do not maintain a second tool registry.
 
 `styles/tailwind-fallback.css` is a local compiled snapshot of the utility classes currently used across the project. The loader uses it only when a page includes the Tailwind CDN but its generated stylesheet is unavailable. When adding new Tailwind utility classes, update this fallback stylesheet as part of the change; existing shared `uh-` classes need no separate registration.
 

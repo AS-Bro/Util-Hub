@@ -110,10 +110,10 @@
 <body>
   <!-- HEADER -->
   <header class="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between gap-4">
         <a class="uh-dashboard-brand flex items-center gap-3" href="index.html" aria-label="Utility Hub home">
-          <img class="uh-brand-logo" src="images/UH.png" alt="" width="38" height="38" />
+          <img class="uh-brand-logo" src="images/UH.png" alt="" width="34" height="34" />
           <div class="leading-tight">
             <h1 class="font-display text-lg font-semibold tracking-tight text-ink">Utility Hub</h1>
             <p class="font-mono text-[11px] uppercase tracking-widest text-faint">Sheet 01 — Everyday Tools</p>
@@ -135,29 +135,6 @@
             </span>
           </button>
         </div>
-      </div>
-
-      <!-- Search -->
-      <div class="relative">
-        <i data-lucide="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden="true"></i>
-        <input
-          id="search-input"
-          type="text"
-          placeholder="Search tools by name or purpose…"
-          autocomplete="off"
-          class="w-full rounded-md border border-line bg-panel py-2.5 pl-10 pr-20 text-sm text-ink placeholder:text-faint outline-none transition focus:border-accent"
-        />
-        <button
-          id="clear-search"
-          type="button"
-          class="absolute right-16 top-1/2 hidden -translate-y-1/2 rounded p-1 text-faint hover:text-ink"
-          aria-label="Clear search"
-        >
-          <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
-        </button>
-        <kbd class="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-faint">
-          ⌘K
-        </kbd>
       </div>
 
       <!-- Category Navigation Strip with Left & Right Arrow Buttons -->
@@ -187,6 +164,36 @@
 
   <!-- MAIN -->
   <main id="browse" class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <section id="welcome-panel" class="uh-dashboard-panel mb-8" aria-labelledby="welcome-title">
+      <div class="uh-welcome-heading">
+        <div>
+          <p id="welcome-date" class="uh-section-kicker"></p>
+          <h2 id="welcome-title" class="uh-welcome-title"></h2>
+        </div>
+        <div class="uh-welcome-stats" aria-label="Dashboard overview">
+          <div class="uh-stat"><strong id="welcome-tool-count">0</strong><span>Tools</span></div>
+          <div class="uh-stat"><strong id="welcome-favorite-count">0</strong><span>Favorites</span></div>
+        </div>
+      </div>
+      <div class="uh-welcome-content">
+        <section class="uh-welcome-block" aria-labelledby="recently-added-title">
+          <h3 id="recently-added-title" class="uh-section-kicker">Recently added</h3>
+          <div id="recently-added-tools" class="uh-mini-tool-list"></div>
+        </section>
+        <section class="uh-welcome-block" aria-labelledby="continue-title">
+          <h3 id="continue-title" class="uh-section-kicker">Continue where you left off</h3>
+          <div id="recent-tools" class="uh-mini-tool-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="pinned-collections-section" class="mb-8 hidden" aria-labelledby="pinned-collections-title">
+      <div class="uh-section-heading">
+        <h2 id="pinned-collections-title" class="font-mono text-xs uppercase tracking-widest text-faint">Pinned collections</h2>
+      </div>
+      <div id="pinned-collections" class="uh-collection-grid"></div>
+    </section>
+
     <!-- Favorites -->
     <section id="favorites-section" class="mb-10 hidden">
       <div class="mb-3 flex items-center gap-2">
@@ -196,11 +203,49 @@
       <div id="favorites-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
     </section>
 
+    <section id="collections-section" class="mb-10" aria-labelledby="collections-title">
+      <div class="uh-section-heading">
+        <h2 id="collections-title" class="font-mono text-xs uppercase tracking-widest text-faint">My Collections</h2>
+        <button id="create-collection-btn" type="button" class="uh-control-button">
+          <i data-lucide="plus" class="h-4 w-4" aria-hidden="true"></i>
+          Create collection
+        </button>
+      </div>
+      <div id="collections-grid" class="uh-collection-grid"></div>
+    </section>
+
     <!-- All tools -->
-    <section>
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="font-mono text-xs uppercase tracking-widest text-faint">All Tools</h2>
+    <section id="tools-section" aria-labelledby="tools-heading">
+      <div class="uh-section-heading">
+        <div class="flex min-w-0 items-center gap-3">
+          <button id="collection-back-btn" type="button" class="uh-control-button hidden" aria-label="Back to all tools">
+            <i data-lucide="arrow-left" class="h-4 w-4" aria-hidden="true"></i>
+            All tools
+          </button>
+          <h2 id="tools-heading" class="font-mono text-xs uppercase tracking-widest text-faint">All Tools</h2>
+        </div>
         <span id="results-count" class="font-mono text-xs text-faint"></span>
+      </div>
+
+      <div class="uh-tools-toolbar" aria-label="Tool display options">
+        <div class="uh-view-switch" role="group" aria-label="Tool view">
+          <button id="grid-view-btn" type="button" class="uh-view-button" aria-pressed="true">
+            <i data-lucide="grid-2x2" class="h-4 w-4" aria-hidden="true"></i>
+            Grid
+          </button>
+          <button id="list-view-btn" type="button" class="uh-view-button" aria-pressed="false">
+            <i data-lucide="list" class="h-4 w-4" aria-hidden="true"></i>
+            List
+          </button>
+        </div>
+        <label class="uh-sort-control" for="tool-sort">
+          <span>Sort</span>
+          <select id="tool-sort">
+            <option value="az">A–Z</option>
+            <option value="recent">Recently Added</option>
+            <option value="used">Most Used</option>
+          </select>
+        </label>
       </div>
 
       <div id="tool-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
@@ -285,6 +330,104 @@
         </div>
         <iframe id="preview-iframe" title="Tool preview" class="h-full w-full flex-1 bg-white" src="about:blank"></iframe>
       </div>
+    </div>
+  </div>
+
+  <!-- COLLECTION EDITOR -->
+  <dialog id="collection-modal" class="uh-modal hidden" aria-hidden="true" aria-labelledby="collection-modal-title">
+    <div class="uh-modal-shell">
+      <form id="collection-form" class="uh-modal-panel">
+        <div class="uh-modal-heading">
+          <div>
+            <p class="uh-section-kicker">Tool library</p>
+            <h2 id="collection-modal-title" data-autofocus tabindex="-1">Create collection</h2>
+          </div>
+          <button id="collection-close-btn" type="button" class="uh-icon-button" aria-label="Close collection editor">
+            <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="uh-modal-content">
+          <div id="collection-editor-fields">
+            <label class="uh-form-label" for="collection-name">Collection name</label>
+            <input id="collection-name" class="uh-form-input" type="text" maxlength="48" required autocomplete="off" placeholder="e.g. Daily tools" />
+            <label class="uh-pin-option">
+              <input id="collection-pinned" type="checkbox" />
+              <span>Show this collection in my dashboard</span>
+            </label>
+          </div>
+          <fieldset id="collection-tool-picker" class="uh-tool-picker">
+            <legend class="uh-form-label">Choose tools</legend>
+            <div id="collection-tool-options" class="uh-tool-options"></div>
+          </fieldset>
+          <section id="collection-assignment" class="uh-assignment hidden" aria-labelledby="collection-assignment-title">
+            <p id="collection-assignment-title" class="uh-assignment-tool"></p>
+            <p class="uh-assignment-hint">Choose every collection where this tool should appear.</p>
+            <div id="collection-assignment-list" class="uh-assignment-list"></div>
+            <div id="collection-assignment-empty" class="uh-assignment-empty hidden">
+              <p>You haven’t created any collections yet.</p>
+            </div>
+            <button id="assignment-create-collection-btn" type="button" class="uh-control-button uh-assignment-create">
+              <i data-lucide="plus" class="h-4 w-4" aria-hidden="true"></i>
+              Create new collection
+            </button>
+          </section>
+          <p id="collection-form-error" class="uh-form-error" role="alert" hidden></p>
+        </div>
+        <div class="uh-modal-actions">
+          <button id="collection-delete-btn" type="button" class="uh-control-button uh-danger-button hidden">Delete</button>
+          <span class="uh-modal-spacer"></span>
+          <button id="collection-cancel-btn" type="button" class="uh-control-button">Cancel</button>
+          <button id="collection-save-btn" type="submit" class="uh-control-button uh-primary-button">Create collection</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <div id="uh-action-dock" class="uh-action-dock" role="toolbar" aria-label="Quick actions">
+    <div id="uh-dock-search-panel" class="uh-dock-search-panel" hidden>
+      <div class="uh-dock-search-heading">
+        <span class="uh-section-kicker">Search tools</span>
+        <button id="close-dock-search" type="button" class="uh-icon-button" aria-label="Close search">
+          <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+        </button>
+      </div>
+      <section id="uh-dock-results-panel" class="uh-dock-results-panel" aria-labelledby="uh-dock-results-title">
+        <div class="uh-dock-results-heading">
+          <h2 id="uh-dock-results-title">Search Results</h2>
+          <span id="uh-dock-results-count" class="uh-dock-results-count" aria-live="polite"></span>
+        </div>
+        <p id="uh-dock-results-empty" class="uh-dock-results-empty" aria-live="polite"></p>
+        <div id="uh-dock-results-list" class="uh-dock-results-list"></div>
+      </section>
+      <div class="uh-dock-search-field">
+        <i data-lucide="search" class="uh-dock-search-icon h-4 w-4" aria-hidden="true"></i>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search tools by name or purpose…"
+          autocomplete="off"
+          aria-label="Search tools"
+          aria-controls="uh-dock-results-list"
+          aria-autocomplete="list"
+        />
+        <button id="clear-search" type="button" class="uh-dock-clear-search hidden" aria-label="Clear search">
+          <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+        </button>
+        <kbd>⌘K</kbd>
+      </div>
+    </div>
+    <div class="uh-action-dock-items" data-dock-actions>
+      <button
+        id="open-dock-search"
+        type="button"
+        class="uh-dock-action uh-dock-search-action"
+        data-dock-action="search"
+        aria-label="Search tools"
+        aria-controls="uh-dock-search-panel"
+        aria-expanded="false"
+      >
+        <i data-lucide="search" class="h-5 w-5" aria-hidden="true"></i>
+      </button>
     </div>
   </div>
 
